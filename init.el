@@ -53,68 +53,73 @@
 
 (require 'init-env)
 
-(require 'init-org)
-
-(require 'init-hydra)
-
 (require 'init-ui)
 
 (require 'init-edit)
 (require 'init-helpful)
-(require 'init-completion)
-
-(require 'init-wm)
 
 (require 'init-dired)
 
-;; project management
-(require 'init-project)
+(cond
+ ((string-equal (daemonp) "term")
+  (setq use-package-always-demand t)
+  (require 'init-term))
+ (t
+  (require 'init-org)
 
-;; prog
-(require 'init-prog)
-(require 'init-dap)
+  (require 'init-hydra)
+
+  (require 'init-wm)
+
+  ;; project management
+  (require 'init-project)
+
+  ;; prog
+  (require 'init-prog)
+  (require 'init-dap)
 ;;; lsp config
-(require 'init-lspbridge)
-;; (require 'init-eglot)
-;; (require 'init-lsp)
-(require 'init-ctags)
-(require 'init-jupyter)
-(require 'init-ai)
+  ;; (require 'init-lspbridge)
+  ;; (require 'init-eglot)
+  (require 'init-lsp)
+  (require 'init-ctags)
+  (require 'init-jupyter)
+  (require 'init-ai)
 
 ;;; lang
-(require 'init-treesit)
-(require 'init-web)
-(require 'init-cc)
-(require 'init-python)
-(require 'init-clojure)
-(require 'init-clisp)
-(require 'init-gdscript)
-(require 'init-markdown)
-(require 'init-docker)
-(require 'init-haskell)
-(require 'init-nix)
-(require 'init-swift)
-(require 'init-zig)
-(require 'init-rust)
-(require 'init-tex)
-(require 'init-db)
-(require 'init-lua)
+  (require 'init-treesit)
+  (require 'init-web)
+  (require 'init-cc)
+  (require 'init-python)
+  (require 'init-go)
+  (require 'init-clojure)
+  (require 'init-clisp)
+  (require 'init-gdscript)
+  (require 'init-markdown)
+  (require 'init-docker)
+  (require 'init-haskell)
+  (require 'init-nix)
+  (require 'init-swift)
+  (require 'init-zig)
+  (require 'init-rust)
+  (require 'init-tex)
+  (require 'init-db)
+  (require 'init-lua)
 
-;; terms
-(require 'init-vterm)
-(require 'init-eshell)
+  ;; terms
+  (require 'init-term)
 
-;; magit
-(require 'init-magit)
+  ;; magit
+  (require 'init-magit)
 
-;; social media
-(require 'init-telega)
+  ;; social media
+  (require 'init-telega)
 
-(require 'init-leetcode)
+  (require 'init-leetcode)
 
-(require 'init-tramp)
-(require 'init-telega)
+  (require 'init-tramp)
+  (require 'init-telega)
 
-(require 'init-tools)
+  (require 'init-tools)
 
-;;; init.el ends here
+  (require 'init-completion)
+  ))

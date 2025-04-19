@@ -8,7 +8,8 @@
                                               global-mark-ring
                                               search-ring
                                               regexp-search-ring
-                                              extended-command-history)
+                                              extended-command-history
+					      easysession--current-session-name)
               savehist-autosave-interval 300))
 
 ;; Enable vertico
@@ -161,9 +162,9 @@
 ;;   :commands (consult-applemusic-playlists applemusic-toggle-play))
 
 (use-package corfu
-  ;; :disabled
   :if (featurep 'lsp-mode)
   :straight (:files (:defaults "extensions/*.el"))
+  :demand t
   :hook (((prog-mode conf-mode yaml-mode shell-mode eshell-mode org-mode markdown-mode LaTeX-mode) . corfu-mode)
          ((eshell-mode shell-mode) . (lambda () (setq-local corfu-auto nil)))
          (minibuffer-setup . +corfu-enable-in-minibuffer))
@@ -248,12 +249,6 @@
   :config
   (setq dabbrev-ignored-buffer-regexps '("\\.\\(?:pdf\\|jpe?g\\|png\\)\\'")))
 
-
-;; (use-package tabnine
-;;   ;; :hook (prog-mode . tabnine-mode)
-;;   :hook (kill-emacs . tabnine-kill-process)
-;;   :config
-;;   (add-to-list 'completion-at-point-functions #'tabnine-completion-at-point))
 
 (use-package nerd-icons-corfu
   :if (featurep 'corfu)

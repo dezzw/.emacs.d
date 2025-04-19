@@ -34,6 +34,7 @@
   :config
   (setq org-html-head-include-default-style nil
         org-adapt-indentation t
+	org-use-sub-superscripts nil
 	;;; begin org-modern
 	org-tags-column 0
 	org-auto-align-tags nil
@@ -107,7 +108,9 @@
   :straight t
   :after org
   :hook ((org-mode . org-modern-mode)
-	 (org-agenda-finalize . org-modern-agenda)))
+	 (org-agenda-finalize . org-modern-agenda))
+  :custom
+  (org-modern-fold-stars '(("▶" . "▼") ("▷" . "▽") ("⏵" . "⏷") ("▹" . "▿") ("▸" . "▾"))))
 
 (use-package org-modern-indent
   :straight (org-modern-indent :type git :host github :repo "jdtsmith/org-modern-indent")
@@ -221,53 +224,48 @@
         ("tt" "Task" entry (file+olp "~/Documents/Org/Planner/Tasks.org" "Inbox")
          "* TODO %?\n  %U\n  %a\n  %i" :empty-lines 1)))
 
-(use-package org-roam
+(use-package org-node
   :straight t
+  :after org
   :bind
-  (("C-c o l" . org-roam-buffer-toggle)
-   ("C-c o f" . org-roam-node-find)
-   ("C-c o g" . org-roam-graph)
-   ("C-c o i" . org-roam-node-insert)
-   ("C-c o c" . org-roam-capture))
+  (("C-c o f" . org-node-find)
+   ("C-c o i" . org-node-insert-link))
   :custom
-  (org-roam-directory "~/Documents/Org/Notes")
-  (org-roam-database-connecter 'splite-builtin)
-  (org-roam-completion-everywhere t)
-  (org-roam-completion-system 'default)
-
+  (org-node-extra-id-dirs '("~/Documents/Org/Notes/"))
   :config
-  (org-roam-db-autosync-mode))
+  (org-node-cache-mode))
 
-;; (use-package org-download
-;;   :hook (org-mode . org-download-enable)
-;;   :custom
-;;   (org-download-image-dir "./images/"))
+(use-package org-download
+  :straight t
+  :hook (org-mode . org-download-enable)
+  :custom
+  (org-download-image-dir "./images/"))
 
 ;; (use-package org-imagine
 ;;   :straight 
 
-(defun org-insert-image ()
-  "insert a image from clipboard"
-  (interactive)
-  (let* ((path (concat default-directory "img/"))
-	 (image-file (concat
-		      path
-		      (buffer-name)
-		      (format-time-string "_%Y%m%d_%H%M%S.png"))))
-    (if (not (file-exists-p path))
-	(mkdir path))
-    (do-applescript (concat
-		     "set the_path to \"" image-file "\" \n"
-		     "set png_data to the clipboard as «class PNGf» \n"
-		     "set the_file to open for access (POSIX file the_path as string) with write permission \n"
-		     "write png_data to the_file \n"
-		     "close access the_file"))
-    ;; (shell-command (concat "pngpaste " image-file))
-    (org-insert-link nil
-		     (concat "file:" image-file)
-		     "")
-    (message image-file))
-  (org-display-inline-images))
+;; (defun org-insert-image ()
+;;   "insert a image from clipboard"
+;;   (interactive)
+;;   (let* ((path (concat default-directory "img/"))
+;; 	 (image-file (concat
+;; 		      path
+;; 		      (buffer-name)
+;; 		      (format-time-string "_%Y%m%d_%H%M%S.png"))))
+;;     (if (not (file-exists-p path))
+;; 	(mkdir path))
+;;     (do-applescript (concat
+;; 		     "set the_path to \"" image-file "\" \n"
+;; 		     "set png_data to the clipboard as «class PNGf» \n"
+;; 		     "set the_file to open for access (POSIX file the_path as string) with write permission \n"
+;; 		     "write png_data to the_file \n"
+;; 		     "close access the_file"))
+;;     ;; (shell-command (concat "pngpaste " image-file))
+;;     (org-insert-link nil
+;; 		     (concat "file:" image-file)
+;; 		     "")
+;;     (message image-file))
+;;   (org-display-inline-images))
 
 (provide 'init-org)
 ;;; init-org.el ends here

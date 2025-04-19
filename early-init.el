@@ -28,12 +28,6 @@
 (when (not (fboundp 'igc-stats))
   (setq gc-cons-threshold most-positive-fixnum))
 
-;; Prevent unwanted runtime compilation for gccemacs (native-comp) users;
-;; packages are compiled ahead-of-time when they are installed and site files
-;; are compiled when gccemacs is installed.
-(setq native-comp-jit-compilation nil)
-
-
 ;; Package initialize occurs automatically, before `user-init-file' is
 ;; loaded, but after `early-init-file'. We handle package
 ;; initialization, so we must prevent Emacs from doing it early!
@@ -42,6 +36,15 @@
 
 ;; Prefer loading newer compiled files
 (setq load-prefer-newer t)
+
+;; Prevent unwanted runtime compilation for gccemacs (native-comp) users;
+;; packages are compiled ahead-of-time when they are installed and site files
+;; are compiled when gccemacs is installed.
+;; (setq native-comp-jit-compilation nil)
+
+;; change for compile-angel.el
+(setq native-comp-jit-compilation nil)
+(setq native-comp-async-query-on-exit t)
 
 ;; Reduce rendering/line scan work by not rendering cursors or regions in
 ;; non-focused windows.

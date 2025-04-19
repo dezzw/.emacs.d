@@ -52,40 +52,75 @@
        (propertize " " 'display '(raise -0.25))))))
 
 
-(use-package tabspaces
-  :straight (:type git :host github :repo "mclear-tools/tabspaces")
-  :when (display-graphic-p)
-  :hook (after-init . tabspaces-mode) ;; use this only if you want the minor-mode loaded at startup. 
-  :commands (tabspaces-switch-or-create-workspace
-             tabspaces-open-or-create-project-and-workspace)
-  :custom
-  (tabspaces-default-tab "Default")
-  (tabspaces-remove-to-default t)
-  (tabspaces-include-buffers '("*scratch*" "*Messages*"))
-  ;; sessions
-  ;; (tabspaces-session t)
-  ;; (tabspaces-session-auto-restore t)
-  
-  :config
-  ;; Filter Buffers for Consult-Buffer
-  (with-eval-after-load 'consult
-    ;; hide full buffer list (still available with "b" prefix)
-    (consult-customize consult--source-buffer :hidden t :default nil)
-    ;; set consult-workspace buffer list
-    (defvar consult--source-workspace
-      (list :name     "Workspace Buffer"
-            :narrow   ?w
-            :history  'buffer-name-history
-            :category 'buffer
-            :state    #'consult--buffer-state
-            :default  t
-            :items    (lambda () (consult--buffer-query
-				  :predicate #'tabspaces--local-buffer-p
-				  :sort 'visibility
-				  :as #'buffer-name)))
+;; (use-package tabspaces
+;;   :straight (:type git :host github :repo "mclear-tools/tabspaces")
+;;   :when (display-graphic-p)
+;;   :hook (after-init . tabspaces-mode) ;; use this only if you want the minor-mode loaded at startup. 
+;;   :commands (tabspaces-switch-or-create-workspace
+;;              tabspaces-open-or-create-project-and-workspace)
+;;   :custom
+;;   (tabspaces-default-tab "Default")
+;;   (tabspaces-remove-to-default t)
+;;   (tabspaces-include-buffers '("*scratch*" "*Messages*"))
+;;   ;; sessions
+;;   ;; (tabspaces-session t)
+;;   ;; (tabspaces-session-auto-restore t)
 
-      "Set workspace buffer list for consult-buffer.")
-    (add-to-list 'consult-buffer-sources 'consult--source-workspace)))
+;;   :config
+;;   ;; Filter Buffers for Consult-Buffer
+;;   (with-eval-after-load 'consult
+;;     ;; hide full buffer list (still available with "b" prefix)
+;;     (consult-customize consult--source-buffer :hidden t :default nil)
+;;     ;; set consult-workspace buffer list
+;;     (defvar consult--source-workspace
+;;       (list :name     "Workspace Buffer"
+;;             :narrow   ?w
+;;             :history  'buffer-name-history
+;;             :category 'buffer
+;;             :state    #'consult--buffer-state
+;;             :default  t
+;;             :items    (lambda () (consult--buffer-query
+;; 				  :predicate #'tabspaces--local-buffer-p
+;; 				  :sort 'visibility
+;; 				  :as #'buffer-name)))
+
+;;       "Set workspace buffer list for consult-buffer.")
+;;     (add-to-list 'consult-buffer-sources 'consult--source-workspace)))
+
+(use-package easysession
+  :straight t
+  :commands (easysession-switch-to
+             easysession-save-as
+             easysession-save-mode
+             easysession-load-including-geometry)
+
+  :custom
+  (easysession-mode-line-misc-info t)  ; Display the session in the modeline
+  (easysession-save-interval (* 10 60))  ; Save every 10 minutes
+
+  :init
+  (add-hook 'emacs-startup-hook #'easysession-load-including-geometry 102)
+  (add-hook 'emacs-startup-hook #'easysession-save-mode 103)
+  :config
+  ;; kill all buffers before loading a session
+  (defun kill-old-session-buffers ()
+    (save-some-buffers t)
+    (mapc #'kill-buffer
+          (cl-remove-if
+           (lambda (buffer)
+             (string= (buffer-name buffer) "*Messages*"))
+           (buffer-list)))
+    (delete-other-windows))
+  (add-hook 'easysession-before-load-hook #'kill-old-session-buffers)
+  (add-hook 'easysession-new-session-hook #'kill-old-session-buffers)
+  ;; handle Emacs daemon mode
+  (when (daemonp)
+    (defun my-setup-easy-session ()
+      (easysession-load-including-geometry)
+      (easysession-save-mode)
+      (remove-hook 'server-after-make-frame-hook #'my-setup-easy-session))
+
+    (add-hook 'server-after-make-frame-hook #'my-setup-easy-session)))
 
 (use-package ace-window
   :straight t

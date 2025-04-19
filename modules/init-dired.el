@@ -9,7 +9,8 @@
   (dired-mouse-drag-files t)                   ; added in Emacs 29
   (mouse-drag-and-drop-region-cross-program t) ; added in Emacs 29
   (dired-kill-when-opening-new-dired-buffer t)
-  (delete-by-moving-to-trash t))
+  ;; (delete-by-moving-to-trash t)
+  )
 
 (use-package dired-single
   :straight t
@@ -45,9 +46,7 @@
   (setq dirvish-mode-line-format
         '(:left (sort symlink) :right (vc-info yank index)))
   (setq dirvish-attributes
-        '(nerd-icons vc-state git-msg))
-  (setq delete-by-moving-to-trash t))
-  
+        '(nerd-icons vc-state git-msg)))
 
 (provide 'init-dired)
 ;;; init-dired.el ends here

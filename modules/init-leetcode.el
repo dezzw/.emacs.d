@@ -7,7 +7,7 @@
   :straight '(:type git :host github :repo "ginqi7/leetcode-emacs")
   :commands (leetcode-list-all)
   :config
-  (setq leetcode-language "java"))
+  (setq leetcode-language "swift"))
 
 (provide 'init-leetcode)
 ;;; init-leetcode.el ends here

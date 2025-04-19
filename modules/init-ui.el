@@ -10,6 +10,9 @@
 		      :font "MonaspiceRn Nerd Font Mono"
 		      :slant 'italic)
 
+  (set-face-attribute 'shadow nil
+		      :font "MonaspiceKr Nerd Font Mono")
+
   ;; Set the fixed pitch face
   ;; (set-face-attribute 'fixed-pitch nil
   ;; 		    :font "Operator Mono SSm Lig"
@@ -30,6 +33,13 @@
      'font-lock-variable-name-face nil :weight 'demibold)
     (set-face-attribute
      'font-lock-function-name-face nil :weight 'demibold)))
+
+(defun dw/org-font-setup()
+  (interactive)
+  (set-face-attribute 'default nil
+		      :font "Maple Mono NF CN"
+		      :height 120))
+
 
 (use-package ligature
   :straight t
@@ -138,16 +148,18 @@
   ("C-M--" . transwin-dec)
   ("C-M-0" . transwin-toggle))
 
-;; (use-package hl-todo
-;;   :config
-;;   (setq hl-todo-keyword-faces
-;;         '(("TODO"   . "#61d290")
-;; 	  ("IMPLEMENT" . "#61d290")
-;;           ("FIXME"  . "#FF0000")
-;;           ("DEBUG"  . "#A020F0")
-;;           ("NEXT" . "#FF4500")
-;;           ("UNCHECK"   . "#1E90FF")))
-;;   (global-hl-todo-mode))
+(use-package hl-todo
+  :straight t
+  :defer t
+  :config
+  (setq hl-todo-keyword-faces
+        '(("TODO"   . "#61d290")
+	  ("IMPLEMENT" . "#61d290")
+          ("FIXME"  . "#FF0000")
+          ("DEBUG"  . "#A020F0")
+          ("NEXT" . "#FF4500")
+          ("UNCHECK"   . "#1E90FF")))
+  (global-hl-todo-mode))
 
 (use-package diff-hl
   :straight t
@@ -197,6 +209,12 @@
         scroll-margin 0) 
   :config
   (ultra-scroll-mode 1))
+
+(use-package indent-bars
+  :straight t
+  :hook (prog-mode . indent-bars-mode))
+;; :custom
+;; (indent-bars-prefer-character t))
 
 (use-package image-slicing
   :straight '(:type git :host github :repo "ginqi7/image-slicing")

@@ -2,6 +2,9 @@
 
 (use-package sly
   :straight t
-  :mode "\\.lisp\\'")
+  :commands (sly sly-connect)
+  :init
+  (load (expand-file-name "~/.roswell/helper.el"))
+  (setq inferior-lisp-program "ros -Q run"))
 
 (provide 'init-clisp)

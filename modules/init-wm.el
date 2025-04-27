@@ -88,6 +88,7 @@
 ;;     (add-to-list 'consult-buffer-sources 'consult--source-workspace)))
 
 (use-package easysession
+  :disabled
   :straight t
   :commands (easysession-switch-to
              easysession-save-as
@@ -102,6 +103,22 @@
   (add-hook 'emacs-startup-hook #'easysession-load-including-geometry 102)
   (add-hook 'emacs-startup-hook #'easysession-save-mode 103)
   :config
+  ;; startup with a empty session
+  (defun +empty-easysession ()
+    "Set up a minimal environment when easysession creates a new session."
+    (when (and (boundp 'tab-bar-mode) tab-bar-mode)
+      (tab-bar-close-other-tabs))
+    (delete-other-windows)
+    (scratch-buffer))
+
+  (add-hook 'easysession-new-session-hook #'+empty-easysession)
+  ;; save only main seession
+  (defun +easysession-excepted-main-saved ()
+    "Only save the main session."
+    (when (not (string= "main" (easysession-get-current-session-name)))
+      t))
+  (setq easysession-save-mode-predicate '+easysession-excepted-main-saved)
+  
   ;; kill all buffers before loading a session
   (defun kill-old-session-buffers ()
     (save-some-buffers t)
@@ -115,12 +132,12 @@
   (add-hook 'easysession-new-session-hook #'kill-old-session-buffers)
   ;; handle Emacs daemon mode
   (when (daemonp)
-    (defun my-setup-easy-session ()
+    (defun +setup-easy-session ()
       (easysession-load-including-geometry)
       (easysession-save-mode)
-      (remove-hook 'server-after-make-frame-hook #'my-setup-easy-session))
+      (remove-hook 'server-after-make-frame-hook #'+setup-easy-session))
 
-    (add-hook 'server-after-make-frame-hook #'my-setup-easy-session)))
+    (add-hook 'server-after-make-frame-hook #'+setup-easy-session)))
 
 (use-package ace-window
   :straight t

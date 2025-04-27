@@ -9,8 +9,8 @@
                                               search-ring
                                               regexp-search-ring
                                               extended-command-history
-					      easysession--current-session-name)
-              savehist-autosave-interval 300))
+					      ;; easysession--current-session-name
+					      )))
 
 ;; Enable vertico
 (use-package vertico

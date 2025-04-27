@@ -34,12 +34,12 @@
     :stream t                             ;Stream responses
     :models '(deepseek-r1:8b)))          ;List of models
 
-(use-package copilot
-  :straight (:host github :repo "copilot-emacs/copilot.el" :files ("*.el"))
-  :hook prog-mode
-  :bind (:map copilot-completion-map
-	      ("<tab>" . copilot-accept-completion)
-	      ("TAB" . copilot-accept-completion)))
+;; (use-package copilot
+  ;; :straight (:host github :repo "copilot-emacs/copilot.el" :files ("*.el"))
+  ;; :hook prog-mode
+  ;; :bind (:map copilot-completion-map
+  ;; 	      ("<tab>" . copilot-accept-completion)
+  ;; 	      ("TAB" . copilot-accept-completion)))
 
 (use-package copilot-chat
   :straight (:host github :repo "chep/copilot-chat.el")

@@ -71,9 +71,16 @@
   :straight t
   :commands (vdiff-buffer))
 
-(use-package restclient
+;; (use-package restclient
+;;   :straight t
+;;   :mode (("\\.rest\\'" . restclient-mode)))
+
+(use-package verb
   :straight t
-  :mode (("\\.rest\\'" . restclient-mode)))
+  :after org
+  :config
+  (with-eval-after-load 'org
+    (define-key org-mode-map (kbd "C-c C-r") verb-command-map)))
 
 ;;; try out both developing documents
 (use-package devdocs

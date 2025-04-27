@@ -1,3 +1,16 @@
+From 5d1417052bb7e12f011e67c2a48499ca671679c8 Mon Sep 17 00:00:00 2001
+From: Boris Buliga <boris@d12frosted.io>
+Date: Sat, 21 Dec 2024 09:11:36 -0800
+Subject: [PATCH] provide a way to make undecorated frame with round corners (fixed version for Emacs 31)
+
+---
+ src/frame.c  |  3 +++
+ src/frame.h  |  4 ++++
+ src/nsfns.m  |  6 ++++++
+ src/nsterm.h |  2 ++
+ src/nsterm.m | 54 +++++++++++++++++++++++++++++++++++++++++++++++++++-
+ 5 files changed, 68 insertions(+), 1 deletion(-)
+
 diff --git a/src/frame.c b/src/frame.c
 index 550fd336ff9..fd670cfa288 100644
 --- a/src/frame.c
@@ -170,3 +183,6 @@ index 89664ad3f4d..0aa17a7fa10 100644
        || [self styleMask] == NSWindowStyleMaskBorderless
        || !FRAME_EXTERNAL_TOOL_BAR (f)
        || [self toolbar] != nil)
+-- 
+2.47.0
+

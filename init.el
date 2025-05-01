@@ -1,120 +1,119 @@
-;;; package --- init file -*- lexical-binding: t; -*-
+;;; init.el --- Load the full configuration -*- lexical-binding: t -*-
 ;;; Commentary:
 
+;; This file bootstraps the configuration, which is divided into
+;; a number of other files.
+
 ;;; Code:
-;;
-;; Speed up startup
-;;
 
-;; Defer garbage collection further back in the startup process
-;; (setq gc-cons-threshold most-positive-fixnum)
+;; Produce backtraces when errors occur: can be helpful to diagnose startup issues
+;; (setq debug-on-error t)
+;; ignore native compile warning
+(setq warning-minimum-level :emergency)
 
-;; Prevent flashing of unstyled modeline at startup
-;; (setq-default mode-line-format nil)
+;; Enable with t if you prefer
+(defconst *spell-check-support-enabled* nil )
+(defconst *is-mac* (eq system-type 'darwin))
+(defconst *is-linux* (memq system-type '(gnu gnu/linux gnu/kfreebsd berkeley-unix)))
+(defconst *org-path* "~/Documents/Org/")
+(defconst *fallback-fonts* '("Jigmo" "Jigmo2" "Jigmo3"))
+(defconst *emoji-fonts* '("Apple Color Emoji"
+                          "Noto Color Emoji"
+                          "Noto Emoji"
+                          "Segoe UI Emoji"
+                          "Symbola"))
+(defconst *default-font* "MonaspiceAr Nerd Font Mono")
+(defconst *org-font* "MonaspiceAr Nerd Font Mono")
+(defconst *term-default-font* "MonaspiceAr Nerd Font Mono")
+(defconst *prog-font* "MonaspiceAr Nerd Font Mono")
+(defconst *zh-default-font* "LXGW WenKai")
+(defconst *jp-default-font* "Noto Sans Javanese")
+(defconst *symbol-default-font* "Symbols Nerd Font Mono")
 
-;; Don't pass case-insensitive to `auto-mode-alist'
-;; (setq auto-mode-case-fold nil)
+;; Install straight.el
+;; branch develop
+(setq straight-repository-branch "develop")
+(setq straight-check-for-modifications '(check-on-save find-when-checking))
+(defvar bootstrap-version)
+(let ((bootstrap-file
+       (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
+      (bootstrap-version 6))
+  (unless (file-exists-p bootstrap-file)
+    (with-current-buffer
+        (url-retrieve-synchronously
+         "https://raw.githubusercontent.com/radian-software/straight.el/develop/install.el"
+         'silent 'inhibit-cookies)
+      (goto-char (point-max))
+      (eval-print-last-sexp)))
+  (load bootstrap-file nil 'nomessage))
 
-;; (unless (or (daemonp) noninteractive init-file-debug)
-;;   ;; Suppress file handlers operations at startup
-;;   ;; `file-name-handler-alist' is consulted on each call to `require' and `load'
-;;   (let ((old-value file-name-handler-alist))
-;;     (setq file-name-handler-alist nil)
-;;     (set-default-toplevel-value 'file-name-handler-alist file-name-handler-alist)
-;;     (add-hook 'emacs-startup-hook
-;;               (lambda ()
-;;                 "Recover file name handlers."
-;;                 (setq file-name-handler-alist
-;;                       (delete-dups (append file-name-handler-alist old-value))))
-;;               101)))
+;; install packages
+(defvar *use-package-list*
+  '(setup
+       nov sis plz avy mpv cape wgrep  nerd-icons
+       corfu vundo forge verb elfeed popper embark dimmer vertico
+       diredfl separedit cdlatex consult mmm-mode scratch
+       diff-hl goggles web-mode js2-mode move-dup diminish
+       doom-modeline git-link apheleia pdf-tools ox-pandoc
+       macrostep json-mode orderless kind-icon git-modes git-blamed
+       org-modern ace-pinyin marginalia org-remark
+       denote-org denote-markdown rainbow-mode prettier-js
+       vterm vterm-toggle org-cliplink language-detection meow-tree-sitter
+       markdown-mode mode-line-bell embark-consult speed-type
+       typescript-mode nerd-icons-dired command-log-mode
+       browse-kill-ring rainbow-delimiters default-text-scale denote
+       nerd-icons-corfu nerd-icons-completion whitespace-cleanup-mode
+       eshell-syntax-highlighting consult-dir dirvish swift-mode
+       color-theme-sanityinc-tomorrow highlight-parentheses
+       lsp-mode lsp-tailwindcss lsp-sourcekit lsp-haskell lsp-java lsp-pyright
+       lsp-ui dap-mode flycheck consult-lsp clojure-mode cider babashka neil
+       aggressive-indent-mode
+       (image-slicing :host github :repo "ginqi7/image-slicing")
+       (emt :host github :repo "roife/emt")
+       (meow :host github :repo "meow-edit/meow")
+       (gptel :host github :repo "karthink/gptel")
+       (ultra-scroll :host github :repo "jdtsmith/ultra-scroll")
+       (treesit-auto :host github :repo "LuciusChen/treesit-auto")
+       (telega :host github :repo "LuciusChen/telega.el")
+       (md :host github :repo "eki3z/md")
+       ;; (telega :host github :repo "zevlg/telega.el")
+       (yasnippet :host github :repo "joaotavora/yasnippet")
+       (panel :host github :repo "LuciusChen/panel")
+       (indent-bars :host github :repo "jdtsmith/indent-bars")
+       (vertico-posframe :host github :repo "tumashu/vertico-posframe")
+       (copilot-chat :host github :repo "chep/copilot-chat.el")
+       (copilot :host github :repo "zerolfx/copilot.el" :files ("dist" "*.el"))
+       ))
 
-;; Load path
-;; Optimize: Force "lisp"" and "site-lisp" at the head to reduce the startup time.
-(defun update-load-path (&rest _)
-  "Update `load-path'."
-  (dolist (dir '("modules" "test"))
-    (push (expand-file-name dir user-emacs-directory) load-path)))
+(dolist (e *use-package-list*) (straight-use-package e))
+(setq vc-follow-symlinks t)
 
-;; (defun add-subdirs-to-load-path (&rest _)
-;;   "Add subdirectories to `load-path'.
-;;    Don't put large files in `site-lisp' directory, e.g. EAF.
-;;    Otherwise the startup will be very slow."
-;;   (let ((default-directory (expand-file-name "site-lisp" user-emacs-directory)))
-;;     (normal-top-level-add-subdirs-to-load-path)))
+;; load module settings
+(dolist (dir '("modules" "lib" "site-lisp"))
+  (add-to-list 'load-path (expand-file-name dir user-emacs-directory)))
 
-;; (advice-add #'package-initialize :after #'add-subdirs-to-load-path)a
-
-(update-load-path)
-
-(require 'init-util)
-(require 'init-package)
-
-(require 'init-base)
-
-(require 'init-env)
-
+(require 'init-setup)
+(when *is-mac* (require 'init-mac))
 (require 'init-ui)
 
-(require 'init-edit)
-(require 'init-helpful)
-
-(require 'init-dired)
-
-(require 'init-term)
-(require 'init-org)
-
-(require 'init-hydra)
-
-(require 'init-wm)
-
-;; project management
-(require 'init-project)
-
-;; prog
-(require 'init-prog)
-(require 'init-dap)
-;;; lsp config
-;; (require 'init-lspbridge)
-;; (require 'init-eglot)
-(require 'init-lsp)
-(require 'init-ctags)
-(require 'init-jupyter)
-(require 'init-ai)
-
-;;; lang
-(require 'init-treesit)
-(require 'init-web)
-(require 'init-cc)
-(require 'init-python)
-(require 'init-go)
-(require 'init-clojure)
-(require 'init-clisp)
-(require 'init-gdscript)
-(require 'init-markdown)
-(require 'init-docker)
-(require 'init-haskell)
-(require 'init-nix)
-(require 'init-swift)
-(require 'init-zig)
-(require 'init-rust)
-(require 'init-tex)
-(require 'init-db)
-(require 'init-lua)
-
-;; terms
-(require 'init-term)
-
-;; magit
-(require 'init-magit)
-
-;; social media
-(require 'init-telega)
-
-(require 'init-leetcode)
-
-(require 'init-tramp)
-(require 'init-telega)
-
-(require 'init-tools)
-
+(require 'init-editing)
+(require 'init-vc)
+(require 'init-minibuffer)
 (require 'init-completion)
+(require 'init-prog)
+(require 'init-nav)
+;; (require 'init-transient)
+
+(require 'init-org)
+(require 'init-reader)
+
+(require 'init-shell)
+
+(require 'init-local)
+
+(provide 'init)
+;; Local Variables:
+;; coding: utf-8
+;; no-byte-compile: t
+;; End:
+;;; init.el ends here

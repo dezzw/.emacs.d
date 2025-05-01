@@ -1,197 +1,222 @@
-;;; init-prog.el --- prog mode related -*- lexical-binding: t; -*-
+;; init-prog.el --- Measure startup and require times -*- lexical-binding: t -*-
 ;;; Commentary:
-
 ;;; Code:
 
-(use-package elec-pair
-  :straight nil
-  :hook ((prog-mode conf-mode yaml-mode org-mode markdown-mode minibuffer-mode) . electric-pair-mode))
+(define-derived-mode vue-mode web-mode "Vue")
+(define-derived-mode my-html-mode web-mode "Web")
+(define-derived-mode jsp-mode web-mode "Web")
+(define-derived-mode wxss-mode css-mode "CSS")
+(define-derived-mode wxml-mode html-mode "HTML")
+(define-derived-mode basilisp-mode clojure-mode "Basilisp")
 
-(use-package electric
-  :straight nil
-  :config (electric-indent-mode))
+(setup (:with-mode vue-mode (:file-match "\\.vue\\'"))
+  (:with-mode jsp-mode (:file-match "\\.jsp\\'"))
+  (:with-mode emacs-lisp-mode (:file-match "\\.el\\'"))
+  (:with-mode wxss-mode (:file-match "\\.wxss\\'"))
+  (:with-mode my-html-mode (:file-match "\\.wxml\\'")
+              (:file-match "\\.html\\'"))
+  (:with-mode java-ts-mode (:file-match "\\.java\\'"))
+  (:with-mode python-ts-mode (:file-match "\\.py\\'"))
+  (:with-mode yaml-ts-mode (:file-match "\\.ya?ml\\'"))
+  (:with-mode lua-ts-mode (:file-match "\\.lua\\'"))
+  (:with-mode tsx-ts-mode (:file-match "\\.tsx\\'")
+              (:file-match "\\.jsx\\'"))
+  (:with-mode js-mode (:file-match "\\.js\\'")
+              (:file-match "\\.es6\\'")
+              (:file-match "\\.js\\.erb\\'")
+              (:file-match "\\.es6\\.erb\\'"))
+  (:with-mode typescript-ts-mode (:file-match "\\.mjs\\'")
+              (:file-match "\\.mts\\'")
+              (:file-match "\\.cjs\\'")
+              (:file-match "\\.ts\\'"))
+  (:with-mode json-ts-mode (:file-match "\\.json\\'"))
+  (:with-mode dockerfile-ts-mode (:file-match "\\.Dockerfile\\'"))
+  (:with-mode markdown-ts-mode (:file-match "\\.md\\'"))
+  (:with-mode basilisp-mode (:file-match "\\.lpy\\'")))
 
-;; (use-package rainbow-mode
-;;   :straight t)
+(setup display-fill-column-indicator (:hook-into prog-mode))
+(setup display-line-numbers (:hook-into prog-mode))
 
-(use-package rainbow-delimiters
-  :straight t
-  :hook (prog-mode))
+(setup web-mode
+  (:option web-mode-markup-indent-offset 2
+           web-mode-code-indent-offset 2
+           web-mode-enable-current-column-highlight t))
 
-(use-package colorful-mode
-  :straight t
-  :hook (prog-mode text-mode)
-  :custom
-  (colorful-use-prefix t))
+(setup verb (:option verb-babel-timeout 60.0))
 
+(setup python
+  (:option python-indent-guess-indent-offset t
+           python-indent-guess-indent-offset-verbose nil))
 
-;; (use-package prism
-;;   :straight t)
+(setup apheleia
+  (:with-mode prog-mode (:require apheleia)
+              (:hook apheleia-global-mode))
+  (:when-loaded
+    (:global "C-c C-x C-f" apheleia-format-buffer)
+    ;; $ brew install isort black google-java-format stylua libxml2
+    ;; $ npm install -g prettier
+    (setf (alist-get 'google-java-format apheleia-formatters)
+          '("google-java-format" "--aosp" filepath))
+    (setf (alist-get 'stylua apheleia-formatters)
+          '("stylua" "--indent-type" "Spaces" filepath))
+    (setf (alist-get 'xmllint apheleia-formatters)
+          '("xmllint" "--encode" "utf-8" "--format" "-"))
 
-(use-package aggressive-indent
-  :straight t
-  :hook (python-mode emacs-lisp-mode clojure-mode clojurescript-mode fennel-mode))
+    (setf (alist-get 'python-ts-mode     apheleia-mode-alist) '(isort black))
+    (setf (alist-get 'my-html-mode       apheleia-mode-alist) 'prettier-html)
+    (setf (alist-get 'sql-mode           apheleia-mode-alist) 'pgformatter)
+    (setf (alist-get 'xml-mode           apheleia-mode-alist) 'xmllint)
+    (setf (alist-get 'nxml-mode          apheleia-mode-alist) 'xmllint)
+    (setf (alist-get 'css-mode           apheleia-mode-alist) 'prettier)
+    (setf (alist-get 'typescript-ts-mode apheleia-mode-alist) 'prettier)
+    (setf (alist-get 'js-ts-mode         apheleia-mode-alist) 'prettier)))
 
-(use-package paren
-  :custom-face (show-paren-match ((t (:foreground "SpringGreen3" :underline t :weight bold))))
-  :config
-  (setq show-paren-when-point-inside-paren t
-        show-paren-when-point-in-periphery t
-        show-paren-context-when-offscreen t
-        show-paren-delay 0.2))
+(setup mmm-mode
+  (:with-mode prog-mode (:require mmm-mode))
+  (:when-loaded
+    (:option mmm-parse-when-idle t
+             mmm-global-classes nil
+             mmm-classes-alist nil
+             mmm-mode-ext-classes-alist nil
+             mmm-submode-decoration-level 0)
+    (:hook-into nxml-mode)
+    (mmm-add-classes
+     '((nxml-sql-select :submode sql-mode
+                        :front "<select[^>]*>[ \t]*\n" :back "[ \t]*</select>")
+       (nxml-sql-insert :submode sql-mode
+                        :front "<insert[^>]*>[ \t]*\n" :back "[ \t]*</insert>")
+       (nxml-sql-update :submode sql-mode
+                        :front "<update[^>]*>[ \t]*\n" :back "[ \t]*</update>")
+       (nxml-sql-delete :submode sql-mode
+                        :front "<delete[^>]*>[ \t]*\n" :back "[ \t]*</delete>")))
+    (dolist (class '(nxml-sql-select nxml-sql-insert nxml-sql-update nxml-sql-delete))
+      (mmm-add-mode-ext-class 'nxml-mode nil class))))
 
-(use-package highlight-parentheses
-  :straight t
-  :hook ((minibuffer-setup . highlight-parentheses-minibuffer-setup)
-         (prog-mode . highlight-parentheses-mode))
-  :config
-  (setq highlight-parentheses-colors '("firebrick1" "firebrick3" "orange1" "orange3")
-        highlight-parentheses-attributes '((:underline t) (:underline t) (:underline t))
-        highlight-parentheses-delay 0.2))
+(setup lisp-mode
+  (:also-load lib-lisp)
+  (:require macrostep)
+  (global-set-key [remap eval-expression] 'pp-eval-expression)
+  (:with-map emacs-lisp-mode-map
+    (:bind
+     "C-x C-e" +eval-last-sexp-or-region
+     "C-c C-e" pp-eval-expression
+     "C-c C-l" +load-this-file
+     "C-c x"   macrostep-expand))
+  (:advice pp-display-expression :after +make-read-only)
+  (:hooks emacs-lisp-mode-hook +maybe-set-bundled-elisp-readonly))
 
-(use-package savefold
-  ;; :disable
-  :straight '(:host github :repo "jcfk/savefold.el")
-  :init
-  (setq savefold-backends '(outline org hideshow))
-  (setq savefold-directory (locate-user-emacs-file "savefold"))  ;; default
+;; or the product can be set from a comment on the first line
+;; -- -*- mode: sql; sql-product: mysql; -*-
+;; https://stackoverflow.com/questions/27704367/emacs-how-to-set-the-default-database-type-for-a-sql-file-in-sql-mode
+(setup sql (:when-loaded (sql-set-product 'mysql)))
 
-  :config
-  (savefold-mode 1))
+(setup project
+  (:option project-vc-extra-root-markers
+           '("package.json" "deps.edn" "project.clj" "Package.swift" ".envrc" ".tags" ".project")))
 
-(use-package hl-line
-  :hook (after-init . global-hl-line-mode)
-  :config
-  (setq hl-line-sticky-flag nil)
-  ;; Highlight starts from EOL, to avoid conflicts with other overlays
-  (setq hl-line-range-function (lambda () (cons (line-end-position)
-						(line-beginning-position 2)))))
+(setup js
+  (:also-load lib-js)
+  (:when-loaded
+    (setq-default js-indent-level 2)
+    (+major-mode-lighter 'js-mode "JS")
+    (+major-mode-lighter 'js-jsx-mode "JSX")))
 
-(use-package vdiff
-  :straight t
-  :commands (vdiff-buffer))
+;; js2-mode
+(setup js2-mode
+  (:when-loaded
+    (:hooks js-mode-hook +enable-js2-checks-if-flymake-inactive
+            js2-mode-hook +enable-js2-checks-if-flymake-inactive)
+    ;; Change some defaults: customize them to override
+    (setq-default js2-bounce-indent-p nil)
+    ;; Disable js2 mode's syntax error highlighting by default...
+    (setq-default js2-mode-show-parse-errors nil
+                  js2-mode-show-strict-warnings nil)
+    (js2-imenu-extras-setup)
+    (add-to-list 'interpreter-mode-alist (cons "node" 'js2-mode))
+    (+major-mode-lighter 'js2-mode "JS2")
+    (+major-mode-lighter 'js2-jsx-mode "JSX2")))
 
-;; (use-package restclient
-;;   :straight t
-;;   :mode (("\\.rest\\'" . restclient-mode)))
+(setup xref
+  ;; 用 Popper 替代了 +xref-show-xrefs 以及 :option 配置
+  ;;
+  ;;   (defun +xref-show-xrefs (fetcher display-action)
+  ;;     "Display some Xref values produced by FETCHER using DISPLAY-ACTION.
+  ;; Do not jump to the first xref, just move the focus to the xref window."
+  ;;     (let ((buf (xref--show-xref-buffer fetcher
+  ;;                                        `((window . ,(selected-window))
+  ;;                                          (display-action . ,display-action)
+  ;;                                          (auto-jump . nil)))))
+  ;;       (let ((window (get-buffer-window buf)))
+  ;;         (when window
+  ;;           (select-window window)))))
 
-(use-package verb
-  :straight t
-  :after org
-  :config
-  (with-eval-after-load 'org
-    (define-key org-mode-map (kbd "C-c C-r") verb-command-map)))
+  (defun +xref-quit-window ()
+    "Quit the xref window."
+    (let ((xref-window (get-buffer-window "*xref*")))
+      (when xref-window
+        (quit-window nil xref-window))))
 
-;;; try out both developing documents
-(use-package devdocs
-  :straight t
-  :commands (devdocs-lookup))
+  (:option xref-auto-jump-to-first-xref 'move)
+  ;; (setq xref-show-xrefs-function #'+xref-show-xrefs)
+  (:hooks xref-after-jump-hook +xref-quit-window))
 
-(use-package compile
-  :defer t
-  :hook ((compilation-filter . ansi-color-compilation-filter))
-  :bind (("C-x C-m" . recompile))
-  :config
-  (setopt compilation-scroll-output t)
-  (setopt compilation-ask-about-save nil)
-  (require 'ansi-color))
+(setup treesit-auto
+  (:defer (:require treesit-auto))
+  (:when-loaded
+    (:option treesit-auto-install 'prompt)
+    (treesit-auto-add-to-auto-mode-alist '(bash bibtex cmake commonlisp css dockerfile html java javascript json latex make lua org python rust ruby sql toml typescript typst vue yaml))
+    (global-treesit-auto-mode)))
 
-(use-package smart-compile
-  :straight t
-  :after compile)
+(setup indent-bars
+  (:with-mode (java-ts-mode python-ts-mode vue-mode typescript-mode typescript-ts-mode js-mode)
+    (:require indent-bars)
+    (:hook indent-bars-mode))
+  (:when-loaded
+    (:option indent-bars-color '(highlight :face-bg t :blend 0.15)
+             indent-bars-pattern "."
+             indent-bars-width-frac 0.1
+             indent-bars-pad-frac 0.1
+             indent-bars-zigzag nil
+             indent-bars-color-by-depth '(:regexp "outline-\\([0-9]+\\)" :blend 1) ; blend=1: blend with BG only
+             indent-bars-highlight-current-depth '(:blend 0.5 :width 0.5) ; pump up the BG blend on current
+             indent-bars-display-on-blank-lines t
+             ;; indent-bars-display-on-blank-lines nil
+             indent-bars-treesit-support t
+             indent-bars-no-descend-string t
+             indent-bars-prefer-character t
+             indent-bars-no-stipple-char ?\u2502
+             indent-bars-treesit-scope '((python function_definition class_definition for_statement
+                                                 if_statement with_statement while_statement)))))
 
-(use-package compile-multi
-  :straight t
-  :after compile)
+(setup dap-mode
+  (:load-after lsp-mode)
+  (:when-loaded
+    (:option dap-auto-configure-features '(sessions locals controls tooltip))
+    (:with-map dap-mode-map
+      (:bind
+       "C-x D D" dap-debug
+       "C-x D d" dap-debug-last)))
+  (:with-mode python-ts-mode
+    (:hook
+     (lambda ()
+       (require 'dap-python)
+       (setq dap-python-debugger 'debugpy))))
 
-(use-package consult-compile-multi
-  :when (featurep 'compile-multi)
-  :straight t
-  :after compile-multi
-  :demand t
-  :config (consult-compile-multi-mode))
+  (:with-mode java-ts-mode
+    (:hook
+     (lambda ()
+       (require 'dap-java)))))
 
-(use-package compile-multi-nerd-icons
-  :when (featurep 'compile-multi)
-  :straight t
-  :after nerd-icons-completion
-  :after compile-multi
-  :demand t)
+(setup separedit
+  (:defer (:require separedit))
+  (:when-loaded
+    (:with-map prog-mode-map (:bind "C-c '" separedit))
+    (:with-map minibuffer-mode-map (:bind "C-c '" separedit))
+    (:with-map help-mode-map (:bind "C-c '" separedit))
+    (:option separedit-default-mode 'org-mode)))
 
-(use-package compile-multi-embark
-  :when (featurep 'compile-multi)
-  :straight t
-  :after embark
-  :after compile-multi
-  :demand t
-  :config (compile-multi-embark-mode +1))
-
-(use-package tabnine
-  :straight t
-  ;; :diminish "⌬"
-  :defer t
-  :custom
-  (tabnine-wait 1)
-  (tabnine-minimum-prefix-length 0)
-  :hook (kill-emacs . tabnine-kill-process))
-;; :config
-;; (add-to-list 'completion-at-point-functions #'tabnine-completion-at-point)
-;; ;; (add-to-list 'nerd-icons-corfu-mapping `(tabnine ,(nerd-icons-codicon "nf-cod-hubot") :face font-lock-warning-face) t)
-;; (tabnine-start-process)
-;; :bind
-;; (:map  tabnine-completion-map
-;; 	 ("<tab>" . tabnine-accept-completion)
-;; 	 ("TAB" . tabnine-accept-completion)
-;; 	 ("M-f" . tabnine-accept-completion-by-word)
-;; 	 ("M-<return>" . tabnine-accept-completion-by-line)
-;; 	 ("C-g" . tabnine-clear-overlay)
-;; 	 ("M-[" . tabnine-previous-completion)
-;; 	 ("M-]" . tabnine-next-completion)))
-
-(use-package jinx
-  :straight '(jinx :host github :repo "minad/jinx" :fork "dezzw")
-  :hook (emacs-startup . global-jinx-mode)
-  :bind (("M-$" . jinx-correct)
-         ("C-M-$" . jinx-languages))
-  :config
-  ;; See issue https://github.com/minad/jinx/issues/4
-  ;; This is the syntax table approach. It changes CJK characters from "w" (
-  ;; word constituent) to "_" (symbol constituent). You can use `describe-char'
-  ;; to view a characters' specific syntax category (from major mode syntax table).
-  ;; Emacs 29 supports Unicode 15, the code charts of which can be found at
-  ;; http://www.unicode.org/charts/ (use mouse hover to show the specific range)
-  (let ((st jinx--base-syntax-table))
-    (modify-syntax-entry '(#x4E00 . #x9FFF) "_" st)   ; CJK Unified Ideographs
-    (modify-syntax-entry '(#x3400 . #x4DBF) "_" st)   ; CJK Unified Ideographs Extension A
-    (modify-syntax-entry '(#x20000 . #x2A6DF) "_" st) ; CJK Unified Ideographs Extension B
-    (modify-syntax-entry '(#x2A700 . #x2B73F) "_" st) ; CJK Unified Ideographs Extension C
-    (modify-syntax-entry '(#x2B740 . #x2B81F) "_" st) ; CJK Unified Ideographs Extension D
-    (modify-syntax-entry '(#x2B820 . #x2CEAF) "_" st) ; CJK Unified Ideographs Extension E
-    (modify-syntax-entry '(#x2CEB0 . #x2EBEF) "_" st) ; CJK Unified Ideographs Extension F
-    (modify-syntax-entry '(#x30000 . #x3134F) "_" st) ; CJK Unified Ideographs Extension G
-    (modify-syntax-entry '(#x31350 . #x323AF) "_" st) ; CJK Unified Ideographs Extension H
-    (modify-syntax-entry '(#x2EBF0 . #x2EE5F) "_" st) ; CJK Unified Ideographs Extension I
-    ))
-
-(use-package eee
-  :straight '(:type git :host github :repo "eval-exec/eee.el"
-                    :files (:defaults "*.el" "*.sh"))
-  :config
-  (setq ee-terminal-command "wezterm"))
-
-(use-package editorconfig
-  :demand t
-  :config
-  (defun oxcl/update-indent-bars-with-editorconfig (size)
-    (when (bound-and-true-p indent-bars-mode)
-      (setq indent-bars-spacing-override size)
-      (indent-bars-reset)))
-  (dolist (_mode editorconfig-indentation-alist)
-    (let ((_varlist (cdr _mode)))
-      (setcdr _mode (append '((_ . oxcl/update-indent-bars-with-editorconfig))
-                            (if (listp _varlist) _varlist `(,_varlist))))))
-  (editorconfig-mode 1))
-
+(setup cider
+  (:load-after clojure-mode))
 
 (provide 'init-prog)
 ;;; init-prog.el ends here

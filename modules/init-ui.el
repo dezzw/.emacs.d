@@ -1,223 +1,211 @@
-;;; -*- lexical-binding: t -*-
-(defun dw/font-setup()
-  (interactive)
-  (set-face-attribute 'default nil
-                      ;; :family "Liga SFMono Nerd Font"
-		      :font "MonaspiceAr Nerd Font Mono"
-                      :height 120)
+;;; init-ui.el --- Behaviour specific to non-TTY frames -*- lexical-binding: t -*-
+;;; Commentary:
+;;; Code:
 
-  (set-face-attribute 'italic nil
-		      :font "MonaspiceRn Nerd Font Mono"
-		      :slant 'italic)
+(setup tool-bar (:when-loaded (tool-bar-mode -1)))
+(setup scroll-bar (:when-loaded (set-scroll-bar-mode nil)))
+(setup tooltip (:when-loaded (:option tooltip-delay 2.5)))
+;; Change global font size easily
+(setup default-text-scale (:hook-into after-init))
+;; Don't scale font on trackpad pinch!
+(global-unset-key (kbd "<pinch>"))
 
-  (set-face-attribute 'shadow nil
-		      :font "MonaspiceKr Nerd Font Mono")
+;; Better fringe symbol
+(define-fringe-bitmap 'right-curly-arrow
+  [#b00000000
+   #b00000110
+   #b00001100
+   #b00011000
+   #b00110000
+   #b00011000
+   #b00001100
+   #b00000110])
 
-  ;; Set the fixed pitch face
-  ;; (set-face-attribute 'fixed-pitch nil
-  ;; 		    :font "Operator Mono SSm Lig"
-  ;; 		    :weight 'light
-  ;; 		    :height 140)
+(define-fringe-bitmap 'left-curly-arrow
+  [#b00000000
+   #b01100000
+   #b00110000
+   #b00011000
+   #b00001100
+   #b00011000
+   #b00110000
+   #b01100000])
 
-  ;; Set the variable pitch face
-  ;; (set-face-attribute 'variable-pitch nil
-  ;; 		    :font "Operator Mono SSm Lig"
-  ;; 		    :height 140
-  ;; 		    :weight 'light)
-  (progn
-    (set-face-attribute
-     'font-lock-comment-face nil :inherit 'italic)
-    (set-face-attribute
-     'font-lock-keyword-face nil :inherit 'italic)
-    (set-face-attribute
-     'font-lock-variable-name-face nil :weight 'demibold)
-    (set-face-attribute
-     'font-lock-function-name-face nil :weight 'demibold)))
+(setup window
+  (:also-load lib-window)
+  (:global "C-x |" split-window-horizontally-instead
+           "C-x _" split-window-vertically-instead
+           "C-x 3" (lambda () (interactive)(select-window (split-window-horizontally)))
+           "C-x 2" (lambda () (interactive)(select-window (split-window-vertically)))))
 
-(defun dw/org-font-setup()
-  (interactive)
-  (set-face-attribute 'default nil
-		      :font "Maple Mono NF CN"
-		      :height 120))
+(setup frame
+  (:when-loaded
+    (let ((border '(internal-border-width . 12)))
+      (add-to-list 'default-frame-alist border)
+      (add-to-list 'initial-frame-alist border))))
 
+(setup panel
+  (:option panel-latitude 43.45193874534566
+           panel-longitude -80.49129101085033
+           panel-path-max-length 35
+           panel-min-left-padding 10
+           panel-image-file (concat user-emacs-directory "assets/bitmap.png")
+           panel-image-width 400
+           panel-image-height 169
+           panel-title "The best way to predict the future is to invent it.")
+  (:face panel-title-face ((t (:inherit font-lock-constant-face :height 1.5 :italic t :family "Departure Mono"))))
+  (panel-create-hook))
 
-(use-package ligature
-  :straight t
+(setup custom
+  (:when-loaded
+    (:also-load lib-appearance)
+    (:global "M-C-8" (lambda () (interactive) (+adjust-opacity nil -2))
+             "M-C-7" (lambda () (interactive) (+adjust-opacity nil 2)))
+    ;; Don't prompt to confirm theme safety. This avoids problems with
+    ;; first-time startup on Emacs > 26.3.
+    (:option custom-safe-themes t
+             ;; If you don't customize it, this is the theme you get.
+             custom-enabled-themes '(sanityinc-tomorrow-night)
+             light-theme 'sanityinc-tomorrow-day
+             dark-theme 'sanityinc-tomorrow-night)
+
+    (when *is-mac*
+      (apply-theme-based-on-appearance)
+      (:with-hook ns-system-appearance-change-functions
+        (:hook apply-theme-based-on-appearance)))
+
+    (:with-hook window-setup-hook
+      (:hook reapply-themes)
+      (:hook opacity-dark-theme)
+      (:hook set-dividers-and-fringe-color))
+
+    (:with-hook after-make-frame-functions (:hook opacity-dark-theme))
+    (:with-hook after-init-hook (:hook reapply-themes))))
+
+(setup hl-line
+  (:option hl-line-range-function
+           (lambda () (cons (line-end-position)
+                            (line-beginning-position 2))))
+  (global-hl-line-mode))
+
+(use-package paren
+  :custom-face (show-paren-match ((t (:foreground "SpringGreen3" :underline t :weight bold))))
   :config
-  ;; Enable the "www" ligature in every possible major mode
-  (ligature-set-ligatures 't '("www"))
-  ;; Enable traditional ligature support in eww-mode, if the
-  ;; `variable-pitch' face supports it
-  (ligature-set-ligatures 'eww-mode '("ff" "fi" "ffi"))
-  ;; Enable all Cascadia Code ligatures in programming modes
-  (ligature-set-ligatures 'prog-mode '("|||>" "<|||" "<==>" "<!--" "####" "~~>" "***" "||=" "||>"
-                                       ":::" "::=" "=:=" "===" "==>" "=!=" "=>>" "=<<" "=/=" "!=="
-                                       "!!." ">=>" ">>=" ">>>" ">>-" ">->" "->>" "-->" "---" "-<<"
-                                       "<~~" "<~>" "<*>" "<||" "<|>" "<$>" "<==" "<=>" "<=<" "<->"
-                                       "<--" "<-<" "<<=" "<<-" "<<<" "<+>" "</>" "###" "#_(" "..<"
-                                       "..." "+++" "/==" "///" "_|_" "www" "&&" "^=" "~~" "~@" "~="
-                                       "~>" "~-" "**" "*>" "*/" "||" "|}" "|]" "|=" "|>" "|-" "{|"
-                                       "[|" "]#" "::" ":=" ":>" ":<" "$>" "==" "=>" "!=" "!!" ">:"
-                                       ">=" ">>" ">-" "-~" "-|" "->" "--" "-<" "<~" "<*" "<|" "<:"
-                                       "<$" "<=" "<>" "<-" "<<" "<+" "</" "#{" "#[" "#:" "#=" "#!"
-                                       "##" "#(" "#?" "#_" "%%" ".=" ".-" ".." ".?" "+>" "++" "?:"
-                                       "?=" "?." "??" ";;" "/*" "/=" "/>" "//" "__" "~~" "(*" "*)"
-                                       "\\\\" "://"))
-  ;; Enables ligature checks globally in all buffers. You can also do it
-  ;; per mode with `ligature-mode'.
-  (global-ligature-mode t))
+  (setq show-paren-when-point-inside-paren t
+        show-paren-when-point-in-periphery t
+        show-paren-context-when-offscreen t
+        show-paren-delay 0.2))
 
-;; (use-package unicode-fonts
-;;   :config
-;;   (unicode-fonts-setup))
-
-(use-package color-theme-sanityinc-tomorrow
+(use-package highlight-parentheses
   :straight t
-  :custom
-  (custom-safe-themes t))
-
-(defun dw/apply-theme (appearance)
-  "Load theme, taking current system APPEARANCE into consideration."
-  (mapc #'disable-theme custom-enabled-themes)
-  (pcase appearance
-    ;; ('light (load-theme 'modus-operandi t))
-    ;; ('dark (load-theme 'modus-vivendi t))))
-    ('light (load-theme 'sanityinc-tomorrow-day))
-    ('dark (load-theme 'sanityinc-tomorrow-night)))
-  (dw/font-setup))
-
-(add-hook 'ns-system-appearance-change-functions #'dw/apply-theme)
-;; (add-hook 'enable-theme-functions #'dw/font-setup)
-
-(use-package nerd-icons
-  :straight t
-  :defer t)
-
-(use-package svg-tag-mode
-  :straight t
-  :defer t)
-
-(use-package doom-modeline
-  :straight t
-  :hook
-  ((after-init . doom-modeline-mode)
-   (doom-modeline-mode . size-indication-mode)
-   (doom-modeline-mode . column-number-mode))
+  :hook ((minibuffer-setup . highlight-parentheses-minibuffer-setup)
+         (prog-mode . highlight-parentheses-mode))
   :config
-  (unless after-init-time
-    ;; prevent flash of unstyled modeline at startup
-    (setq-default mode-line-format nil))
-  ;; Set these early so they don't trigger variable watchers
-  (setq doom-modeline-bar-width 3
-        doom-modeline-github nil
-        doom-modeline-mu4e nil
-        doom-modeline-persp-name nil
-        doom-modeline-lsp nil
-        doom-modeline-minor-modes nil
-        doom-modeline-major-mode-icon nil
-        doom-modeline-buffer-file-name-style 'relative-from-project
-        ;; Only show file encoding if it's non-UTF-8 and different line endings
-        ;; than the current OSes preference
-        doom-modeline-buffer-encoding 'nondefault
-        doom-modeline-default-eol-type 0))
+  (setq highlight-parentheses-colors '("firebrick1" "firebrick3" "orange1" "orange3")
+        highlight-parentheses-attributes '((:underline t) (:underline t) (:underline t))
+        highlight-parentheses-delay 0.2))
 
-;; Enable liner number
-(setq display-line-numbers-type 'relative)
-(global-display-line-numbers-mode t)
+(setup highlight-parentheses
+  (:defer (:require highlight-parentheses))
+  (:when-loaded
+    (:option highlight-parentheses-colors '("firebrick1" "firebrick3" "orange1" "orange3")
+             highlight-parentheses-attributes '((:underline t) (:underline t) (:underline t))
+             highlight-parentheses-delay 0.2))
+  (:hooks minibuffer-setup-hook highlight-parentheses-minibuffer-setup)
+  (:hook-into prog-mode))
 
-;; Disable line numbers for some modes
-(dolist (mode '(org-mode-hook
-                term-mode-hook
-                vterm-mode-hook
-                shell-mode-hook
-                eshell-mode-hook
-		pdf-view-mode-hook
-                xwidget-webkit-mode-hook
-                eaf-mode-hook
-                doc-view-mode-hook
-		telega-chat-mode-hook))
-  (add-hook mode (lambda () (display-line-numbers-mode 0))))
+(when window-system
+  (setup faces
+    (:also-load lib-face)
+    (:hooks window-setup-hook +setup-fonts
+            server-after-make-frame-hook +setup-fonts
+            default-text-scale-mode-hook +setup-fonts)
+    (:with-mode (vterm-mode eshell-mode) (:set-font *term-default-font*))
+    (:with-mode (latex-mode prog-mode nxml-mode magit-status-mode magit-diff-mode diff-mode) (:set-font *prog-font*))
+    (:with-mode nov-mode (:set-font (replace-regexp-in-string "14" "16" *default-font*)))
+    (:with-mode (org-mode ebib-index-mode ebib-entry-mode) (:set-font *org-font*))
+    (:advice face-at-point :around #'+suggest-other-faces)))
 
-(use-package transwin
-  :straight t
-  :config
-  (setq transwin-delta-alpha 5)
-  (setq transwin-parameter-alpha 'alpha-background)
-  :bind
-  ("C-M-=" . transwin-inc)
-  ("C-M--" . transwin-dec)
-  ("C-M-0" . transwin-toggle))
+(setup popup-frames (:defer (:require popup-frames)))
 
-(use-package hl-todo
-  :straight t
-  :defer t
-  :config
-  (setq hl-todo-keyword-faces
-        '(("TODO"   . "#61d290")
-	  ("IMPLEMENT" . "#61d290")
-          ("FIXME"  . "#FF0000")
-          ("DEBUG"  . "#A020F0")
-          ("NEXT" . "#FF4500")
-          ("UNCHECK"   . "#1E90FF")))
-  (global-hl-todo-mode))
+(setup dimmer
+  (:defer (dimmer-mode t))
+  (:when-loaded
+    (setq-default dimmer-fraction 0.25)
+    (defun +display-non-graphic-p ()
+      (not (display-graphic-p)))
+    (add-to-list 'dimmer-exclusion-predicates '+display-non-graphic-p)
+    (:advice frame-set-background-mode :after (lambda (&rest args) (dimmer-process-all)))))
 
-(use-package diff-hl
-  :straight t
-  :hook ((magit-post-refresh . diff-hl-magit-post-refresh)
-         (after-init . global-diff-hl-mode)
-         (dired-mode . diff-hl-dired-mode)))
+(setup nerd-icons (:defer (:require nerd-icons)))
 
-;; Child frame
-(when (childframe-workable-p)
-  (use-package posframe
-    :straight t
-    :hook (after-load-theme . posframe-delete-all)
-    :init
-    (defface posframe-border
-      `((t (:inherit region)))
-      "Face used by the `posframe' border."
-      :group 'posframe)
-    (defvar posframe-border-width 2
-      "Default posframe border width.")
-    :config
-    (with-no-warnings
-      (defun my-posframe--prettify-frame (&rest _)
-        (set-face-background 'fringe nil posframe--frame))
-      (advice-add #'posframe--create-posframe :after #'my-posframe--prettify-frame)
+(setup window-navigation
+  (:defer (:require window-navigation))
+  (:when-loaded (window-navigation-mode)))
 
-      (defun posframe-poshandler-frame-center-near-bottom (info)
-        (cons (/ (- (plist-get info :parent-frame-width)
-                    (plist-get info :posframe-width))
-                 2)
-              (/ (+ (plist-get info :parent-frame-height)
-                    (* 2 (plist-get info :font-height)))
-                 2))))))
+(setup popper
+  (:global "C-~"   popper-toggle
+           "M-~"   popper-cycle
+           "C-M-`" popper-toggle-type)
+  (:option popper-window-height (lambda (win)
+                                  (fit-window-to-buffer
+                                   win
+                                   (max 26 (floor (frame-height) 2))
+                                   26))
+           popper-reference-buffers
+           '(("\\*Messages\\*"
+              "Output\\*$"
+              "\\*Async Shell Command\\*"
+              help-mode
+              compilation-mode)
+             ("\\*Help\\*$")
+             ("\\*xref\\*$")
+             ("\\*chatgpt\\*$")
+             ("\\*vterm\\*$")
+             ("\\*eshell\\*$")
+             ("\\*Org Select\\*$")
+             ("\\*Telega User\\*$")
+             ("\\*Telegram Chat Info\\*$")
+             ("\\*Telegram Message Info\\*$")
+             ("\\*Telegram Sticker Set\\*$")
+             ("\\*Telegram Notification Messages\\*$")))
+  (:defer (popper-mode +1)
+          ;; (popper-echo-mode +1)
+          (popper-tab-line-mode +1))
+  ;; HACK: close popper window with `C-g'
+  (defun +popper-close-window-hack (&rest _)
+    "Close popper window via `C-g'."
+    (when (and (called-interactively-p 'interactive)
+               (not (region-active-p))
+               popper-open-popup-alist)
+      (let ((window (caar popper-open-popup-alist)))
+        (when (window-live-p window)
+          (delete-window window)))))
+  (advice-add #'keyboard-quit :before #'+popper-close-window-hack))
 
-(if (daemonp)
-    (add-hook 'after-make-frame-functions
-              (lambda (frame)
-		(setq doom-modeline-icon t)
-		(with-selected-frame frame
-		  (dw/font-setup))))
-  (if (display-graphic-p)
-      (dw/font-setup)))
-
-(use-package ultra-scroll
-  :straight '(:type git :host github :repo "jdtsmith/ultra-scroll")
-  :init
-  (setq scroll-conservatively 101 ; important!
-        scroll-margin 0) 
-  :config
-  (ultra-scroll-mode 1))
-
-(use-package indent-bars
-  :straight t
-  :hook (prog-mode . indent-bars-mode))
-;; :custom
-;; (indent-bars-prefer-character t))
-
-(use-package image-slicing
-  :straight '(:type git :host github :repo "ginqi7/image-slicing")
-  :defer t)
+(setup tab-bar
+  (:defer (:require tab-bar))
+  (:when-loaded
+    (:global "s-t" tab-bar-new-tab
+             "s-w" tab-bar-close-tab)
+    (:also-load lib-tabbar)
+    (:option tab-bar-separator ""
+             tab-bar-close-button-show nil
+             tab-bar-new-button-show nil
+             tab-bar-new-tab-to 'rightmost
+             tab-bar-tab-hints t
+             tab-bar-show 1
+             tab-bar-new-tab-choice "*scratch*"
+             tab-bar-select-tab-modifiers '(super)
+             tab-bar-tab-name-truncated-max 20
+             tab-bar-auto-width nil
+             ;; Add spaces for tab-name
+             tab-bar-tab-name-function '+tab-bar-tab-name-function
+             tab-bar-tab-name-format-function '+tab-bar-tab-name-format-function
+             tab-bar-format '(+tab-bar-format-menu-bar
+                              tab-bar-format-tabs
+                              tab-bar-format-add-tab
+                              tab-bar-format-align-right))))
 
 (provide 'init-ui)
+;;; init-ui.el ends here

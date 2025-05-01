@@ -25,7 +25,7 @@
 (setq load-prefer-newer t)
 
 ;; Increase how much is read from processes in a single chunk (default is 4kb).
-(setq read-process-output-max (* 256 1024))  ; 256kb
+(setq read-process-output-max (* 1024 1024))  ; 1mb
 
 ;; Reduce rendering/line scan work by not rendering cursors or regions in
 ;; non-focused windows.
@@ -180,6 +180,8 @@
 
 ;; tab-bar
 (setq tab-bar-mode t)
+
+(setenv "LSP_USE_PLISTS" "true")
 
 (provide 'early-init)
 ;;; early-init.el ends here

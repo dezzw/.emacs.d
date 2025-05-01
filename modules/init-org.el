@@ -1,271 +1,396 @@
-;;; package --- org-mode related -*- lexical-binding: t; -*-
+;;; init-org.el --- Org-mode config -*- lexical-binding: t -*-
 ;;; Commentary:
-
 ;;; Code:
-(use-package org
-  :defer
-  :straight `(org
-              :fork (:host nil
-			   :repo "https://git.tecosaur.net/tec/org-mode.git"
-			   :branch "dev"
-			   :remote "tecosaur")
-              :files (:defaults "etc")
-              :build t
-              :pre-build
-              (with-temp-file "org-version.el"
-		(require 'lisp-mnt)
-		(let ((version
-                       (with-temp-buffer
-                         (insert-file-contents "lisp/org.el")
-                         (lm-header "version")))
-                      (git-version
-                       (string-trim
-			(with-temp-buffer
-                          (call-process "git" nil t nil "rev-parse" "--short" "HEAD")
-                          (buffer-string)))))
-                  (insert
-                   (format "(defun org-release () \"The release version of Org.\" %S)\n" version)
-                   (format "(defun org-git-version () \"The truncate git commit hash of Org mode.\" %S)\n" git-version)
-                   "(provide 'org-version)\n")))
-              :pin nil)
-  :hook
-  ((org-mode . org-indent-mode)
-   (org-mode . visual-line-mode))
-  :config
-  (setq org-html-head-include-default-style nil
-        org-adapt-indentation t
-	org-use-sub-superscripts nil
-	;;; begin org-modern
-	org-tags-column 0
-	org-auto-align-tags nil
-	org-catch-invisible-edits 'show-and-error
-	org-special-ctrl-a/e t
-	org-insert-heading-respect-content t
-	org-pretty-entities t
-	org-agenda-tags-column 0
-        ;;; end org-modern
-        org-hide-emphasis-markers t
-        org-src-fontify-natively t
-        org-src-tab-acts-natively t
-        org-edit-src-content-indentation 0
-        org-hide-block-startup nil
-        org-src-preserve-indentation nil
-        org-startup-folded 'content
-        org-cycle-separator-lines 2)
 
-  (if (eq system-type 'darwin)
-      (setq org-agenda-files '("~/Documents/Org/Planner")))
-  ;; Custom TODO states and Agendas
-  (setq org-todo-keywords
-        '((sequence "TODO(t)" "NEXT(n)" "TBA(b)" "|" "DONE(d!)")))
+;; Lots of stuff from http://doc.norang.ca/org-mode.html
+(setup org
+  (:global "C-c L"     org-store-link
+           "C-c C-o"   org-open-at-point
+           "C-M-<up>"  org-up-element
+           ;; 一般这个函数都是在 org 启动后调用，如果 org 没有启动则会报错。
+           ;; Wrong type argument: commandp, dired-copy-images-links
+           "C-c n m"   dired-copy-images-links)
+  (:when-loaded
+    (:also-load lib-org)
+    (:also-load image-slicing)
+    (:option
+     org-directory *org-path*
+     ;; emphasis
+     org-emphasis-regexp-components '("-[:space:]('\"{[:nonascii:]"
+                                      "-[:space:].,:!?;'\")}\\[[:nonascii:]"
+                                      "[:space:]"
+                                      "."
+                                      1)
+     org-match-substring-regexp (concat
+                                 "\\([0-9a-zA-Zα-γΑ-Ω]\\)\\([_^]\\)\\("
+                                 "\\(?:" (org-create-multibrace-regexp "{" "}" org-match-sexp-depth) "\\)"
+                                 "\\|"
+                                 "\\(?:" (org-create-multibrace-regexp "(" ")" org-match-sexp-depth) "\\)"
+                                 "\\|"
+                                 "\\(?:\\*\\|[+-]?[[:alnum:].,\\]*[[:alnum:]]\\)\\)")
+     org-image-actual-width nil
+     ;; remove org-src content indent
+     org-edit-src-content-indentation 0
+     org-src-preserve-indentation nil
+     ;; https://git.tecosaur.net/tec/org-mode.git version only
+     org-fontify-semantic-seperator nil
+     org-goto-interface 'outline-path-completion
+     ;; Various preferences
+     org-log-done t
+     org-edit-timestamp-down-means-later t
+     org-hide-emphasis-markers t
+     org-fold-catch-invisible-edits 'show
+     org-export-coding-system 'utf-8
+     org-fast-tag-selection-single-key 'expert
+     org-html-validation-link nil
+     org-export-kill-product-buffer-when-displayed t
+     org-tags-column 80
+     ;; refiling
+     org-refile-use-cache nil
+     ;; Targets include this file and any file contributing to the agenda - up to 5 levels deep
+     org-refile-targets '((nil :maxlevel . 5) (org-agenda-files :maxlevel . 5))
+     ;; Allow refile to create parent tasks with confirmation
+     org-refile-allow-creating-parent-nodes 'confirm
+     ;; Targets start with the file name - allows creating level 1 tasks
+     ;; org-refile-use-outline-path (quote file))
+     org-refile-use-outline-path 'file
+     org-outline-path-complete-in-steps nil
+     ;; archive
+     org-archive-mark-done nil
+     org-archive-location "%s_archive::* Archive"
+     org-archive-default-command 'org-archive-subtree-hierarchical
+     ;; TODO
+     ;; HOLD(h@)       ; 进入时添加笔记
+     ;; HOLD(h/!)      ; 离开时添加变更信息
+     ;; HOLD(h@/!)     ; 进入时添加笔记，离开时添加变更信息
+     org-todo-keywords
+     '((sequence "TODO(t)" "NEXT(n)" "|" "DONE(d!/!)")
+       (sequence "PROJECT(p)" "|" "DONE(d!/!)" "CANCELLED(c/!)")
+       (sequence "WAITING(w/!)" "DELEGATED(e!)" "HOLD(h)" "|" "CANCELLED(c/!)"))
+     org-todo-repeat-to-state "NEXT"
+     org-todo-keyword-faces
+     '(("NEXT" :inherit warning)
+       ("PROJECT" :inherit font-lock-string-face))
+     ;; Exclude DONE state tasks from refile targets
+     org-refile-target-verify-function (lambda ()
+                                         (not (member
+                                               (nth 2 (org-heading-components))
+                                               org-done-keywords))))
+    (:also-load lib-org-archive-hierachical)
+    (:advice org-refile :after (lambda (&rest _) (gtd-save-org-buffers)))
+    (:with-mode org-mode
+      (:hook (lambda () (electric-pair-local-mode -1)))
+      (:hook org-indent-mode)
+      (:hook (lambda () (setq truncate-lines nil))))
+    (:with-hook org-after-todo-state-change-hook
+      (:hook log-todo-next-creation-date)
+      (:hook org-copy-todo-to-today))
+    (+org-emphasize-bindings)
+    (org-set-emph-re 'org-emphasis-regexp-components org-emphasis-regexp-components)
+    (org-element-update-syntax)))
 
-  (setq org-tag-alist
-        '((:startgroup)
-          ;; Put mutually exclusive tags here
-          (:endgroup)
-          ("review" . ?r)
-          ("assignment" . ?a)
-          ("lab" . ?l)
-          ("test" . ?t)
-          ("quiz" . ?q)
-          ("pratice" . ?p)
-          ("emacs" . ?e)
-          ("note" . ?n)
-          ("idea" . ?i))))
+(setup ob-core
+  (:load-after org)
+  (:when-loaded
+    (:also-load
+     ob-python
+     ob-latex
+     ob-verb)
+    (:option
+     ;; 这里应该就是 .zshrc 里面配置的 python3
+     org-babel-python-command "python3")
+    (org-babel-do-load-languages
+     'org-babel-load-languages '((python . t)
+                                 (shell . t)
+                                 (verb . t)
+                                 (latex . t)))))
 
-(use-package org-contrib
-  :straight t
-  :after org)
+(setup denote
+  (:defer (:require denote))
+  (:when-loaded
+    (:global "C-c n n" denote-open-or-create
+             "C-c n d" denote-sort-dired
+             "C-c n l" denote-link
+             "C-c n L" denote-add-links
+             "C-c n b" denote-backlinks
+             "C-c n r" denote-rename-file
+             "C-c n R" denote-rename-file-using-front-matter)
+    (:option denote-directory (expand-file-name "denote" *org-path*)
+             denote-save-buffers nil
+             denote-known-keywords '("emacs" "private")
+             denote-infer-keywords t
+             denote-sort-keywords t
+             denote-prompts '(title file-type keywords)
+             denote-excluded-directories-regexp nil
+             denote-excluded-keywords-regexp nil
+             denote-rename-confirmations '(rewrite-front-matter modify-file-name)
+             denote-date-prompt-use-org-read-date t
+             denote-backlinks-show-context t
+             denote-org-front-matter
+             "#+title:      %s
+#+date:       %s
+#+filetags:   %s
+#+identifier: %s
+#+signature:  %s
+#+startup: indent
+\n")
+    (denote-rename-buffer-mode 1)))
 
-(use-package org-latex-preview
-  :hook (org-mode . org-latex-preview-auto-mode)
-  :config
-  ;; Increase preview width
-  (plist-put org-latex-preview-appearance-options
-             :page-width 0.8)
+(setup org-clock
+  (:load-after org)
+  (:global "C-c o j" org-clock-goto
+           "C-c o l" org-clock-in-last
+           "C-c o i" org-clock-in
+           "C-c o o" org-clock-out)
+  (:when-loaded
+    (:option org-clock-persist t
+             org-clock-in-resume t
+             ;; Save clock data and notes in the LOGBOOK drawer
+             org-clock-into-drawer t
+             ;; Save state changes in the LOGBOOK drawer
+             org-log-into-drawer t
+             ;; Removes clocked tasks with 0:00 duration
+             org-clock-out-remove-zero-time-clocks t
+             ;; Show clock sums as hours and minutes, not "n days" etc.
+             org-time-clocksum-format
+             '(:hours "%d" :require-hours t :minutes ":%02d" :require-minutes t))
+    (org-clock-persistence-insinuate)))
 
-  ;; Use dvisvgm to generate previews
-  ;; You don't need this, it's the default:
-  (setq org-latex-preview-process-default 'dvisvgm)
-  
-  ;; Block C-n, C-p etc from opening up previews when using auto-mode
-  (setq org-latex-preview-auto-ignored-commands
-        '(next-line previous-line mwheel-scroll
-		    scroll-up-command scroll-down-command))
+(setup ox-latex
+  (:load-after org)
+  (:when-loaded
+    (:option
+     org-latex-pdf-process '("latexmk -f -xelatex -shell-escape -output-directory=%o %F")
+     org-preview-latex-default-process 'dvisvgm
+     org-preview-latex-process-alist
+     '((dvisvgm :programs
+                ("xelatex" "dvisvgm")
+                :description "xdv > svg"
+                :message "you need to install the programs: xelatex and dvisvgm."
+                :use-xcolor t
+                :image-input-type "xdv"
+                :image-output-type "svg"
+                :image-size-adjust (1.5 . 1.2)
+                :latex-compiler
+                ("xelatex -no-pdf -interaction nonstopmode -shell-escape -output-directory %o %f")
+                :image-converter
+                ("dvisvgm %f -e -n -b min -c %S -o %O"))
+       (imagemagick :programs
+                    ("xelatex" "convert")
+                    :description "pdf > png"
+                    :message "you need to install the programs: xelatex and imagemagick."
+                    :use-xcolor t
+                    :image-input-type "pdf"
+                    :image-output-type "png"
+                    :image-size-adjust (1.0 . 1.0)
+                    :latex-compiler
+                    ("xelatex -interaction nonstopmode -output-directory %o %f")
+                    :image-converter
+                    ("convert -density %D -trim -antialias %f -quality 100 %O")))
+     org-format-latex-options '(:foreground default :background "Transparent" :scale 1.5 :html-foreground "Black" :html-background "Transparent" :html-scale 1.0 :matchers
+                                            ("begin" "$1" "$" "$$" "\\(" "\\["))
+     org-latex-listings 'minted
+     org-latex-minted-options '(("breaklines")
+                                ("bgcolor" "bg"))
+     org-latex-compiler "xelatex"
+     org-latex-packages-alist
+     '(;; hook right arrow with text above and below
+       ;; https://tex.stackexchange.com/questions/186896/xhookrightarrow-and-xmapsto
+       ("" "svg" t)
+       ("" "svg-extract" t)
 
-  ;; Enable consistent equation numbering
-  (setq org-latex-preview-numbered t)
+       ("" "mathtools" t)
+       ("" "amsmath" t)
+       ("" "amssymb" t)
+       ;; for mapsfrom
+       ;; see: https://tex.stackexchange.com/questions/26508/left-version-of-mapsto
+       ("" "stmaryrd" t)
+       ("" "mathrsfs" t)
+       ("" "tikz" t)
+       ("" "tikz-cd" t)
+       ;; ("" "quiver" t)
+       ;; see https://castel.dev/post/lecture-notes-2/
+       ("" "import" t)
+       ("" "xifthen" t)
+       ("" "pdfpages" t)
+       ("" "transparent" t)
+       ;; algorithm
+       ;; https://tex.stackexchange.com/questions/229355/algorithm-algorithmic-algorithmicx-algorithm2e-algpseudocode-confused
+       ("ruled,linesnumbered" "algorithm2e" t)
+       ;; You should not load the algorithm2e, algcompatible, algorithmic packages if you have already loaded algpseudocode.
+       ;; ("" "algpseudocode" t)
+       ;; for chinese preview
+       ("fontset=LXGW WenKai,UTF8" "ctex" t)))))
 
-  ;; Bonus: Turn on live previews.  This shows you a live preview of a LaTeX
-  ;; fragment and updates the preview in real-time as you edit it.
-  ;; To preview only environments, set it to '(block edit-special) instead
-  (setq org-latex-preview-live t)
+(setup org-agenda
+  (:global "C-c a" org-agenda)
+  (:when-loaded
+    (:option
+     org-agenda-sort-notime-is-late nil
+     ;; 时间显示为两位数(9:30 -> 09:30)
+     org-agenda-time-leading-zero t
+     ;; 过滤掉 dynamic
+     org-agenda-hide-tags-regexp (regexp-opt '("dynamic"))
+     org-agenda-files (file-expand-wildcards (concat *org-path* "/agenda/*.org"))
+     org-agenda-compact-blocks t
+     org-agenda-sticky t
+     org-agenda-start-on-weekday nil
+     org-agenda-span 'day
+     org-agenda-include-diary nil
+     org-agenda-current-time-string (concat "◀┈┈┈┈┈┈┈┈┈┈┈┈┈ ⏰")
+     org-agenda-sorting-strategy
+     '((agenda habit-down time-up user-defined-up effort-up category-keep)
+       (todo category-up effort-up)
+       (tags category-up effort-up)
+       (search category-up))
+     org-agenda-window-setup 'current-window
+     org-agenda-custom-commands
+     `(("N" "Notes" tags "NOTE"
+        ((org-agenda-overriding-header "Notes")
+         (org-tags-match-list-sublevels t)))
+       ("g" "GTD"
+        ((agenda "" nil)
+         (tags-todo "-inbox"
+                    ((org-agenda-overriding-header "Next Actions")
+                     (org-agenda-tags-todo-honor-ignore-options t)
+                     (org-agenda-todo-ignore-scheduled 'future)
+                     (org-agenda-skip-function
+                      (lambda ()
+                        (or (org-agenda-skip-subtree-if 'todo '("HOLD" "WAITING"))
+                            (org-agenda-skip-entry-if 'nottodo '("NEXT")))))
+                     (org-tags-match-list-sublevels t)
+                     (org-agenda-sorting-strategy
+                      '(todo-state-down effort-up category-keep))))
+         (tags-todo "-reading/PROJECT"
+                    ((org-agenda-overriding-header "Project")
+                     (org-agenda-prefix-format "%-11c%5(org-todo-age) ")
+                     (org-tags-match-list-sublevels t)
+                     (org-agenda-sorting-strategy
+                      '(category-keep))))
+         (tags-todo "+reading/PROJECT"
+                    ((org-agenda-overriding-header "Reading")
+                     (org-agenda-prefix-format "%-11c%5(org-todo-age) ")
+                     (org-tags-match-list-sublevels t)
+                     (org-agenda-sorting-strategy
+                      '(category-keep))))
+         (tags-todo "/WAITING"
+                    ((org-agenda-overriding-header "Waiting")
+                     (org-agenda-tags-todo-honor-ignore-options t)
+                     (org-agenda-todo-ignore-scheduled 'future)
+                     (org-agenda-sorting-strategy
+                      '(category-keep))))
+         (tags-todo "/DELEGATED"
+                    ((org-agenda-overriding-header "Delegated")
+                     (org-agenda-tags-todo-honor-ignore-options t)
+                     (org-agenda-todo-ignore-scheduled 'future)
+                     (org-agenda-sorting-strategy
+                      '(category-keep))))
+         (tags-todo "-inbox"
+                    ((org-agenda-overriding-header "On Hold")
+                     (org-agenda-skip-function
+                      (lambda ()
+                        (or (org-agenda-skip-subtree-if 'todo '("WAITING"))
+                            (org-agenda-skip-entry-if 'nottodo '("HOLD")))))
+                     (org-tags-match-list-sublevels nil)
+                     (org-agenda-sorting-strategy
+                      '(category-keep))))
+         ))
+       ("v" "Orphaned Tasks"
+        ((agenda "" nil)
+         (tags "inbox"
+               ((org-agenda-overriding-header "Inbox")
+                (org-agenda-prefix-format "%-11c%5(org-todo-age) ")
+                (org-tags-match-list-sublevels nil)))
+         (tags-todo "+book&-reading/PROJECT"
+                    ((org-agenda-overriding-header "Book Plan")
+                     (org-agenda-prefix-format "%-11c%5(org-todo-age) ")
+                     (org-tags-match-list-sublevels t)
+                     (org-agenda-sorting-strategy
+                      '(category-keep))))
+         (tags-todo "-inbox/-NEXT"
+                    ((org-agenda-overriding-header "Orphaned Tasks")
+                     (org-agenda-tags-todo-honor-ignore-options t)
+                     (org-agenda-prefix-format "%-11c%5(org-todo-age) ")
+                     (org-agenda-todo-ignore-scheduled 'future)
+                     (org-agenda-skip-function
+                      (lambda ()
+                        (or (org-agenda-skip-subtree-if 'todo '("PROJECT" "HOLD" "WAITING" "DELEGATED"))
+                            (org-agenda-skip-subtree-if 'nottododo '("TODO")))))
+                     (org-tags-match-list-sublevels t)
+                     (org-agenda-sorting-strategy
+                      '(category-keep))))))))
 
-  ;; More immediate live-previews -- the default delay is 1 second
-  (setq org-latex-preview-live-debounce 0.25))
+    (:also-load lib-org-agenda)
+    (setq-default org-agenda-clockreport-parameter-plist
+                  '(:link t :maxlevel 3))
+    (add-to-list 'org-agenda-after-show-hook 'org-show-entry)
+    ;; Re-align tags when window shape changes
+    (:with-mode org-agenda-mode
+      (lambda () (add-hook 'window-configuration-change-hook 'org-agenda-align-tags nil t)))))
 
-(use-package org-modern
-  :straight t
-  :after org
-  :hook ((org-mode . org-modern-mode)
-	 (org-agenda-finalize . org-modern-agenda))
-  :custom
-  (org-modern-fold-stars '(("▶" . "▼") ("▷" . "▽") ("⏵" . "⏷") ("▹" . "▿") ("▸" . "▾"))))
+(setup org-habit
+  (:load-after org-agenda)
+  (:when-loaded
+    (:option org-habit-following-days 1
+             org-habit-preceding-days 7
+             org-habit-show-all-today t
+             org-habit-graph-column 57
+             org-habit-overdue-glyph ?○
+             org-habit-alert-glyph ?○
+             org-habit-today-glyph ?○
+             org-habit-completed-glyph ?●
+             org-habit-show-done-always-green t)
+    (:with-feature org-agenda
+      (:also-load org-habit)
+      (let ((agenda-sorting-strategy (assoc 'agenda org-agenda-sorting-strategy)))
+        (setcdr agenda-sorting-strategy (remove 'habit-down (cdr agenda-sorting-strategy)))))))
 
-(use-package org-modern-indent
-  :straight (org-modern-indent :type git :host github :repo "jdtsmith/org-modern-indent")
-  :after org
-  :config ; add late to hook
-  (add-hook 'org-mode-hook #'org-modern-indent-mode 90))
+(setup org-modern
+  (:load-after org)
+  (:when-loaded
+    (:with-mode org-mode
+      (:hook org-modern-mode)
+      (:hook (lambda ()
+               "Beautify Org Checkbox Symbol"
+               (push '("[ ]" . "☐") prettify-symbols-alist)
+               (push '("[X]" . "☑" ) prettify-symbols-alist)
+               (push '("[-]" . #("□–" 0 2 (composition ((2))))) prettify-symbols-alist)
+               (prettify-symbols-mode))))
+    (:option org-modern-star 'replace
+             org-modern-replace-stars "❑❍❑❍❑❍"
+             org-hide-emphasis-markers t
+             org-tags-column 0
+             org-modern-block-fringe 2
+             org-catch-invisible-edits 'show-and-error
+             org-special-ctrl-a/e t
+             org-insert-heading-respect-content t
+             org-modern-table-vertical 0
+             org-modern-table-horizontal 0.2
+             org-modern-checkbox nil
+             org-ellipsis "[+]")
+    ;; 美化 checkbox，unchecked 和 checked 分别继承 TODO 的 TODO 和 DONE 的颜色。
+    ;; https://emacs.stackexchange.com/questions/45291/change-color-of-org-mode-checkboxes
+    (defface org-checkbox-todo-text
+      '((t (:foreground unspecified :inherit org-todo)))
+      "Face for the text part of an unchecked org-mode checkbox.")
 
-(use-package visual-fill-column
-  :straight t
-  :hook org-mode
-  :custom
-  (visual-fill-column-width 110)
-  (visual-fill-column-center-text t))
+    (defface org-checkbox-done-text
+      '((t (:foreground unspecified :inherit org-done :strike-through t)))
+      "Face for the text part of a checked org-mode checkbox.")
 
-(use-package valign
-  :straight t
-  :hook org-mode)
+    (defface org-checkbox-partial-text
+      '((t (:foreground unspecified :inherit org-todo)))
+      "Face for the text part of a partially checked org-mode checkbox.")
 
-(use-package org-appear
-  :straight t
-  :hook org-mode)
-
-(use-package org-tidy
-  :straight t
-  :hook
-  (org-mode . org-tidy-mode)
-  :custom
-  (org-tidy-properties-style 'fringe))
-
-(with-eval-after-load "ob"
-  (org-babel-do-load-languages
-   'org-babel-load-languages
-   '((emacs-lisp . t)
-     (C . t)
-     (shell . t)
-     (python . t)
-     (sql . t)
-     (java . t)))
-
-  (setq org-confirm-babel-evaluate nil))
-
-(use-package org-super-agenda
-  :straight t
-  :hook org-agenda-mode
-  :commands (org-agenda)
-  :init
-  (setq org-agenda-skip-scheduled-if-done t
-        org-agenda-skip-deadline-if-done t
-        org-agenda-include-deadlines t
-        org-agenda-include-diary t
-        org-agenda-block-separator nil
-        org-agenda-compact-blocks t
-        org-log-done 'time
-        org-log-into-drawer t
-        org-agenda-start-with-log-mode t)
-
-  (setq org-agenda-custom-commands
-        '(("d" "Dashboard"
-           ((agenda "" ((org-agenda-span 'day)
-
-                        (org-super-agenda-groups
-                         '((:name "Today"
-				  :time-grid t
-				  :date today
-				  :scheduled today
-				  :order 1)
-                           (:name "Due Soon"
-				  :deadline future
-				  :order 2)
-                           (:discard (:anything t))))))
-            (alltodo "" ((org-agenda-overriding-header "")
-                         (org-super-agenda-groups
-                          '((:name "Overdue"
-				   :deadline past
-				   :order 1)
-                            (:name "Assignments"
-				   :tag "assignment"
-				   :order 2)
-                            (:name "Labs"
-				   :tag "lab"
-				   :order 3)
-                            (:name "Quizs"
-				   :tag "quiz"
-				   :order 4)
-                            (:name "Tests/Exam"
-				   :tag "test"
-				   :order  5)
-                            (:name "Projects"
-				   :tag "Project"
-				   :order 14)
-                            (:name "Emacs"
-				   :tag "Emacs"
-				   :order 13)
-                            (:discard (:anything t)))))))))))
-
-;; Refiling
-(setq org-refile-targets
-      '(("~/Documents/Org/Planner/Archive.org" :maxlevel . 1)))
-
-;; Save Org buffers after refiling!
-(advice-add 'org-refile :after 'org-save-all-org-buffers)
-
-;; Capture Templates
-(defun dw/read-file-as-string (path)
-  (with-temp-buffer
-    (insert-file-contents path)
-    (buffer-string)))
-
-(setq org-capture-templates
-      `(("t" "Tasks / Projects")
-        ("tt" "Task" entry (file+olp "~/Documents/Org/Planner/Tasks.org" "Inbox")
-         "* TODO %?\n  %U\n  %a\n  %i" :empty-lines 1)))
-
-(use-package org-node
-  :straight t
-  :after org
-  :bind
-  (("C-c o f" . org-node-find)
-   ("C-c o i" . org-node-insert-link))
-  :custom
-  (org-node-extra-id-dirs '("~/Documents/Org/Notes/"))
-  :config
-  (org-node-cache-mode))
-
-(use-package org-download
-  :straight t
-  :hook (org-mode . org-download-enable)
-  :custom
-  (org-download-image-dir "./images/"))
-
-;; (use-package org-imagine
-;;   :straight 
-
-;; (defun org-insert-image ()
-;;   "insert a image from clipboard"
-;;   (interactive)
-;;   (let* ((path (concat default-directory "img/"))
-;; 	 (image-file (concat
-;; 		      path
-;; 		      (buffer-name)
-;; 		      (format-time-string "_%Y%m%d_%H%M%S.png"))))
-;;     (if (not (file-exists-p path))
-;; 	(mkdir path))
-;;     (do-applescript (concat
-;; 		     "set the_path to \"" image-file "\" \n"
-;; 		     "set png_data to the clipboard as «class PNGf» \n"
-;; 		     "set the_file to open for access (POSIX file the_path as string) with write permission \n"
-;; 		     "write png_data to the_file \n"
-;; 		     "close access the_file"))
-;;     ;; (shell-command (concat "pngpaste " image-file))
-;;     (org-insert-link nil
-;; 		     (concat "file:" image-file)
-;; 		     "")
-;;     (message image-file))
-;;   (org-display-inline-images))
+    (font-lock-add-keywords
+     'org-mode
+     `(("^[ \t]*\\(?:[-+*]\\|[0-9]+[).]\\)[ \t]+\\(\\(?:\\[@\\(?:start:\\)?[0-9]+\\][ \t]*\\)?\\[ \\][^\n]*\n\\)"
+        1 'org-checkbox-todo-text prepend)
+       ("^[ \t]*\\(?:[-+*]\\|[0-9]+[).]\\)[ \t]+\\(\\(?:\\[@\\(?:start:\\)?[0-9]+\\][ \t]*\\)?\\[X\\][^\n]*\n\\)"
+        1 'org-checkbox-done-text prepend)
+       ("^[ \t]*\\(?:[-+*]\\|[0-9]+[).]\\)[ \t]+\\(\\(?:\\[@\\(?:start:\\)?[0-9]+\\][ \t]*\\)?\\[-\\][^\n]*\n\\)"
+        1 'org-checkbox-partial-text prepend))
+     'append)))
 
 (provide 'init-org)
 ;;; init-org.el ends here

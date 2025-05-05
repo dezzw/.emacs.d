@@ -14,6 +14,20 @@
   "Setup fonts."
   ;; Setting the default
   (set-face-attribute 'default nil :font *default-font* :weight 'normal)
+
+  (set-face-attribute 'italic nil
+                      :font "MonaspiceRn Nerd Font Mono"
+                      :slant 'italic)
+
+  (set-face-attribute 'shadow nil
+                      :font "MonaspiceKr Nerd Font Mono")
+
+  (set-face-attribute 'font-lock-comment-face nil :inherit 'italic)
+  (set-face-attribute 'font-lock-keyword-face nil :inherit 'italic)
+  (set-face-attribute 'font-lock-variable-name-face nil :weight 'extra-bold)
+  (set-face-attribute 'font-lock-function-name-face nil :weight 'extra-bold)
+
+
   (set-face-like-default 'fixed-pitch-serif)
   (set-face-like-default 'variable-pitch)
 
@@ -62,10 +76,7 @@
                   (#xEA60 . #xEC1E))));; Codicons
     (dolist (range ranges)
       (set-fontset-font t range *symbol-default-font*)))
-  ;; Set font for specific characters
-  ;; (set-fontset-font nil ?❤ "Symbols Nerd Font Mono")
-
-  (set-fontset-font t 'javanese *jp-default-font*))
+  )
 
 ;; https://github.com/mickeynp/ligature.el/issues/8
 (defconst ligatures-alist

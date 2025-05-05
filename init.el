@@ -7,7 +7,7 @@
 ;;; Code:
 
 ;; Produce backtraces when errors occur: can be helpful to diagnose startup issues
-;; (setq debug-on-error t)
+(setq debug-on-error nil)
 ;; ignore native compile warning
 (setq warning-minimum-level :emergency)
 
@@ -22,12 +22,8 @@
                           "Noto Emoji"
                           "Segoe UI Emoji"
                           "Symbola"))
-(defconst *default-font* "MonaspiceAr Nerd Font Mono")
-(defconst *org-font* "MonaspiceAr Nerd Font Mono")
-(defconst *term-default-font* "MonaspiceAr Nerd Font Mono")
-(defconst *prog-font* "MonaspiceAr Nerd Font Mono")
+(defconst *default-font* "MonaspiceAr Nerd Font Mono-12")
 (defconst *zh-default-font* "LXGW WenKai")
-(defconst *jp-default-font* "Noto Sans Javanese")
 (defconst *symbol-default-font* "Symbols Nerd Font Mono")
 
 ;; Install straight.el
@@ -67,7 +63,8 @@
        color-theme-sanityinc-tomorrow highlight-parentheses
        lsp-mode lsp-tailwindcss lsp-sourcekit lsp-haskell lsp-java lsp-pyright
        lsp-ui dap-mode flycheck consult-lsp clojure-mode cider babashka neil
-       aggressive-indent-mode
+       aggressive-indent-mode envrc helpful
+       fennel-mode nix-ts-mode
        (image-slicing :host github :repo "ginqi7/image-slicing")
        (emt :host github :repo "roife/emt")
        (meow :host github :repo "meow-edit/meow")
@@ -79,10 +76,19 @@
        ;; (telega :host github :repo "zevlg/telega.el")
        (yasnippet :host github :repo "joaotavora/yasnippet")
        (panel :host github :repo "LuciusChen/panel")
+       (rose-pine :host github :repo "LuciusChen/rose-pine")
        (indent-bars :host github :repo "jdtsmith/indent-bars")
        (vertico-posframe :host github :repo "tumashu/vertico-posframe")
        (copilot-chat :host github :repo "chep/copilot-chat.el")
        (copilot :host github :repo "zerolfx/copilot.el" :files ("dist" "*.el"))
+       (leetcode-emacs :type git :host github :repo "ginqi7/leetcode-emacs")
+       (tabspaces :type git :host github :repo "mclear-tools/tabspaces")
+       (eat :type git :host codeberg :repo "akib/emacs-eat"
+            :files ("*.el" ("term" "term/*.el") "*.texi"
+                    "*.ti" ("terminfo/e" "terminfo/e/*")
+                    ("terminfo/65" "terminfo/65/*")
+                    ("integration" "integration/*")
+                    (:exclude ".dir-locals.el" "*-tests.el")))
        ))
 
 (dolist (e *use-package-list*) (straight-use-package e))
@@ -101,13 +107,15 @@
 (require 'init-minibuffer)
 (require 'init-completion)
 (require 'init-prog)
-(require 'init-nav)
+(require 'init-util)
 ;; (require 'init-transient)
 
 (require 'init-org)
 (require 'init-reader)
 
 (require 'init-shell)
+
+(require 'init-ai)
 
 (require 'init-local)
 

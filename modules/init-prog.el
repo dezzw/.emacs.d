@@ -30,6 +30,9 @@
               (:file-match "\\.cjs\\'")
               (:file-match "\\.ts\\'"))
   (:with-mode json-ts-mode (:file-match "\\.json\\'"))
+  (:with-mode nix-ts-mode (:file-match "\\.nix\\'"))
+  (:with-mode lua-ts-mode (:file-match "\\.lua\\'"))
+  (:with-mode fennel-mode (:file-match "\\.fnl\\'"))
   (:with-mode dockerfile-ts-mode (:file-match "\\.Dockerfile\\'"))
   (:with-mode markdown-ts-mode (:file-match "\\.md\\'"))
   (:with-mode basilisp-mode (:file-match "\\.lpy\\'")))
@@ -217,6 +220,12 @@
 
 (setup cider
   (:load-after clojure-mode))
+
+(setup envrc
+  (:defer (:require envrc))
+  (:when-loaded
+    (:with-map envrc-mode-map
+      (:bind "C-c e" envrc-command-map))))
 
 (provide 'init-prog)
 ;;; init-prog.el ends here

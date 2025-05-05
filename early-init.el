@@ -157,8 +157,9 @@
 (push '(vertical-scroll-bars) default-frame-alist)
 (push '(horizontal-scroll-bars) default-frame-alist)
 (push '(undecorated-round . t) default-frame-alist)
+(push '(fullscreen . maximized) default-frame-alist)
 
-(setq initial-frame-alist '((width . 100) (height . 40)))
+;; (setq initial-frame-alist '((width . 100) (height . 40)))
 
 (setq tool-bar-mode nil
       scroll-bar-mode nil)
@@ -172,7 +173,6 @@
 (setq use-dialog-box nil)
 
 (unless (memq window-system '(mac ns))
-  ;; (menu-bar-mode -1)
   (setq menu-bar-mode nil))
 
 (when (fboundp 'horizontal-scroll-bar-mode)

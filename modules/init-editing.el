@@ -186,6 +186,7 @@
   (:option vundo--window-max-height 5
            vundo-roll-back-on-quit t))
 
+(require 'map)
 (setup imenu
   (:when-loaded
     (:with-mode emacs-lisp-mode

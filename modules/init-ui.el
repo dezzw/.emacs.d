@@ -53,8 +53,19 @@
            panel-image-width 400
            panel-image-height 169
            panel-title "The best way to predict the future is to invent it.")
-  (:face panel-title-face ((t (:inherit font-lock-constant-face :height 1.5 :italic t :family "Departure Mono"))))
+  (:face panel-title-face ((t (:inherit font-lock-constant-face :height 1.2 :italic t :family "Operator Mono"))))
   (panel-create-hook))
+
+(when (display-graphic-p)
+  (setup faces
+    (:also-load lib-face)
+    (:hooks window-setup-hook +setup-fonts
+            server-after-make-frame-hook +setup-fonts
+            after-make-frame-functions
+            (lambda (frame)
+              (with-selected-frame frame
+                (+setup-fonts))))
+    (+setup-fonts)))
 
 (setup custom
   (:when-loaded
@@ -65,9 +76,9 @@
     ;; first-time startup on Emacs > 26.3.
     (:option custom-safe-themes t
              ;; If you don't customize it, this is the theme you get.
-             custom-enabled-themes '(sanityinc-tomorrow-night)
-             light-theme 'sanityinc-tomorrow-day
-             dark-theme 'sanityinc-tomorrow-night)
+             custom-enabled-themes '(rose-pine-night)
+             light-theme 'rose-pine-day
+             dark-theme 'rose-pine-night)
 
     (when *is-mac*
       (apply-theme-based-on-appearance)
@@ -113,18 +124,6 @@
              highlight-parentheses-delay 0.2))
   (:hooks minibuffer-setup-hook highlight-parentheses-minibuffer-setup)
   (:hook-into prog-mode))
-
-(when window-system
-  (setup faces
-    (:also-load lib-face)
-    (:hooks window-setup-hook +setup-fonts
-            server-after-make-frame-hook +setup-fonts
-            default-text-scale-mode-hook +setup-fonts)
-    (:with-mode (vterm-mode eshell-mode) (:set-font *term-default-font*))
-    (:with-mode (latex-mode prog-mode nxml-mode magit-status-mode magit-diff-mode diff-mode) (:set-font *prog-font*))
-    (:with-mode nov-mode (:set-font (replace-regexp-in-string "14" "16" *default-font*)))
-    (:with-mode (org-mode ebib-index-mode ebib-entry-mode) (:set-font *org-font*))
-    (:advice face-at-point :around #'+suggest-other-faces)))
 
 (setup popup-frames (:defer (:require popup-frames)))
 
@@ -202,10 +201,39 @@
              ;; Add spaces for tab-name
              tab-bar-tab-name-function '+tab-bar-tab-name-function
              tab-bar-tab-name-format-function '+tab-bar-tab-name-format-function
-             tab-bar-format '(+tab-bar-format-menu-bar
-                              tab-bar-format-tabs
+             tab-bar-format '(tab-bar-format-tabs
                               tab-bar-format-add-tab
                               tab-bar-format-align-right))))
+
+(setup (:require tabspaces)
+  (:hook-into after-init)
+  (:option tabspaces-default-tab "Main"
+           tabspaces-remove-to-default t
+           tabspaces-include-buffers '("*scratch*" "*Messages*")
+           tabspaces-initialize-project-with-todo nil
+           ;; sessions
+           tabspaces-session t
+           ;; tabspaces-session-auto-restore t
+           tabspaces-session-project-session-store "~/.emacs.d/tabspaces-sessions/"
+           )
+  (:after consult
+    ;; hide full buffer list (still available with "b" prefix)
+    (consult-customize consult--source-buffer :hidden t :default nil)
+    ;; set consult-workspace buffer list
+    (defvar consult--source-workspace
+      (list :name     "Workspace Buffers"
+            :narrow   ?w
+            :history  'buffer-name-history
+            :category 'buffer
+            :state    #'consult--buffer-state
+            :default  t
+            :items    (lambda () (consult--buffer-query
+                                  :predicate #'tabspaces--local-buffer-p
+                                  :sort 'visibility
+                                  :as #'buffer-name)))
+
+      "Set workspace buffer list for consult-buffer.")
+    (add-to-list 'consult-buffer-sources 'consult--source-workspace)))
 
 (provide 'init-ui)
 ;;; init-ui.el ends here

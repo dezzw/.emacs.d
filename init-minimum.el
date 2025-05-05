@@ -55,8 +55,18 @@
 
 ;; load module settings
 (add-to-list 'load-path (expand-file-name "modules" user-emacs-directory))
+(add-to-list 'load-path (expand-file-name "lib" user-emacs-directory))
+
 (require 'init-setup)
 (when *is-mac* (require 'init-mac))
 ;; ==== put your code below this line! ====
 ;; emacs -Q -l ~/.emacs.d/init-minimum.el
 ;;; init-minimum.el ends here
+
+(when window-system
+  (setup faces
+    (:also-load lib-face)
+    (:hooks window-setup-hook +setup-fonts
+            server-after-make-frame-hook +setup-fonts
+            default-text-scale-mode-hook +setup-fonts
+            after-make-frame-functions +setup-fonts)))

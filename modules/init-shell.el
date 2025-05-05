@@ -66,5 +66,9 @@
   (:load-after esh-mode)
   (:when-loaded (eshell-syntax-highlighting-global-mode +1)))
 
+(setup eat
+  (:hooks eshell-load-hook eat-eshell-mode)
+  (:hooks eshell-load-hook eat-eshell-visual-command-mode))
+
 (provide 'init-shell)
 ;;; init-shell.el ends here

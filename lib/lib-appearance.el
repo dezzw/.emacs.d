@@ -8,7 +8,8 @@
   (dolist (theme custom-enabled-themes)
     (unless (custom-theme-p theme)
       (load-theme theme)))
-  (custom-set-variables `(custom-enabled-themes (quote ,custom-enabled-themes))))
+  (custom-set-variables `(custom-enabled-themes (quote ,custom-enabled-themes)))
+  (+setup-fonts))
 
 (defun set-dividers-and-fringe-color ()
   "Set the color of dividers and fringe to match the current theme."

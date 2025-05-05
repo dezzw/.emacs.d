@@ -13,8 +13,7 @@
   (:with-map copilot-mode-map
     (:bind
      "C-e" copilot-accept-completion))
-  (:when-loaded
-    (:option copilot-indent-warning-suppress t)
-    (copilot--start-agent)))
+  (:option copilot-indent-offset-warning-disable t))
 
+(provide 'init-ai)
 ;;; init-ai.el ends here

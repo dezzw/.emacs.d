@@ -1,4 +1,4 @@
-;;; init-nav.el --- util -*- lexical-binding: t -*-
+;;; init-util.el --- util -*- lexical-binding: t -*-
 ;;; Commentary:
 ;;; Code:
 
@@ -67,5 +67,18 @@
              "M-j"  dirvish-fd-jump))
     (:with-mode dirvish-directory-view-mode (:hook diredfl-mode))))
 
-(provide 'init-nav)
-;;; init-nav.el ends here
+(setup helpful
+  (:defer (:require helpful))
+  (:global
+   [remap describe-function] helpful-function
+   [remap describe-symbol] helpful-symbol
+   [remap describe-variable] helpful-variable
+   [remap describe-command] helpful-command
+   [remap describe-key] helpful-key))
+
+(setup leetcode
+  (:autoload leetcode-list-all)
+  (:option leetcode-language "swift"))
+
+(provide 'init-util)
+;;; init-util.el ends here

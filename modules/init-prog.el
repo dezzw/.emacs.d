@@ -223,9 +223,7 @@
 
 (setup envrc
   (:defer (:require envrc))
-  (:when-loaded
-    (:with-map envrc-mode-map
-      (:bind "C-c e" envrc-command-map))))
+  (:bind "C-c e" envrc-command-map))
 
 (provide 'init-prog)
 ;;; init-prog.el ends here

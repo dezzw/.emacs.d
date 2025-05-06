@@ -4,6 +4,14 @@
 
 (setup files
   (:option  auto-save-default nil
+            auto-save-visited-interval 1.1
+            auto-save-visited-predicate
+            (lambda () (and (not (buffer-live-p (get-buffer " *vundo tree*")))
+                            (not (string-suffix-p "gpg" (file-name-extension (buffer-name)) t))
+                            (not (eq (buffer-base-buffer (get-buffer (concat "CAPTURE-" (buffer-name))))
+                                     (current-buffer)))
+                            (or (not (boundp 'corfu--total)) (zerop corfu--total))
+                            (or (not (boundp 'yas--active-snippets)) (not yas--active-snippets))))
             make-backup-files nil
             enable-local-variables :all
             ;; emacs@31 feature

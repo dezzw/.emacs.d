@@ -65,6 +65,8 @@
        lsp-ui dap-mode flycheck consult-lsp clojure-mode cider babashka neil
        aggressive-indent-mode envrc helpful
        fennel-mode nix-ts-mode
+       ;;;
+       activities
        (image-slicing :host github :repo "ginqi7/image-slicing")
        (emt :host github :repo "roife/emt")
        (meow :host github :repo "meow-edit/meow")
@@ -82,7 +84,7 @@
        (copilot-chat :host github :repo "chep/copilot-chat.el")
        (copilot :host github :repo "zerolfx/copilot.el" :files ("dist" "*.el"))
        (leetcode-emacs :type git :host github :repo "ginqi7/leetcode-emacs")
-       (tabspaces :type git :host github :repo "mclear-tools/tabspaces")
+       ;; (tabspaces :type git :host github :repo "mclear-tools/tabspaces")
        (eat :type git :host codeberg :repo "akib/emacs-eat"
             :files ("*.el" ("term" "term/*.el") "*.texi"
                     "*.ti" ("terminfo/e" "terminfo/e/*")

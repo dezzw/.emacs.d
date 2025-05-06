@@ -205,35 +205,42 @@
                               tab-bar-format-add-tab
                               tab-bar-format-align-right))))
 
-(setup (:require tabspaces)
-  (:hook-into after-init)
-  (:option tabspaces-default-tab "Main"
-           tabspaces-remove-to-default t
-           tabspaces-include-buffers '("*scratch*" "*Messages*")
-           tabspaces-initialize-project-with-todo nil
-           ;; sessions
-           tabspaces-session t
-           ;; tabspaces-session-auto-restore t
-           tabspaces-session-project-session-store "~/.emacs.d/tabspaces-sessions/"
-           )
+(setup activities
+  (:hooks after-init-hook activities-mode)
+  (:hooks after-init-hook activities-tabs-mode)
+  (:option edebug-inhibit-emacs-lisp-mode-bindings t)
+  (:global
+   "C-x C-a C-n" activities-new
+   "C-x C-a C-d" activities-define
+   "C-x C-a C-a" activities-resume
+   "C-x C-a C-s" activities-suspend
+   "C-x C-a C-k" activities-kill
+   "C-x C-a RET" activities-switch
+   "C-x C-a b" activities-switch-buffer
+   "C-x C-a g" activities-revert
+   "C-x C-a l" activities-list)
   (:after consult
     ;; hide full buffer list (still available with "b" prefix)
     (consult-customize consult--source-buffer :hidden t :default nil)
-    ;; set consult-workspace buffer list
-    (defvar consult--source-workspace
-      (list :name     "Workspace Buffers"
-            :narrow   ?w
-            :history  'buffer-name-history
-            :category 'buffer
-            :state    #'consult--buffer-state
-            :default  t
-            :items    (lambda () (consult--buffer-query
-                                  :predicate #'tabspaces--local-buffer-p
-                                  :sort 'visibility
-                                  :as #'buffer-name)))
+    (defvar consult--source-activities
+      `(:name     "Activity Buffers"
+                  :narrow   ?a
+                  :category buffer
+                  :history  buffer-name-history
+                  :action   ,#'switch-to-buffer
+                  :items
+                  ,(lambda ()
+                     (let* ((activity (or (activities-current)
+                                          (car activities-list)))
+                            (buffers (and activity
+                                          (let ((tab (activities-tabs--tab activity)))
+                                            (activities-tabs--tab-parameter 'activities-buffer-list tab)))))
+                       (mapcar #'buffer-name buffers))))
+      "Consult source for current activity's buffers.")
+    (add-to-list 'consult-buffer-sources 'consult--source-activities)))
 
-      "Set workspace buffer list for consult-buffer.")
-    (add-to-list 'consult-buffer-sources 'consult--source-workspace)))
+(setup which-key
+  (:hook-into after-init))
 
 (provide 'init-ui)
 ;;; init-ui.el ends here

@@ -208,7 +208,8 @@
 (setup activities
   (:hooks after-init-hook activities-mode)
   (:hooks after-init-hook activities-tabs-mode)
-  (:option edebug-inhibit-emacs-lisp-mode-bindings t)
+  (:option edebug-inhibit-emacs-lisp-mode-bindings t
+           activities-kill-buffers t)
   (:global
    "C-x C-a C-n" activities-new
    "C-x C-a C-d" activities-define
@@ -228,10 +229,10 @@
                   :category buffer
                   :history  buffer-name-history
                   :action   ,#'switch-to-buffer
+                  :enabled  ,(lambda () (activities-current))
                   :items
                   ,(lambda ()
-                     (let* ((activity (or (activities-current)
-                                          (car activities-list)))
+                     (let* ((activity (activities-current))
                             (buffers (and activity
                                           (let ((tab (activities-tabs--tab activity)))
                                             (activities-tabs--tab-parameter 'activities-buffer-list tab)))))

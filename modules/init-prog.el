@@ -222,7 +222,7 @@
   (:load-after clojure-mode))
 
 (setup envrc
-  (:defer (:require envrc))
+  (:hooks after-init-hook envrc-global-mode)
   (:bind "C-c e" envrc-command-map))
 
 (provide 'init-prog)

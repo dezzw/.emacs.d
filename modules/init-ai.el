@@ -3,7 +3,7 @@
 ;;; Code:
 
 (setup copilot-chat
-  (:load-after org magit)
+  (:load-after magit)
   (:hooks git-commit-setup-hook copilot-chat-insert-commit-message)
   (:option copilot-chat-model "claude-3.7-sonnet-thought"))
 

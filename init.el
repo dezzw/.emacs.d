@@ -52,21 +52,36 @@
        diff-hl goggles web-mode js2-mode move-dup diminish
        doom-modeline git-link apheleia pdf-tools ox-pandoc
        macrostep json-mode orderless kind-icon git-modes git-blamed
-       org-modern ace-pinyin marginalia org-remark
-       denote-org denote-markdown rainbow-mode prettier-js
-       vterm vterm-toggle org-cliplink language-detection meow-tree-sitter
+       ace-pinyin marginalia rainbow-mode prettier-js
+       vterm vterm-toggle language-detection meow-tree-sitter
        markdown-mode mode-line-bell embark-consult speed-type
        typescript-mode nerd-icons-dired command-log-mode
        browse-kill-ring rainbow-delimiters default-text-scale denote
        nerd-icons-corfu nerd-icons-completion whitespace-cleanup-mode
        eshell-syntax-highlighting consult-dir dirvish swift-mode
        color-theme-sanityinc-tomorrow highlight-parentheses
+       ;;; lsp
        lsp-mode lsp-tailwindcss lsp-sourcekit lsp-haskell lsp-java lsp-pyright
-       lsp-ui dap-mode flycheck consult-lsp clojure-mode cider babashka neil
-       aggressive-indent-mode envrc helpful
+       lsp-ui dap-mode flycheck consult-lsp
+
+       ;;; org related
+       org-modern org-appear org-remark org-tidy org-cliplink org-download
+       visual-fill-column valign
+       (org-modern-indent :type git :host github :repo "jdtsmith/org-modern-indent")
+       denote-org denote-markdown
+
+       ;;; language related
+       ;;; Clojure
+       clojure-mode cider babashka neil
+       ;;; LaTeX
+       auctex
        fennel-mode nix-ts-mode
-       ;;;
-       activities
+       ;;; Scheme
+       geiser-chez
+
+       ;;; utilities
+       zoom activities
+       jinx envrc helpful aggressive-indent-mode
        (image-slicing :host github :repo "ginqi7/image-slicing")
        (emt :host github :repo "roife/emt")
        (meow :host github :repo "meow-edit/meow")

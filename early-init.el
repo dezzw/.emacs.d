@@ -173,7 +173,7 @@
 (setq use-dialog-box nil)
 
 (unless (memq window-system '(mac ns))
-  (setq menu-bar-mode nil))
+  (menu-bar-mode -1))
 
 (when (fboundp 'horizontal-scroll-bar-mode)
   (horizontal-scroll-bar-mode -1))

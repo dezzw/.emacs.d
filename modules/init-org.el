@@ -13,6 +13,7 @@
   (:when-loaded
     (:also-load lib-org)
     (:also-load image-slicing)
+    (:also-load org-download)
     (:option
      org-directory *org-path*
      ;; emphasis
@@ -29,6 +30,7 @@
                                  "\\|"
                                  "\\(?:\\*\\|[+-]?[[:alnum:].,\\]*[[:alnum:]]\\)\\)")
      org-image-actual-width nil
+     org-download-image-dir "./images/"
      ;; remove org-src content indent
      org-edit-src-content-indentation 0
      org-src-preserve-indentation nil
@@ -81,7 +83,14 @@
     (:with-mode org-mode
       (:hook (lambda () (electric-pair-local-mode -1)))
       (:hook org-indent-mode)
-      (:hook (lambda () (setq truncate-lines nil))))
+      (:hook (lambda () (setq truncate-lines nil)))
+      (:hook (lambda ()
+               (setq visual-fill-column-width 110
+                     visual-fill-column-center-text t)
+               (visual-fill-column-mode 1)))
+      (:hook valign-mode)
+      (:hook org-appear-mode)
+      (:hook org-tidy-mode))
     (:with-hook org-after-todo-state-change-hook
       (:hook log-todo-next-creation-date)
       (:hook org-copy-todo-to-today))
@@ -162,31 +171,31 @@
     (:option
      org-latex-pdf-process '("latexmk -f -xelatex -shell-escape -output-directory=%o %F")
      org-preview-latex-default-process 'dvisvgm
-     org-preview-latex-process-alist
-     '((dvisvgm :programs
-                ("xelatex" "dvisvgm")
-                :description "xdv > svg"
-                :message "you need to install the programs: xelatex and dvisvgm."
-                :use-xcolor t
-                :image-input-type "xdv"
-                :image-output-type "svg"
-                :image-size-adjust (1.5 . 1.2)
-                :latex-compiler
-                ("xelatex -no-pdf -interaction nonstopmode -shell-escape -output-directory %o %f")
-                :image-converter
-                ("dvisvgm %f -e -n -b min -c %S -o %O"))
-       (imagemagick :programs
-                    ("xelatex" "convert")
-                    :description "pdf > png"
-                    :message "you need to install the programs: xelatex and imagemagick."
-                    :use-xcolor t
-                    :image-input-type "pdf"
-                    :image-output-type "png"
-                    :image-size-adjust (1.0 . 1.0)
-                    :latex-compiler
-                    ("xelatex -interaction nonstopmode -output-directory %o %f")
-                    :image-converter
-                    ("convert -density %D -trim -antialias %f -quality 100 %O")))
+     ;; org-preview-latex-process-alist
+     ;; '((dvisvgm :programs
+     ;;            ("xelatex" "dvisvgm")
+     ;;            :description "xdv > svg"
+     ;;            :message "you need to install the programs: xelatex and dvisvgm."
+     ;;            :use-xcolor t
+     ;;            :image-input-type "xdv"
+     ;;            :image-output-type "svg"
+     ;;            :image-size-adjust (1.5 . 1.2)
+     ;;            :latex-compiler
+     ;;            ("xelatex -no-pdf -interaction nonstopmode -shell-escape -output-directory %o %f")
+     ;;            :image-converter
+     ;;            ("dvisvgm %f -e -n -b min -c %S -o %O"))
+     ;;   (imagemagick :programs
+     ;;                ("xelatex" "convert")
+     ;;                :description "pdf > png"
+     ;;                :message "you need to install the programs: xelatex and imagemagick."
+     ;;                :use-xcolor t
+     ;;                :image-input-type "pdf"
+     ;;                :image-output-type "png"
+     ;;                :image-size-adjust (1.0 . 1.0)
+     ;;                :latex-compiler
+     ;;                ("xelatex -interaction nonstopmode -output-directory %o %f")
+     ;;                :image-converter
+     ;;                ("convert -density %D -trim -antialias %f -quality 100 %O")))
      org-format-latex-options '(:foreground default :background "Transparent" :scale 1.5 :html-foreground "Black" :html-background "Transparent" :html-scale 1.0 :matchers
                                             ("begin" "$1" "$" "$$" "\\(" "\\["))
      org-latex-listings 'minted
@@ -368,6 +377,11 @@
              org-modern-table-horizontal 0.2
              org-modern-checkbox nil
              org-ellipsis "[+]")
+
+    (:also-load
+     org-modern-indent)
+    (add-hook 'org-mode-hook #'org-modern-indent-mode 90)
+
     ;; 美化 checkbox，unchecked 和 checked 分别继承 TODO 的 TODO 和 DONE 的颜色。
     ;; https://emacs.stackexchange.com/questions/45291/change-color-of-org-mode-checkboxes
     (defface org-checkbox-todo-text

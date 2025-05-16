@@ -68,6 +68,12 @@
     (:option magit-log-margin '(t age-abbreviated magit-log-margin-width :author 11))
     (:advice magit-log-format-margin :filter-args #'+magit-log--abbreviate-author)))
 
+(setup forge
+  (:load-after magit)
+  (:when-loaded
+    ;; Make it easier to see that a topic was closed.
+    (:face forge-topic-closed ((t (:strike-through t))))))
+
 (setup diff-hl
   (:defer (diff-hl-mode))
   (:when-loaded

@@ -9,7 +9,8 @@
     (unless (custom-theme-p theme)
       (load-theme theme)))
   (custom-set-variables `(custom-enabled-themes (quote ,custom-enabled-themes)))
-  (+setup-fonts))
+  (when (display-graphic-p)
+  (+setup-fonts)))
 
 (defun set-dividers-and-fringe-color ()
   "Set the color of dividers and fringe to match the current theme."

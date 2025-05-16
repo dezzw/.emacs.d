@@ -56,7 +56,7 @@
   (:face panel-title-face ((t (:inherit font-lock-constant-face :height 1.2 :italic t :family "Operator Mono"))))
   (panel-create-hook))
 
-(when (display-graphic-p)
+(when (or window-system (daemonp))
   (setup faces
     (:also-load lib-face)
     (:hooks window-setup-hook +setup-fonts
@@ -142,6 +142,10 @@
   (:defer (:require window-navigation))
   (:when-loaded (window-navigation-mode)))
 
+(setup zoom
+  (:hook-into window-setup server-after-make-frame)
+  (:option zoom-size '(0.618 . 0.618)))
+
 (setup popper
   (:global "C-~"   popper-toggle
            "M-~"   popper-cycle
@@ -220,25 +224,31 @@
    "C-x C-a b" activities-switch-buffer
    "C-x C-a g" activities-revert
    "C-x C-a l" activities-list)
-  (:after consult
-    ;; hide full buffer list (still available with "b" prefix)
-    (consult-customize consult--source-buffer :hidden t :default nil)
-    (defvar consult--source-activities
-      `(:name     "Activity Buffers"
-                  :narrow   ?a
-                  :category buffer
-                  :history  buffer-name-history
-                  :action   ,#'switch-to-buffer
-                  :enabled  ,(lambda () (activities-current))
-                  :items
-                  ,(lambda ()
-                     (let* ((activity (activities-current))
-                            (buffers (and activity
-                                          (let ((tab (activities-tabs--tab activity)))
-                                            (activities-tabs--tab-parameter 'activities-buffer-list tab)))))
-                       (mapcar #'buffer-name buffers))))
-      "Consult source for current activity's buffers.")
-    (add-to-list 'consult-buffer-sources 'consult--source-activities)))
+  (:when-loaded
+    (:after consult
+      ;; hide full buffer list (still available with "b" prefix)
+      (consult-customize consult--source-buffer
+                         ;; :hidden ,(lambda () (activities-current))
+                         :enabled (lambda () (not (activities-current)))
+                         :default t)
+      (defvar consult--source-activities
+        `(:name     "Activity Buffers"
+                    :narrow   ?a
+                    :category buffer
+                    :history  buffer-name-history
+                    :action   ,#'switch-to-buffer
+                    :enabled  ,(lambda () (activities-current))
+                    :items
+                    ,(lambda ()
+                       (consult--buffer-query
+                        :predicate (lambda (b)
+                                     (memq b (activities-tabs--tab-parameter
+                                              'activities-buffer-list
+                                              (activities-tabs--tab (activities-current)))))
+                        :sort 'visibility
+                        :as #'buffer-name)))
+        "Consult source for current activity's buffers.")
+      (add-to-list 'consult-buffer-sources 'consult--source-activities))))
 
 (setup which-key
   (:hook-into after-init))

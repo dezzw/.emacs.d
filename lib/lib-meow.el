@@ -132,6 +132,9 @@ If N is negative, select to the beginning of the previous Nth thing instead."
    ;; SPC j/k will run the original command in MOTION state.
    '("j" . "H-j")
    '("k" . "H-k")
+   ;; function shortcuts
+   '("SPC" . execute-extended-command)
+   '("f" . find-file)
    ;; Use SPC (0-9) for digit arguments.
    '("1" . meow-digit-argument)
    '("2" . meow-digit-argument)
@@ -157,10 +160,8 @@ If N is negative, select to the beginning of the previous Nth thing instead."
    '("2" . meow-expand-2)
    '("1" . meow-expand-1)
    '("-" . negative-argument)
-   '("/" . find-file)
-   (if *is-mac*
-       '(";" . sis-meow-reverse)
-     '(";" . meow-reverse))
+   '("/" . consult-line)
+   '(";" . meow-reverse)
    '("," . meow-inner-of-thing)
    '("." . meow-bounds-of-thing)
    '("[" . meow-beginning-of-thing)

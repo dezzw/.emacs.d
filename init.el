@@ -126,7 +126,7 @@
 (require 'init-completion)
 (require 'init-prog)
 (require 'init-util)
-;; (require 'init-transient)
+(require 'init-transient)
 
 (require 'init-org)
 (require 'init-reader)

@@ -131,9 +131,9 @@
         ('other
          (setq sis--prefix-override-map-enable t))))))
 
-(setup auto-space
-  (:defer (:require auto-space))
-  (:when-loaded (auto-space-mode)))
+;; (setup auto-space
+;;   (:defer (:require auto-space))
+;;   (:when-loaded (auto-space-mode)))
 
 ;; 剪贴板查找
 (setup browse-kill-ring

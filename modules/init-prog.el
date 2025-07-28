@@ -52,8 +52,6 @@
            python-indent-guess-indent-offset-verbose nil))
 
 (setup apheleia
-  (:with-mode prog-mode (:require apheleia)
-              (:hook apheleia-global-mode))
   (:when-loaded
     (:global "C-c C-x C-f" apheleia-format-buffer)
     ;; $ brew install isort black google-java-format stylua libxml2

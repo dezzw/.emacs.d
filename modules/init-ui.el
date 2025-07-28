@@ -44,17 +44,18 @@
       (add-to-list 'default-frame-alist border)
       (add-to-list 'initial-frame-alist border))))
 
-(setup panel
-  (:option panel-latitude 43.45193874534566
-           panel-longitude -80.49129101085033
-           panel-path-max-length 35
-           panel-min-left-padding 10
-           panel-image-file (concat user-emacs-directory "assets/bitmap.png")
-           panel-image-width 400
-           panel-image-height 169
-           panel-title "The best way to predict the future is to invent it.")
-  (:face panel-title-face ((t (:inherit font-lock-constant-face :height 1.2 :italic t :family "Operator Mono"))))
-  (panel-create-hook))
+(when (or window-system (daemonp))
+  (setup panel
+    (:option panel-latitude 43.45193874534566
+             panel-longitude -80.49129101085033
+             panel-path-max-length 35
+             panel-min-left-padding 10
+             panel-image-file (concat user-emacs-directory "assets/bitmap.png")
+             panel-image-width 400
+             panel-image-height 169
+             panel-title "The best way to predict the future is to invent it.")
+    (:face panel-title-face ((t (:inherit font-lock-constant-face :height 1.2 :italic t :family "Operator Mono"))))
+    (panel-create-hook)))
 
 (when (or window-system (daemonp))
   (setup faces
@@ -125,8 +126,6 @@
   (:hooks minibuffer-setup-hook highlight-parentheses-minibuffer-setup)
   (:hook-into prog-mode))
 
-(setup popup-frames (:defer (:require popup-frames)))
-
 (setup dimmer
   (:defer (dimmer-mode t))
   (:when-loaded
@@ -138,9 +137,9 @@
 
 (setup nerd-icons (:defer (:require nerd-icons)))
 
-(setup window-navigation
-  (:defer (:require window-navigation))
-  (:when-loaded (window-navigation-mode)))
+;; (setup window-navigation
+;;   (:defer (:require window-navigation))
+;;   (:when-loaded (window-navigation-mode)))
 
 (setup zoom
   (:hook-into window-setup server-after-make-frame)

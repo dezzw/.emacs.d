@@ -2,6 +2,8 @@
 ;;; Commentary:
 ;;; Code:
 
+(when *is-mac*
+  (progn
 (setup copilot-chat
   (:load-after magit)
   (:hooks git-commit-setup-hook copilot-chat-insert-commit-message)
@@ -14,6 +16,7 @@
     (:bind
      "C-e" copilot-accept-completion))
   (:option copilot-indent-offset-warning-disable t))
+))
 
 (provide 'init-ai)
 ;;; init-ai.el ends here

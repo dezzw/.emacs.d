@@ -66,7 +66,8 @@
 (setup cape
   (:load-after corfu)
   (:when-loaded
-    (add-to-list 'completion-at-point-functions #'cape-emoji)
+    (when (or window-system (daemonp))
+      (add-to-list 'completion-at-point-functions #'cape-emoji))
     (add-to-list 'completion-at-point-functions #'cape-dabbrev)
     (add-to-list 'completion-at-point-functions #'cape-file)))
 
@@ -92,6 +93,27 @@
            lsp-enable-indentation nil
            lsp-idle-delay 0.500
            lsp-keymap-prefix "C-x L")
+  (:with-mode python-ts-mode
+    (:hook
+     lsp-inlay-hints-mode
+     (lambda ()
+       (require 'lsp-pyright)
+       (setq lsp-disabled-clients '(pylsp mspyls ruff))
+       (setq lsp-pyright-langserver-command "basedpyright")
+       (lsp-deferred))))
+
+  (:with-mode java-ts-mode
+    (:hook
+     (lambda ()
+       (require 'lsp-java)
+       (lsp-deferred))))
+
+  (:with-mode swift-mode
+    (:hook
+     (lambda ()
+       (require 'lsp-sourcekit)
+       (setq lsp-sourcekit-executable "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/sourcekit-lsp")
+       (lsp-deferred))))
   (:when-loaded
     (:with-map lsp-mode-map
       (:bind "M-<return>" lsp-execute-code-action))
@@ -100,26 +122,6 @@
       (:hook (lambda ()
                (setf (alist-get 'lsp-capf completion-category-defaults)
                      '((styles . (orderless flex)))))))
-    (:with-mode python-ts-mode
-      (:hook
-       lsp-inlay-hints-mode
-       (lambda ()
-         (require 'lsp-pyright)
-         (setq lsp-pyright-langserver-command "basedpyright")
-         (lsp-deferred))))
-
-    (:with-mode java-ts-mode
-      (:hook
-       (lambda ()
-         (require 'lsp-java)
-         (lsp-deferred))))
-
-    (:with-mode swift-mode
-      (:hook
-       (lambda ()
-         (require 'lsp-sourcekit)
-         (setq lsp-sourcekit-executable "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/sourcekit-lsp")
-         (lsp-deferred))))
 
     (:with-mode lsp-tailwindcss-major-modes
       (:hook

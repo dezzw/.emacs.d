@@ -145,5 +145,40 @@
         ("i" "invalidate cache" projectile-invalidate-cache :transient t)
         ("z" "cache current file" projectile-cache-current-file)]])))
 
+(defvar my-linuxPC-Lock-p "cli455")
+(defvar my-linuxPC-Lock-l "0")
+
+(defun my/set-linuxPC-Lock-p ()
+  (interactive)
+  (setq my-linuxPC-Lock-p (read-string "Port (-p, blank to omit): " my-linuxPC-Lock-p)))
+
+(defun my/set-linuxPC-Lock-l ()
+  (interactive)
+  (setq my-linuxPC-Lock-l (read-string "Lock (-l, blank to omit): " my-linuxPC-Lock-l)))
+
+(defun my/linuxPC-Lock-build-cmd ()
+  (let ((args (list "/home/desmond/workspace/bitstream/test/fpga/linuxPC_Lock.py")))
+    (when (and my-linuxPC-Lock-p (not (string-empty-p my-linuxPC-Lock-p)))
+      (setq args (append args (list "-p" my-linuxPC-Lock-p))))
+    (when (and my-linuxPC-Lock-l (not (string-empty-p my-linuxPC-Lock-l)))
+      (setq args (append args (list "-l" my-linuxPC-Lock-l))))
+    (format "python3 %s" (mapconcat #'shell-quote-argument args " "))))
+
+(defun my/linuxPC-Lock-run ()
+  (interactive)
+  (let ((cmd (my/linuxPC-Lock-build-cmd)))
+    (when (yes-or-no-p (format "Run command: %s ?" cmd))
+      (compile cmd))))
+
+(transient-define-prefix my-linuxPC-Lock ()
+  "Edit args and run linuxPC_Lock.py. See final command on run."
+  [ ["Arguments"
+      ("p" (lambda () (format "-p (Port) [%s]" my-linuxPC-Lock-p)) my/set-linuxPC-Lock-p)
+      ("l" (lambda () (format "-l (Lock) [%s]" my-linuxPC-Lock-l)) my/set-linuxPC-Lock-l)]
+    ["Actions"
+      ("r" "Run" my/linuxPC-Lock-run)] ])
+
+(global-set-key (kbd "C-c L") #'my-linuxPC-Lock)
+
 (provide 'init-transient)
 ;;; init-transient.el ends here

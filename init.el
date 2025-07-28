@@ -22,7 +22,7 @@
                           "Noto Emoji"
                           "Segoe UI Emoji"
                           "Symbola"))
-(defconst *default-font* "MonaspiceAr Nerd Font Mono-12")
+(defconst *default-font* "MonaspiceAr Nerd Font Mono")
 (defconst *zh-default-font* "LXGW WenKai")
 (defconst *symbol-default-font* "Symbols Nerd Font Mono")
 
@@ -53,7 +53,8 @@
        doom-modeline git-link apheleia pdf-tools ox-pandoc
        macrostep json-mode orderless kind-icon git-modes git-blamed
        ace-pinyin marginalia rainbow-mode prettier-js
-       vterm vterm-toggle language-detection meow-tree-sitter
+       ;;vterm 
+       vterm-toggle language-detection meow-tree-sitter
        markdown-mode mode-line-bell embark-consult speed-type
        typescript-mode nerd-icons-dired command-log-mode
        browse-kill-ring rainbow-delimiters default-text-scale denote

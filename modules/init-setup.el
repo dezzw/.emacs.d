@@ -7,6 +7,17 @@
 
 (require 'setup)
 
+(setup-define :pkg
+  (lambda (&optional package)
+    "Install PACKAGE with straight.el if not installed, then require it.
+If PACKAGE is nil, use `setup-current-feature'."
+    (let ((pkg (or package setup-current-feature)))
+      `(unless (require ',pkg nil 'noerror)
+         (straight-use-package ',pkg)
+         (require ',pkg))))
+  :documentation "Install PACKAGE with straight.el if needed, then require it."
+  :after-loaded t)
+
 (setup-define :defer
   (lambda (features)
     `(run-with-idle-timer 1 nil

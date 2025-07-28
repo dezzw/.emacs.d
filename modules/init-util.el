@@ -88,6 +88,7 @@
   (:autoload leetcode-list-all)
   (:option leetcode-language "swift"))
 
+(when *is-mac*
 (setup jinx
   (:hooks emacs-startup-hook global-jinx-mode)
   (:when-loaded
@@ -112,7 +113,7 @@
       (modify-syntax-entry '(#x30000 . #x3134F) "_" st) ; CJK Unified Ideographs Extension G
       (modify-syntax-entry '(#x31350 . #x323AF) "_" st) ; CJK Unified Ideographs Extension H
       (modify-syntax-entry '(#x2EBF0 . #x2EE5F) "_" st) ; CJK Unified Ideographs Extension I
-      )))
+      ))))
 
 (provide 'init-util)
 ;;; init-util.el ends here

@@ -7,7 +7,7 @@
 (define-derived-mode jsp-mode web-mode "Web")
 (define-derived-mode wxss-mode css-mode "CSS")
 (define-derived-mode wxml-mode html-mode "HTML")
-(define-derived-mode basilisp-mode clojure-mode "Basilisp")
+(define-derived-mode basilisp-ts-mode clojure-ts-mode "Basilisp")
 
 (setup (:with-mode vue-mode (:file-match "\\.vue\\'"))
   (:with-mode jsp-mode (:file-match "\\.jsp\\'"))
@@ -35,7 +35,7 @@
   (:with-mode fennel-mode (:file-match "\\.fnl\\'"))
   (:with-mode dockerfile-ts-mode (:file-match "\\.Dockerfile\\'"))
   (:with-mode markdown-ts-mode (:file-match "\\.md\\'"))
-  (:with-mode basilisp-mode (:file-match "\\.lpy\\'")))
+  (:with-mode basilisp-ts-mode (:file-match "\\.lpy\\'")))
 
 (setup display-fill-column-indicator (:hook-into prog-mode))
 (setup display-line-numbers (:hook-into prog-mode))
@@ -161,12 +161,11 @@
   ;; (setq xref-show-xrefs-function #'+xref-show-xrefs)
   (:hooks xref-after-jump-hook +xref-quit-window))
 
-(setup treesit-auto
-  (:defer (:require treesit-auto))
+(setup treesit
+  (:also-load lib-treesit)
   (:when-loaded
-    (:option treesit-auto-install 'prompt)
-    (treesit-auto-add-to-auto-mode-alist '(bash bibtex cmake commonlisp css dockerfile html java javascript json latex make lua org python rust ruby sql toml typescript typst vue yaml))
-    (global-treesit-auto-mode)))
+    (:option treesit-language-source-alist +treesit-language-source-alist)))
+
 
 (setup indent-bars
   (:with-mode (java-ts-mode python-ts-mode vue-mode typescript-mode typescript-ts-mode js-mode)
@@ -189,25 +188,6 @@
              indent-bars-treesit-scope '((python function_definition class_definition for_statement
                                                  if_statement with_statement while_statement)))))
 
-(setup dap-mode
-  (:load-after lsp-mode)
-  (:when-loaded
-    (:option dap-auto-configure-features '(sessions locals controls tooltip))
-    (:with-map dap-mode-map
-      (:bind
-       "C-x D D" dap-debug
-       "C-x D d" dap-debug-last)))
-  (:with-mode python-ts-mode
-    (:hook
-     (lambda ()
-       (require 'dap-python)
-       (setq dap-python-debugger 'debugpy))))
-
-  (:with-mode java-ts-mode
-    (:hook
-     (lambda ()
-       (require 'dap-java)))))
-
 (setup separedit
   (:defer (:require separedit))
   (:when-loaded
@@ -216,12 +196,20 @@
     (:with-map help-mode-map (:bind "C-c '" separedit))
     (:option separedit-default-mode 'org-mode)))
 
-(setup cider
-  (:load-after clojure-mode))
-
 (setup envrc
   (:hooks after-init-hook envrc-global-mode)
   (:bind "C-c e" envrc-command-map))
+
+(setup tramp
+  (:option tramp-default-method "ssh"
+           tramp-auto-save-directory (expand-file-name "tramp-autosaves/" user-emacs-directory)
+           enable-remote-dir-locals t
+           remote-file-name-inhibit-cache 60))
+
+(setup citre
+  (:defer (:require citre))
+  (:also-load citre-config))
+
 
 (provide 'init-prog)
 ;;; init-prog.el ends here

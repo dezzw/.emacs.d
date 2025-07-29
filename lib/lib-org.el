@@ -267,6 +267,20 @@ If there's no region, marks the closest sexp first."
       (define-key org-mode-map (kbd key)
                   `(lambda () (interactive) (+org-emphasize-below-point ,char))))))
 
+(defun +org-set-latex-scale ()
+  "Set `org-format-latex-options' :scale based on LaTeX fragment type."
+  (let* ((element (org-element-context))
+         (type (org-element-type element))
+         (scale (if (eq type 'latex-fragment) 0.85 1.2)))
+    (setq org-format-latex-options
+          (plist-put org-format-latex-options :scale scale))))
+
+(defun +org-latex-preview ()
+  "Set scale and preview LaTeX fragment at point."
+  (interactive)
+  (+org-set-latex-scale)
+  (org-latex-preview))
+
 (provide 'lib-org)
 ;;;; provide
 ;;; lib-org.el ends here.

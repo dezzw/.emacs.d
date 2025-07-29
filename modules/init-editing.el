@@ -63,11 +63,12 @@
   (:with-function meow-setup (:autoload-this))
   (meow-global-mode 1)
   (meow-setup)
-  (:option  wrap-keymap (let ((map (make-keymap)))
-                          (suppress-keymap map)
-                          (dolist (k '("(" "[" "{" "<"))
-                            (define-key map k #'insert-pair))
-                          map))
+  (:option meow-use-clipboard t
+           wrap-keymap (let ((map (make-keymap)))
+                         (suppress-keymap map)
+                         (dolist (k '("(" "[" "{" "<"))
+                           (define-key map k #'insert-pair))
+                         map))
   (meow-normal-define-key (cons "\\" wrap-keymap))
   (:hooks meow-insert-mode-hook
           (lambda ()
@@ -179,9 +180,9 @@
   (:global [remap just-one-space] cycle-spacing)
   (setq-default show-trailing-whitespace nil)
   (:with-mode (prog-mode text-mode conf-mode)
-    (:local-set show-trailing-whitespace t))
-  (global-whitespace-cleanup-mode)
-  (diminish 'whitespace-cleanup-mode))
+    (:local-set show-trailing-whitespace t)))
+;; (global-whitespace-cleanup-mode)
+;; (diminish 'whitespace-cleanup-mode))
 
 (setup vundo
   (:option vundo--window-max-height 5

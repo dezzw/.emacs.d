@@ -8,15 +8,17 @@
 (require 'setup)
 
 (setup-define :pkg
-  (lambda (&optional package)
-    "Install PACKAGE with straight.el if not installed, then require it.
-If PACKAGE is nil, use `setup-current-feature'."
-    (let ((pkg (or package setup-current-feature)))
-      `(unless (require ',pkg nil 'noerror)
-         (straight-use-package ',pkg)
-         (require ',pkg))))
-  :documentation "Install PACKAGE with straight.el if needed, then require it."
-  :after-loaded t)
+  (lambda (pkg)
+    (let ((pkg-name (if (listp pkg) (car pkg) pkg))
+          (recipe (if (listp pkg) (cdr pkg) nil)))
+      `(progn
+         (unless (featurep ',pkg-name)
+           ,(if recipe
+                `(straight-use-package ',(cons pkg-name recipe))
+              `(straight-use-package ',pkg-name)))
+         (require ',pkg-name))))
+  :documentation "Use straight to install and require PKG.
+If a recipe is provided (in a list), it is passed to straight-use-package.")
 
 (setup-define :defer
   (lambda (features)

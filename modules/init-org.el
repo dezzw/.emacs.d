@@ -39,6 +39,7 @@
      org-goto-interface 'outline-path-completion
      ;; Various preferences
      org-log-done t
+     org-startup-indented t
      org-edit-timestamp-down-means-later t
      org-hide-emphasis-markers t
      org-fold-catch-invisible-edits 'show
@@ -82,7 +83,6 @@
     (:advice org-refile :after (lambda (&rest _) (gtd-save-org-buffers)))
     (:with-mode org-mode
       (:hook (lambda () (electric-pair-local-mode -1)))
-      (:hook org-indent-mode)
       (:hook (lambda () (setq truncate-lines nil)))
       (:hook (lambda ()
                (setq visual-fill-column-width 110
@@ -90,7 +90,9 @@
                (visual-fill-column-mode 1)))
       (:hook valign-mode)
       (:hook org-appear-mode)
-      (:hook org-tidy-mode))
+      (:hook (lambda ()
+               (setq org-tidy-properties-style 'fringe)
+               (org-tidy-mode 1))))
     (:with-hook org-after-todo-state-change-hook
       (:hook log-todo-next-creation-date)
       (:hook org-copy-todo-to-today))
@@ -102,6 +104,7 @@
   (:load-after org)
   (:when-loaded
     (:also-load
+     ob-async
      ob-python
      ob-latex
      ob-verb)
@@ -169,39 +172,15 @@
   (:load-after org)
   (:when-loaded
     (:option
-     org-latex-pdf-process '("latexmk -f -xelatex -shell-escape -output-directory=%o %F")
+     org-latex-pdf-process '("latexmk -pdflatex='xelatex -shell-escape -interaction=nonstopmode' -pdf -f %f")
      org-preview-latex-default-process 'dvisvgm
-     ;; org-preview-latex-process-alist
-     ;; '((dvisvgm :programs
-     ;;            ("xelatex" "dvisvgm")
-     ;;            :description "xdv > svg"
-     ;;            :message "you need to install the programs: xelatex and dvisvgm."
-     ;;            :use-xcolor t
-     ;;            :image-input-type "xdv"
-     ;;            :image-output-type "svg"
-     ;;            :image-size-adjust (1.5 . 1.2)
-     ;;            :latex-compiler
-     ;;            ("xelatex -no-pdf -interaction nonstopmode -shell-escape -output-directory %o %f")
-     ;;            :image-converter
-     ;;            ("dvisvgm %f -e -n -b min -c %S -o %O"))
-     ;;   (imagemagick :programs
-     ;;                ("xelatex" "convert")
-     ;;                :description "pdf > png"
-     ;;                :message "you need to install the programs: xelatex and imagemagick."
-     ;;                :use-xcolor t
-     ;;                :image-input-type "pdf"
-     ;;                :image-output-type "png"
-     ;;                :image-size-adjust (1.0 . 1.0)
-     ;;                :latex-compiler
-     ;;                ("xelatex -interaction nonstopmode -output-directory %o %f")
-     ;;                :image-converter
-     ;;                ("convert -density %D -trim -antialias %f -quality 100 %O")))
-     org-format-latex-options '(:foreground default :background "Transparent" :scale 1.5 :html-foreground "Black" :html-background "Transparent" :html-scale 1.0 :matchers
+     org-format-latex-options '(:foreground default :background "Transparent" :scale 1.0 :html-foreground "Black" :html-background "Transparent" :html-scale 1.0 :matchers
                                             ("begin" "$1" "$" "$$" "\\(" "\\["))
      org-latex-listings 'minted
-     org-latex-minted-options '(("breaklines")
-                                ("bgcolor" "bg"))
-     org-latex-compiler "xelatex"
+     org-latex-minted-options '(("breaklines" "true")
+                                ("fontsize" "\\small")
+                                ("bgcolor" "none"))
+     ;; org-latex-compiler "xelatex"
      org-latex-packages-alist
      '(;; hook right arrow with text above and below
        ;; https://tex.stackexchange.com/questions/186896/xhookrightarrow-and-xmapsto
@@ -226,10 +205,13 @@
        ;; algorithm
        ;; https://tex.stackexchange.com/questions/229355/algorithm-algorithmic-algorithmicx-algorithm2e-algpseudocode-confused
        ("ruled,linesnumbered" "algorithm2e" t)
+       ("" "minted" t)
+       ("" "xcolor" t)
        ;; You should not load the algorithm2e, algcompatible, algorithmic packages if you have already loaded algpseudocode.
        ;; ("" "algpseudocode" t)
        ;; for chinese preview
-       ("fontset=LXGW WenKai,UTF8" "ctex" t)))))
+       ;; ("fontset=LXGW WenKai,UTF8" "ctex" t)
+       ))))
 
 (setup org-agenda
   (:global "C-c a" org-agenda)

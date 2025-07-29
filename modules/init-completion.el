@@ -153,9 +153,8 @@
    lsp-bridge-signature-show-function 'lsp-bridge-signature-show-with-frame
    lsp-bridge-signature-show-with-frame-position "top-right"
    lsp-bridge-enable-mode-line nil
-   lsp-bridge-enable-hover-diagnostic t
+   lsp-bridge-enable-hover-diagnostic nil
    lsp-bridge-enable-inlay-hint t
-   lsp-bridge-enable-hover-diagnostic t
    lsp-bridge-enable-org-babel t
 
    ;; acm configuration
@@ -195,7 +194,7 @@
     (:option flymake-no-changes-timeout nil
              ;; emacs@30 feature
              flymake-show-diagnostics-at-end-of-line 'fancy)
-             ;; flymake-fringe-indicator-position 'right-fringe)
+    ;; flymake-fringe-indicator-position 'right-fringe)
     (:with-mode prog-mode (:hook flymake-mode))
     (:with-mode emacs-lisp-mode (:hook (lambda()(flymake-mode -1))))))
 

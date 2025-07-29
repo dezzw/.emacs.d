@@ -51,26 +51,34 @@
   (:option python-indent-guess-indent-offset t
            python-indent-guess-indent-offset-verbose nil))
 
-(setup apheleia
-  (:when-loaded
-    (:global "C-c C-x C-f" apheleia-format-buffer)
-    ;; $ brew install isort black google-java-format stylua libxml2
-    ;; $ npm install -g prettier
-    (setf (alist-get 'google-java-format apheleia-formatters)
-          '("google-java-format" "--aosp" filepath))
-    (setf (alist-get 'stylua apheleia-formatters)
-          '("stylua" "--indent-type" "Spaces" filepath))
-    (setf (alist-get 'xmllint apheleia-formatters)
-          '("xmllint" "--encode" "utf-8" "--format" "-"))
+;; Not support format in region
+;; (setup apheleia
+;;   (:when-loaded
+;;     (:global "C-c C-x C-f" apheleia-format-buffer)
+;;     ;; $ brew install isort black google-java-format stylua libxml2
+;;     ;; $ npm install -g prettier
+;;     (setf (alist-get 'google-java-format apheleia-formatters)
+;;           '("google-java-format" "--aosp" filepath))
+;;     (setf (alist-get 'stylua apheleia-formatters)
+;;           '("stylua" "--indent-type" "Spaces" filepath))
+;;     (setf (alist-get 'xmllint apheleia-formatters)
+;;           '("xmllint" "--encode" "utf-8" "--format" "-"))
 
-    (setf (alist-get 'python-ts-mode     apheleia-mode-alist) '(isort black))
-    (setf (alist-get 'my-html-mode       apheleia-mode-alist) 'prettier-html)
-    (setf (alist-get 'sql-mode           apheleia-mode-alist) 'pgformatter)
-    (setf (alist-get 'xml-mode           apheleia-mode-alist) 'xmllint)
-    (setf (alist-get 'nxml-mode          apheleia-mode-alist) 'xmllint)
-    (setf (alist-get 'css-mode           apheleia-mode-alist) 'prettier)
-    (setf (alist-get 'typescript-ts-mode apheleia-mode-alist) 'prettier)
-    (setf (alist-get 'js-ts-mode         apheleia-mode-alist) 'prettier)))
+;;     (setf (alist-get 'python-ts-mode     apheleia-mode-alist) '(isort black))
+;;     (setf (alist-get 'my-html-mode       apheleia-mode-alist) 'prettier-html)
+;;     (setf (alist-get 'sql-mode           apheleia-mode-alist) 'pgformatter)
+;;     (setf (alist-get 'xml-mode           apheleia-mode-alist) 'xmllint)
+;;     (setf (alist-get 'nxml-mode          apheleia-mode-alist) 'xmllint)
+;;     (setf (alist-get 'css-mode           apheleia-mode-alist) 'prettier)
+;;     (setf (alist-get 'typescript-ts-mode apheleia-mode-alist) 'prettier)
+;;     (setf (alist-get 'js-ts-mode         apheleia-mode-alist) 'prettier)))
+
+(setup reformtter
+  (:pkg reformatter)
+  (:with-mode python-ts-mode
+    (reformatter-define black-format
+                        :program "black"
+                        :args '("-"))))
 
 (setup mmm-mode
   (:with-mode prog-mode (:require mmm-mode))

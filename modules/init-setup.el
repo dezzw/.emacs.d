@@ -5,6 +5,7 @@
 
 ;;; Code:
 
+(straight-use-package 'setup)
 (require 'setup)
 
 (setup-define :pkg

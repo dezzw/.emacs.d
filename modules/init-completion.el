@@ -2,7 +2,7 @@
 ;;; Commentary:
 ;;; Code:
 (setup orderless
-  (:defer (:require orderless))
+  (:defer (:pkg orderless))
   (:when-loaded
     (:option completion-styles '(orderless flex)
              completion-category-defaults nil
@@ -34,7 +34,7 @@
                    "Unholy mix of Orderless and Basic."))))
 
 (setup yasnippet
-  (:defer (:require yasnippet))
+  (:defer (:pkg yasnippet))
   (:when-loaded
     (yas-global-mode)
     (:option yas-verbosity 0)))
@@ -135,6 +135,11 @@
 ;;        (lambda ()
 ;;          (require 'dap-java))))))
 
+;;     (:with-mode java-ts-mode
+;;       (:hook
+;;        (lambda ()
+;;          (require 'dap-java))))))
+
 (setup lsp-bridge
   (:pkg (lsp-bridge :type git :host github :repo "manateelazycat/lsp-bridge"
                     :files (:defaults "*.el" "*.py" "acm" "core" "langserver" "multiserver" "resources")
@@ -182,9 +187,32 @@
     (yas-global-mode 1)
     (global-lsp-bridge-mode)))
 
+(setup flymake
+  (:defer (:require flymake))
+  (:when-loaded
+    ;; ??:? `flymake-no-changes-timeout` ???? nil ?,
+    ;; ???? `eglot-handle-notification` ? `:after` ???
+    (:option flymake-no-changes-timeout nil
+             ;; emacs@30 feature
+             flymake-show-diagnostics-at-end-of-line 'fancy)
+             ;; flymake-fringe-indicator-position 'right-fringe)
+    (:with-mode prog-mode (:hook flymake-mode))
+    (:with-mode emacs-lisp-mode (:hook (lambda()(flymake-mode -1))))))
+
+(setup flymake-bridge
+  (:pkg (flymake-bridge :type git :host github :repo "eki3z/flymake-bridge"))
+  (add-hook 'lsp-bridge-mode-hook #'flymake-bridge-setup))
+
+
+;; (setup flyover
+;;   (:pkg flyover)
+;;   (:hook-into flymake-mode)
+;;   (:option flyover-show-at-eol t
+;;            flyover-checkers '(flymake)))
+
 (when (featurep 'lsp-mode)
   (setup corfu
-    (:defer (:require corfu))
+    (:defer (:pkg corfu))
     (:when-loaded
       (:with-feature nerd-icons-corfu
         ;; Using VS Code icons as an alternative
@@ -208,6 +236,7 @@
 
   (setup cape
     (:load-after corfu)
+    (:pkg cape)
     (:when-loaded
       (add-to-list 'completion-at-point-functions #'cape-emoji)
       (add-to-list 'completion-at-point-functions #'cape-dabbrev)

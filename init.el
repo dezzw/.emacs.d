@@ -66,13 +66,13 @@
 
        ;;; org related
        org-modern org-appear org-remark org-tidy org-cliplink org-download
-       visual-fill-column valign
+       visual-fill-column valign ob-async
        (org-modern-indent :type git :host github :repo "jdtsmith/org-modern-indent")
        denote-org denote-markdown
 
        ;;; language related
        ;;; Clojure
-       clojure-mode cider babashka neil
+       clojure-ts-mode cider babashka neil
        ;;; LaTeX
        auctex
        fennel-mode nix-ts-mode
@@ -80,14 +80,13 @@
        geiser-chez
 
        ;;; utilities
-       zoom activities
+       zoom activities citre
        jinx envrc helpful aggressive-indent-mode
        (image-slicing :host github :repo "ginqi7/image-slicing")
        (emt :host github :repo "roife/emt")
        (meow :host github :repo "meow-edit/meow")
        (gptel :host github :repo "karthink/gptel")
        (ultra-scroll :host github :repo "jdtsmith/ultra-scroll")
-       (treesit-auto :host github :repo "LuciusChen/treesit-auto")
        (telega :host github :repo "LuciusChen/telega.el")
        (md :host github :repo "eki3z/md")
        ;; (telega :host github :repo "zevlg/telega.el")
@@ -106,6 +105,10 @@
                     ("terminfo/65" "terminfo/65/*")
                     ("integration" "integration/*")
                     (:exclude ".dir-locals.el" "*-tests.el")))
+
+       ;;; consult-omni
+       (consult-omni :type git :host github :repo "armindarvish/consult-omni" :files (:defaults "sources/*.el"))
+       browser-hist consult-notes consult-gh
        ))
 
 (dolist (e *use-package-list*) (straight-use-package e))

@@ -7,6 +7,19 @@
 
 (require 'setup)
 
+(setup-define :pkg
+  (lambda (pkg)
+    (let ((pkg-name (if (listp pkg) (car pkg) pkg))
+          (recipe (if (listp pkg) (cdr pkg) nil)))
+      `(progn
+         (unless (featurep ',pkg-name)
+           ,(if recipe
+                `(straight-use-package ',(cons pkg-name recipe))
+              `(straight-use-package ',pkg-name)))
+         (require ',pkg-name))))
+  :documentation "Use straight to install and require PKG.
+If a recipe is provided (in a list), it is passed to straight-use-package.")
+
 (setup-define :defer
   (lambda (features)
     `(run-with-idle-timer 1 nil

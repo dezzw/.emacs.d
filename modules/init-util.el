@@ -42,8 +42,6 @@
 (setup dirvish
   (:defer (:require dirvish))
   (:when-loaded
-    (:global "C-c f f" dirvish
-             "C-c f s" dirvish-side)
     (dirvish-override-dired-mode)
     (:option dirvish-quick-access-entries
              '(("h" "~/" "Home")

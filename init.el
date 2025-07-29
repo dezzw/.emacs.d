@@ -26,6 +26,9 @@
 (defconst *zh-default-font* "LXGW WenKai")
 (defconst *symbol-default-font* "Symbols Nerd Font Mono")
 
+(setq user-full-name "Desmond Wang")
+(setq user-mail-address "desmond.wang@netint.ca")
+
 ;; Install straight.el
 ;; branch develop
 (setq straight-repository-branch "develop")

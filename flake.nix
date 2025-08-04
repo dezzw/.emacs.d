@@ -34,7 +34,6 @@
           inherit system;
           overlays = [ emacs-overlay.overlay ];
         };
-
 	lib = pkgs.lib;
       in
       rec {

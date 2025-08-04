@@ -16,8 +16,8 @@
   (:global "M-`" 'ns-next-frame))
 
 (setup (:only-if (and (display-graphic-p)))
-  (:require lib-env)
-  (+load-env-file))
+   (:require lib-env)
+   (+load-env-file))
 
 (setup emt
   (:defer (:require emt))

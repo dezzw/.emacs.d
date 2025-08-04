@@ -34,60 +34,90 @@
           inherit system;
           overlays = [ emacs-overlay.overlay ];
         };
+
+	lib = pkgs.lib;
       in
-        rec {
-          emacs-patched =
-            (pkgs.emacs-igc.override {
-              withImageMagick = true;
-            }).overrideAttrs
-              (old: rec {
-                patches = (old.patches or [ ]) ++ [
-                  # Fix OS window role so that yabai can pick up Emacs
-                  (pkgs.fetchpatch {
-                    url = "https://raw.githubusercontent.com/d12frosted/homebrew-emacs-plus/master/patches/emacs-28/fix-window-role.patch";
-                    sha256 = "+z/KfsBm1lvZTZNiMbxzXQGRTjkCFO4QPlEK35upjsE=";
-                  })
+      rec {
+        languageServers = with pkgs; [
+          ccls
 
-                  # Add setting to enable rounded window with no decoration (still have to alter default-frame-alist)
-                  (pkgs.fetchpatch {
-                    url = "https://raw.githubusercontent.com/d12frosted/homebrew-emacs-plus/master/patches/emacs-31/round-undecorated-frame.patch";
-                    sha256 = "sha256-WWLg7xUqSa656JnzyUJTfxqyYB/4MCAiiiZUjMOqjuY=";
-                  })
+          ruff
+          basedpyright
 
-                  # Make Emacs aware of OS-level light/dark mode
-                  (pkgs.fetchpatch {
-                    url = "https://raw.githubusercontent.com/d12frosted/homebrew-emacs-plus/master/patches/emacs-31/system-appearance.patch";
-                    sha256 = "sha256-4+2U+4+2tpuaThNJfZOjy1JPnneGcsoge9r+WpgNDko=";
-                  })
+          vscode-langservers-extracted
+          typescript-language-server
+          bash-language-server
 
-                  ./patches/emacs-31/ns-alpha-background.patch
-                  ./patches/emacs-31/smooth-cursor.patch
-                ];
-              });
+          neil
+          clj-kondo
 
-          emacs-augmented = (
-            (pkgs.emacsPackagesFor emacs-patched).emacsWithPackages (
-              epkgs: with epkgs; [
-                # (callPackage ./site-packages/lsp-bridge/lsp-bridge.nix {
-                #   inherit (pkgs) fetchFromGitHub;
-                # })
+          nixd
+          texlab
+          lua-language-server
+          fennel-ls
 
-                vterm
-                pdf-tools
-                pkgs.emacsPackages.treesit-grammars.with-all-grammars
-              ]
-            )
-          );
+          # "${pkgs.vscode-extensions.ms-vscode.cpptools}/share/vscode/extensions/ms-vscode.cpptools/debugAdapters"
+        ];
 
-          packages.demacs = emacs-augmented;
+        emacs-patched =
+          (pkgs.emacs-igc.override {
+            withImageMagick = true;
+          }).overrideAttrs
+            (old: rec {
+              patches = (old.patches or [ ]) ++ [
+                # Fix OS window role so that yabai can pick up Emacs
+                (pkgs.fetchpatch {
+                  url = "https://raw.githubusercontent.com/d12frosted/homebrew-emacs-plus/master/patches/emacs-28/fix-window-role.patch";
+                  sha256 = "+z/KfsBm1lvZTZNiMbxzXQGRTjkCFO4QPlEK35upjsE=";
+                })
 
-          apps.demacs = flake-utils.lib.mkApp {
-            drv = packages.demacs;
-            name = "demacs";
-            exePath = "/bin/emacs";
-          };
-          packages.default = packages.demacs;
-          apps.default = apps.demacs;
-        }
+                # Add setting to enable rounded window with no decoration (still have to alter default-frame-alist)
+                (pkgs.fetchpatch {
+                  url = "https://raw.githubusercontent.com/d12frosted/homebrew-emacs-plus/master/patches/emacs-31/round-undecorated-frame.patch";
+                  sha256 = "sha256-WWLg7xUqSa656JnzyUJTfxqyYB/4MCAiiiZUjMOqjuY=";
+                })
+
+                # Make Emacs aware of OS-level light/dark mode
+                (pkgs.fetchpatch {
+                  url = "https://raw.githubusercontent.com/d12frosted/homebrew-emacs-plus/master/patches/emacs-31/system-appearance.patch";
+                  sha256 = "sha256-4+2U+4+2tpuaThNJfZOjy1JPnneGcsoge9r+WpgNDko=";
+                })
+
+                ./patches/emacs-31/ns-alpha-background.patch
+                ./patches/emacs-31/smooth-cursor.patch
+              ];
+            });
+
+        emacs-augmented = (
+          (pkgs.emacsPackagesFor emacs-patched).emacsWithPackages (
+            epkgs: with epkgs; [
+              # (callPackage ./site-packages/lsp-bridge/lsp-bridge.nix {
+              #   inherit (pkgs) fetchFromGitHub;
+              # })
+
+              vterm
+              pdf-tools
+              pkgs.emacsPackages.treesit-grammars.with-all-grammars
+            ]
+          )
+        );
+
+        emacsWithLanguageServers =
+          pkgs.runCommand "emacs-with-language-servers" { nativeBuildInputs = [ pkgs.makeWrapper ]; }
+            ''
+              mkdir -p $out/bin
+              makeWrapper ${emacs-augmented}/bin/emacs $out/bin/emacs --prefix PATH : ${lib.makeBinPath languageServers}
+            '';
+
+        packages.demacs = emacsWithLanguageServers;
+
+        apps.demacs = flake-utils.lib.mkApp {
+          drv = packages.demacs;
+          name = "demacs";
+          exePath = "/bin/emacs";
+        };
+        packages.default = packages.demacs;
+        apps.default = apps.demacs;
+      }
     );
 }

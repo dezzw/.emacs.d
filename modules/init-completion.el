@@ -64,8 +64,8 @@
       (:hook
        lsp-inlay-hints-mode
        (lambda ()
-         (require 'lsp-pyright)
          (setq lsp-pyright-langserver-command "basedpyright")
+         (require 'lsp-pyright)
          (lsp-deferred))))
 
     (:with-mode java-ts-mode

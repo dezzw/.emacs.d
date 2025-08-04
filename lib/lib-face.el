@@ -14,15 +14,13 @@
   "Setup fonts."
   ;; Setting the default
   (when (display-graphic-p)
-    (set-face-attribute 'default nil :font *default-font* :weight 'normal :height 140)
+    (set-face-attribute 'default nil :font *default-font* :weight 'normal :height 120)
 
     (set-face-attribute 'italic nil
 			:font "MonaspiceRn Nerd Font Mono"
-                        :height 140
 			:slant 'italic)
 
     (set-face-attribute 'shadow nil
-                        :height 140
 			:font "MonaspiceKr Nerd Font Mono")
 
     (set-face-attribute 'font-lock-comment-face nil :inherit 'italic)

@@ -93,19 +93,25 @@
 ;;   (:when-loaded
 ;;     (global-blamer-mode 1)))
 
-(use-package blamer
-  :straight (:host github :repo "artawower/blamer.el")
-  :bind (("s-i" . blamer-show-commit-info))
-  :custom
-  (blamer-idle-time 0.3)
-  (blamer-min-offset 70)
-  :custom-face
-  (blamer-face ((t :foreground "#7a88cf"
-                    :background nil
-                    :height 140
-                    :italic t)))
-  :config
-  (global-blamer-mode 1))
+;; (use-package blamer
+;;   :straight (:host github :repo "artawower/blamer.el")
+;;   :bind (("s-i" . blamer-show-commit-info))
+;;   :custom
+;;   (blamer-idle-time 0.3)
+;;   (blamer-min-offset 70)
+;;   :custom-face
+;;   (blamer-face ((t :foreground "#7a88cf"
+;;                     :background nil
+;;                     :height 140
+;;                     :italic t)))
+;;   :config
+;;   (global-blamer-mode 1))
+
+(setup sideline-blame
+  (:pkg sideline-blame)
+  (:option sideline-backends-right '((sideline-blame . up)))
+  (:when-loaded
+    (global-sideline-mode 1)))
 
 (provide 'init-vc)
 ;;; init-vc.el ends here

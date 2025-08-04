@@ -39,62 +39,62 @@
     (yas-global-mode)
     (:option yas-verbosity 0)))
 
-;; (setup lsp-mode
-;;   (:defer (:require lsp-mode))
-;;   (:also-load lib-lsp)
-;;   (:option lsp-enable-folding nil
-;;            lsp-enable-text-document-color nil
-;;            lsp-enable-on-type-formatting nil
-;;            lsp-headerline-breadcrumb-enable nil
-;;            lsp-completion-provider :none
-;;            lsp-enable-snippet nil
-;;            lsp-semantic-tokens-enable t
-;;            lsp-enable-indentation nil
-;;            lsp-idle-delay 0.500
-;;            lsp-keymap-prefix "C-x L")
-;;   (:when-loaded
-;;     (:with-map lsp-mode-map
-;;       (:bind "M-<return>" lsp-execute-code-action))
-;;     (:hook lsp-lens-mode)
-;;     (:with-mode lsp-completion-mode
-;;       (:hook (lambda ()
-;;                (setf (alist-get 'lsp-capf completion-category-defaults)
-;;                      '((styles . (orderless flex)))))))
-;;     (:with-mode python-ts-mode
-;;       (:hook
-;;        lsp-inlay-hints-mode
-;;        (lambda ()
-;;          (require 'lsp-pyright)
-;;          (setq lsp-pyright-langserver-command "basedpyright")
-;;          (lsp-deferred))))
+(setup lsp-mode
+  (:defer (:require lsp-mode))
+  (:also-load lib-lsp)
+  (:option lsp-enable-folding nil
+           lsp-enable-text-document-color nil
+           lsp-enable-on-type-formatting nil
+           lsp-headerline-breadcrumb-enable nil
+           lsp-completion-provider :none
+           lsp-enable-snippet nil
+           lsp-semantic-tokens-enable t
+           lsp-enable-indentation nil
+           lsp-idle-delay 0.500
+           lsp-keymap-prefix "C-x L")
+  (:when-loaded
+    (:with-map lsp-mode-map
+      (:bind "M-<return>" lsp-execute-code-action))
+    (:hook lsp-lens-mode)
+    (:with-mode lsp-completion-mode
+      (:hook (lambda ()
+               (setf (alist-get 'lsp-capf completion-category-defaults)
+                     '((styles . (orderless flex)))))))
+    (:with-mode python-ts-mode
+      (:hook
+       lsp-inlay-hints-mode
+       (lambda ()
+         (setq lsp-pyright-langserver-command "basedpyright")
+         (require 'lsp-pyright)
+         (lsp-deferred))))
 
-;;     (:with-mode java-ts-mode
-;;       (:hook
-;;        (lambda ()
-;;          (require 'lsp-java)
-;;          (lsp-deferred))))
+    (:with-mode java-ts-mode
+      (:hook
+       (lambda ()
+         (require 'lsp-java)
+         (lsp-deferred))))
 
-;;     (:with-mode swift-mode
-;;       (:hook
-;;        (lambda ()
-;;          (require 'lsp-sourcekit)
-;;          (setq lsp-sourcekit-executable "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/sourcekit-lsp")
-;;          (lsp-deferred))))
+    (:with-mode swift-mode
+      (:hook
+       (lambda ()
+         (require 'lsp-sourcekit)
+         (setq lsp-sourcekit-executable "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/sourcekit-lsp")
+         (lsp-deferred))))
 
-;;     (:with-mode lsp-tailwindcss-major-modes
-;;       (:hook
-;;        (lambda ()
-;;          (setq lsp-tailwindcss-add-on-mode t))))
+    (:with-mode lsp-tailwindcss-major-modes
+      (:hook
+       (lambda ()
+         (setq lsp-tailwindcss-add-on-mode t))))
 
-;;     (:with-mode (clojure-mode clojurescript-mode clojurec-mode)
-;;       (:hook
-;;        (lambda ()
-;;          (aggressive-indent-mode)
-;;          (setq-local completion-at-point-functions
-;;                      (list (cape-capf-super #'cider-complete-at-point #'lsp-completion-at-point)))
-;;          (lsp-deferred))))
+    (:with-mode (clojure-mode clojurescript-mode clojurec-mode)
+      (:hook
+       (lambda ()
+         (aggressive-indent-mode)
+         (setq-local completion-at-point-functions
+                     (list (cape-capf-super #'cider-complete-at-point #'lsp-completion-at-point)))
+         (lsp-deferred))))
 
-;;     (advice-add 'lsp-resolve-final-command :around #'lsp-booster--advice-final-command)))
+    (advice-add 'lsp-resolve-final-command :around #'lsp-booster--advice-final-command)))
 
 (when (featurep 'lsp-mode)
   (setup lsp-ui
@@ -114,8 +114,9 @@
     (:with-map lsp-ui-mode-map
       (:bind
        [remap xref-find-definitions] lsp-ui-peek-find-definitions
-       [remap xref-find-references] lsp-ui-peek-find-references)))
+       [remap xref-find-references] lsp-ui-peek-find-references))))
 
+(when (featurep 'lsp-mode)
   (setup dap-mode
     (:load-after lsp-mode)
     (:when-loaded

@@ -34,6 +34,8 @@
   (:with-mode lua-ts-mode (:file-match "\\.lua\\'"))
   (:with-mode fennel-mode (:file-match "\\.fnl\\'"))
   (:with-mode dockerfile-ts-mode (:file-match "\\.Dockerfile\\'"))
+  (:with-mode rust-ts-mode (:file-match "\\.rs\\'"))
+  (:with-mode go-ts-mode (:file-match "\\.go\\'"))
   (:with-mode markdown-ts-mode (:file-match "\\.md\\'"))
   (:with-mode basilisp-ts-mode (:file-match "\\.lpy\\'")))
 

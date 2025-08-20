@@ -108,7 +108,7 @@
               makeWrapper ${emacs-augmented}/bin/emacs $out/bin/emacs --prefix PATH : ${lib.makeBinPath languageServers}
             '';
 
-        packages.demacs = emacsWithLanguageServers;
+        packages.demacs = emacs-augmented;
 
         apps.demacs = flake-utils.lib.mkApp {
           drv = packages.demacs;

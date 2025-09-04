@@ -59,8 +59,12 @@
             set-mark-command-repeat-pop t))
 
 (setup meow
+  (:pkg meow)
+  (:pkg undo-fu)
+  (:pkg undo-fu-session)
   (:also-load lib-meow)
   (:with-function meow-setup (:autoload-this))
+  (undo-fu-session-global-mode)
   (meow-global-mode 1)
   (meow-setup)
   (:option meow-use-clipboard t

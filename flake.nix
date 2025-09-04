@@ -64,12 +64,6 @@
           }).overrideAttrs
             (old: rec {
               patches = (old.patches or [ ]) ++ [
-                # Fix OS window role so that yabai can pick up Emacs
-                (pkgs.fetchpatch {
-                  url = "https://raw.githubusercontent.com/d12frosted/homebrew-emacs-plus/master/patches/emacs-28/fix-window-role.patch";
-                  sha256 = "+z/KfsBm1lvZTZNiMbxzXQGRTjkCFO4QPlEK35upjsE=";
-                })
-
                 # Add setting to enable rounded window with no decoration (still have to alter default-frame-alist)
                 (pkgs.fetchpatch {
                   url = "https://raw.githubusercontent.com/d12frosted/homebrew-emacs-plus/master/patches/emacs-31/round-undecorated-frame.patch";

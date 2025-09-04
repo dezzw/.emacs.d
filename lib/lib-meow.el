@@ -200,7 +200,7 @@ If N is negative, select to the beginning of the previous Nth thing instead."
    '("R" . meow-swap-grab)
    '("s" . meow-kill)
    '("t" . meow-till)
-   '("u" . meow-undo)
+   '("u" . undo-fu-only-undo)
    '("U" . vundo)
    '("V" . meow-visit)
    '("w" . meow-mark-word)

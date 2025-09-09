@@ -4,10 +4,10 @@
 
 (when *is-mac*
   (progn
-(setup copilot-chat
-  (:load-after magit)
-  (:hooks git-commit-setup-hook copilot-chat-insert-commit-message)
-  (:option copilot-chat-model "claude-3.7-sonnet-thought"))
+    (setup copilot-chat
+      (:load-after magit)
+      (:hooks git-commit-setup-hook copilot-chat-insert-commit-message)
+      (:option copilot-chat-model "claude-3.7-sonnet-thought"))))
 
 ;; (setup copilot
 ;;   (:defer (:require copilot))

@@ -94,19 +94,19 @@
 (setup consult
   (:defer (:require consult))
   (:when-loaded
-    (:global "M-g l" consult-line
-             "M-g i" consult-imenu
-             "M-g f" consult-recent-file
-             "M-g r" consult-ripgrep
-             "M-g p" consult-project-buffer
-             "M-g y" consult-flymake
-             "M-g m" consult-global-mark
-             ;; brew install fd
-             "M-g d" consult-fd
-             [remap switch-to-buffer] consult-buffer
-             [remap switch-to-buffer-other-window] 'consult-buffer-other-window
-             [remap switch-to-buffer-other-frame] 'consult-buffer-other-frame
-             [remap goto-line] 'consult-goto-line)
+    (keymap-global-set "M-g l" 'consult-line)
+    (keymap-global-set "M-g i" 'consult-imenu)
+    (keymap-global-set "M-g f" 'consult-recent-file)
+    (keymap-global-set "M-g r" 'consult-ripgrep)
+    (keymap-global-set "M-g p" 'consult-project-buffer)
+    (keymap-global-set "M-g y" 'consult-flymake)
+    (keymap-global-set "M-g m" 'consult-global-mark)
+    (keymap-global-set "M-g a" 'consult-org-agenda)
+    (keymap-global-set "M-g d" 'consult-fd)
+    (keymap-global-set "<remap> <switch-to-buffer>" 'consult-buffer)
+    (keymap-global-set "<remap> <switch-to-buffer-other-window>" 'consult-buffer-other-window)
+    (keymap-global-set "<remap> <switch-to-buffer-other-frame>" 'consult-buffer-other-frame)
+    (keymap-global-set "<remap> <goto-line>" 'consult-goto-line)
     (:also-load lib-consult)
     (:option consult-async-min-input 2
              xref-show-xrefs-function #'consult-xref
@@ -116,7 +116,7 @@
 (setup consult-dir
   (:load-after vertico)
   (:when-loaded
-    (:global "C-x C-d" consult-dir)
+    (keymap-global-set "C-x C-d" 'consult-dir)
     (:with-map vertico-map
       (:bind
        "C-x C-d" consult-dir
@@ -136,10 +136,10 @@
       "Open FILE in macOS Finder."
       (interactive "fFile: ")
       (shell-command (format "open -R %s && osascript -e 'tell application \"Finder\" to activate'" (shell-quote-argument (expand-file-name file)))))
-
-    (:global "C-c ." embark-act
-             "M-n"   embark-next-symbol
-             "M-p"   embark-previous-symbol)
+    
+    (keymap-global-set "C-c ." 'embark-act)
+    (keymap-global-set "M-n"   'embark-next-symbol)
+    (keymap-global-set "M-p"   'embark-previous-symbol)
     (:with-map embark-file-map (when *is-mac* (:bind "o" +embark-open-in-finder)))
     (:option embark-indicators '(embark-minimal-indicator
                                  embark-highlight-indicator

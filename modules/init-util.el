@@ -116,7 +116,8 @@
 
 (setup gptel
   (:pkg gptel)
-  (:option gptel-model "openrouter/auto")
+  (:option gptel-default-mode 'org-mode
+           gptel-model "openrouter/auto")
   (:when-loaded
     (defun read-file-contents (file-path)
       "Read the contents of FILE-PATH and return it as a string."
@@ -130,7 +131,11 @@
             :stream t
             :key (auth-source-pick-first-password :host "cursor.netint.ca" :user "netint")
             :models '("openrouter/auto" "openai/gpt-5-chat" "anthropic/claude-sonnet-4" "anthropic/claude-3.7-sonnet")
-            ))))
+            )))
+   (:with-hook gptel-post-stream-hook
+      (:hook (lambda ()(meow-insert-exit)))
+      (:hook gptel-auto-scroll))
+    (:hooks gptel-post-response-hook gptel-end-of-response))
 
 (setup elysium
   (:pkg elysium)

@@ -4,12 +4,12 @@
 
 ;; Lots of stuff from http://doc.norang.ca/org-mode.html
 (setup org
-  (:global "C-c L"     org-store-link
-           "C-c C-o"   org-open-at-point
-           "C-M-<up>"  org-up-element
+  (keymap-global-set "C-c L" 'org-store-link)
+  (keymap-global-set "C-c C-o" 'org-open-at-point)
+  (keymap-global-set "C-M-<up>" 'org-up-element)
            ;; 一般这个函数都是在 org 启动后调用，如果 org 没有启动则会报错。
            ;; Wrong type argument: commandp, dired-copy-images-links
-           "C-c n m"   dired-copy-images-links)
+  (keymap-global-set "C-c n m" 'dired-copy-images-links)
   (:when-loaded
     (:also-load lib-org)
     (:also-load image-slicing)
@@ -120,13 +120,13 @@
 (setup denote
   (:defer (:require denote))
   (:when-loaded
-    (:global "C-c n n" denote-open-or-create
-             "C-c n d" denote-sort-dired
-             "C-c n l" denote-link
-             "C-c n L" denote-add-links
-             "C-c n b" denote-backlinks
-             "C-c n r" denote-rename-file
-             "C-c n R" denote-rename-file-using-front-matter)
+    (keymap-global-set "C-c n n" 'denote-open-or-create)
+    (keymap-global-set "C-c n d" 'denote-sort-dired)
+    (keymap-global-set "C-c n l" 'denote-link)
+    (keymap-global-set "C-c n L" 'denote-add-links)
+    (keymap-global-set "C-c n b" 'denote-backlinks)
+    (keymap-global-set "C-c n r" 'denote-rename-file)
+    (keymap-global-set "C-c n R" 'denote-rename-file-using-front-matter)
     (:option denote-directory (expand-file-name "denote" *org-path*)
              denote-save-buffers nil
              denote-known-keywords '("emacs" "private")
@@ -150,10 +150,10 @@
 
 (setup org-clock
   (:load-after org)
-  (:global "C-c o j" org-clock-goto
-           "C-c o l" org-clock-in-last
-           "C-c o i" org-clock-in
-           "C-c o o" org-clock-out)
+  (keymap-global-set "C-c o j" 'org-clock-goto)
+  (keymap-global-set "C-c o l" 'org-clock-in-last)
+  (keymap-global-set "C-c o i" 'org-clock-in)
+  (keymap-global-set "C-c o o" 'org-clock-out)
   (:when-loaded
     (:option org-clock-persist t
              org-clock-in-resume t
@@ -214,7 +214,7 @@
        ))))
 
 (setup org-agenda
-  (:global "C-c a" org-agenda)
+  (keymap-global-set "C-c a" 'org-agenda)
   (:when-loaded
     (:option
      org-agenda-sort-notime-is-late nil

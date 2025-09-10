@@ -46,14 +46,14 @@
            blink-matching-paren-highlight-offscreen t))
 
 (setup simple
-  (:global "C-." set-mark-command
-           "C-x C-." pop-global-mark
-           ;; 从光标位置删除到行首第一个非空格字符。
-           "C-M-<backspace>" (lambda ()
-                               (interactive)
-                               (let ((prev-pos (point)))
-                                 (back-to-indentation)
-                                 (kill-region (point) prev-pos))))
+  (keymap-global-set "C-." 'set-mark-command)
+  (keymap-global-set "C-x C-." 'pop-global-mark)
+  ;; 从光标位置删除到行首第一个非空格字符。
+  (keymap-global-set "C-M-<backspace>" (lambda ()
+                                         (interactive)
+                                         (let ((prev-pos (point)))
+                                           (back-to-indentation)
+                                           (kill-region (point) prev-pos))))
   (:option  indent-tabs-mode nil
             save-interprogram-paste-before-kill t
             set-mark-command-repeat-pop t))
@@ -154,12 +154,10 @@
 ;; it will use those keybindings. For this reason, you might prefer to
 ;; use M-S-up and M-S-down, which will work even in lisp modes.
 (setup move-dup
-  (:global [M-up] move-dup-move-lines-up
-           [M-down] move-dup-move-lines-down
-           [M-S-up] move-dup-move-lines-up
-           [M-S-down] move-dup-move-lines-down
-           "C-c d" move-dup-duplicate-down
-           "C-c u" move-dup-duplicate-up))
+  (keymap-global-set "M-<up>"   'move-dup-move-lines-up)
+  (keymap-global-set "M-<down>" 'move-dup-move-lines-down)
+  (keymap-global-set "C-c d"    'move-dup-duplicate-down)
+  (keymap-global-set "C-c u"    'move-dup-duplicate-up))
 
 ;; 彩虹括号
 (setup rainbow-delimiters
@@ -181,7 +179,7 @@
            "C-S-<tab>" hs-global-cycle)))
 
 (setup whitespace-cleanup-mode
-  (:global [remap just-one-space] cycle-spacing)
+  (keymap-global-set "<remap> <just-one-space>" 'cycle-spacing)
   (setq-default show-trailing-whitespace nil)
   (:with-mode (prog-mode text-mode conf-mode)
     (:local-set show-trailing-whitespace t)))
@@ -210,8 +208,8 @@
                            1)))))))
 
 (setup avy
-  (:global "C-;" avy-goto-word-or-subword-1
-           "C-:" avy-goto-char-in-line)
+  (keymap-global-set "C-;" 'avy-goto-word-or-subword-1)
+  (keymap-global-set "C-:" 'avy-goto-char-in-line)
   (:option avy-style 'de-bruijn)
   (:defer (:require ace-pinyin)
           (ace-pinyin-global-mode +1)))

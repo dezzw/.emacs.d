@@ -33,10 +33,10 @@
 
 (setup window
   (:also-load lib-window)
-  (:global "C-x |" split-window-horizontally-instead
-           "C-x _" split-window-vertically-instead
-           "C-x 3" (lambda () (interactive)(select-window (split-window-horizontally)))
-           "C-x 2" (lambda () (interactive)(select-window (split-window-vertically)))))
+  (keymap-global-set "C-x |" 'split-window-horizontally-instead)
+  (keymap-global-set "C-x _" 'split-window-vertically-instead)
+  (keymap-global-set "C-x 3" (lambda () (interactive)(select-window (split-window-horizontally))))
+  (keymap-global-set "C-x 2" (lambda () (interactive)(select-window (split-window-vertically)))))
 
 (setup frame
   (:when-loaded
@@ -71,8 +71,8 @@
 (setup custom
   (:when-loaded
     (:also-load lib-appearance)
-    (:global "M-C-8" (lambda () (interactive) (+adjust-opacity nil -2))
-             "M-C-7" (lambda () (interactive) (+adjust-opacity nil 2)))
+    (keymap-global-set "C-M-8" (lambda () (interactive) (+adjust-opacity nil -2)))
+    (keymap-global-set "C-M-7" (lambda () (interactive) (+adjust-opacity nil 2)))
     ;; Don't prompt to confirm theme safety. This avoids problems with
     ;; first-time startup on Emacs > 26.3.
     (:option custom-safe-themes t
@@ -138,9 +138,9 @@
   (:option zoom-size '(0.618 . 0.618)))
 
 (setup popper
-  (:global "C-~"   popper-toggle
-           "M-~"   popper-cycle
-           "C-M-`" popper-toggle-type)
+  (keymap-global-set "C-~" 'popper-toggle)
+  (keymap-global-set "M-~" 'popper-cycle)
+  (keymap-global-set "C-M-`" 'popper-toggle-type)
   (:option popper-window-height (lambda (win)
                                   (fit-window-to-buffer
                                    win
@@ -180,8 +180,8 @@
 (setup tab-bar
   (:defer (:require tab-bar))
   (:when-loaded
-    (:global "s-t" tab-bar-new-tab
-             "s-w" tab-bar-close-tab)
+    (keymap-global-set "s-t" 'tab-bar-new-tab)
+    (keymap-global-set "s-w" 'tab-bar-close-tab)
     (:also-load lib-tabbar)
     (:option tab-bar-separator ""
              tab-bar-close-button-show nil
@@ -205,16 +205,15 @@
   (:hooks after-init-hook activities-tabs-mode)
   (:option edebug-inhibit-emacs-lisp-mode-bindings t
            activities-kill-buffers t)
-  (:global
-   "C-x C-a C-n" activities-new
-   "C-x C-a C-d" activities-define
-   "C-x C-a C-a" activities-resume
-   "C-x C-a C-s" activities-suspend
-   "C-x C-a C-k" activities-kill
-   "C-x C-a RET" activities-switch
-   "C-x C-a b" activities-switch-buffer
-   "C-x C-a g" activities-revert
-   "C-x C-a l" activities-list)
+  (keymap-global-set "C-x C-a C-n" #'activities-new)
+  (keymap-global-set "C-x C-a C-d" #'activities-define)
+  (keymap-global-set "C-x C-a C-a" #'activities-resume)
+  (keymap-global-set "C-x C-a C-s" #'activities-suspend)
+  (keymap-global-set "C-x C-a C-k" #'activities-kill)
+  (keymap-global-set "C-x C-a RET" #'activities-switch)
+  (keymap-global-set "C-x C-a b" #'activities-switch-buffer)
+  (keymap-global-set "C-x C-a g" #'activities-revert)
+  (keymap-global-set "C-x C-a l" #'activities-list)
   (:when-loaded
     (:after consult
       ;; hide full buffer list (still available with "b" prefix)

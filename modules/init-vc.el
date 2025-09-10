@@ -6,6 +6,8 @@
   (:option ediff-split-window-function 'split-window-horizontally
            ediff-window-setup-function 'ediff-setup-windows-plain))
 
+(add-hook 'prog-mode-hook (function smerge-mode))
+
 (setup autorevert
   (:defer (:require autorevert))
   (:when-loaded
@@ -31,9 +33,8 @@
              "C-p"     magit-blob-previous))
     ;; Hint: customize `magit-repository-directories' so that you can use C-u M-F12 to
     ;; quickly open magit on any one of your projects.
-    (:global [(meta f12)] magit-status
-             "C-x g" magit-status
-             "C-x M-g" magit-dispatch)
+    (keymap-global-set "C-x g" 'magit-status)
+    (keymap-global-set "C-x M-g" 'magit-dispatch)
     (:option magit-diff-refine-hunk t
              ;; Don't autosave repo buffers. This is too magical, and saving can
              ;; trigger a bunch of unwanted side-effects, like save hooks and
@@ -85,27 +86,6 @@
             dired-mode-hook diff-hl-dired-mode)
     (:with-map diff-hl-mode-map
       (:bind "<left-fringe> <mouse-1>" diff-hl-diff-goto-hunk))))
-
-;; (setup blamer
-;;   (:pkg blamer)
-;;   (:option blamer-idle-time 0.3
-;;            blamer-min-offset 70)
-;;   (:when-loaded
-;;     (global-blamer-mode 1)))
-
-;; (use-package blamer
-;;   :straight (:host github :repo "artawower/blamer.el")
-;;   :bind (("s-i" . blamer-show-commit-info))
-;;   :custom
-;;   (blamer-idle-time 0.3)
-;;   (blamer-min-offset 70)
-;;   :custom-face
-;;   (blamer-face ((t :foreground "#7a88cf"
-;;                     :background nil
-;;                     :height 140
-;;                     :italic t)))
-;;   :config
-;;   (global-blamer-mode 1))
 
 (setup sideline-blame
   (:pkg sideline-blame)

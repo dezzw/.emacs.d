@@ -134,8 +134,9 @@ If N is negative, select to the beginning of the previous Nth thing instead."
    '("k" . "H-k")
    ;; function shortcuts
    '("SPC" . execute-extended-command)
-   '("f" . find-file)
    '("b" . consult-buffer)
+   '("f" . find-file)
+   
    ;; Use SPC (0-9) for digit arguments.
    '("1" . meow-digit-argument)
    '("2" . meow-digit-argument)

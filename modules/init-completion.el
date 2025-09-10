@@ -46,11 +46,19 @@
            lsp-enable-text-document-color nil
            lsp-enable-on-type-formatting nil
            lsp-headerline-breadcrumb-enable nil
+
+           lsp-modeline-code-actions-enable nil
+           lsp-modeline-diagnostics-enable nil
+           
            lsp-completion-provider :none
            lsp-enable-snippet nil
            lsp-semantic-tokens-enable t
            lsp-enable-indentation nil
            lsp-idle-delay 0.500
+           
+           lsp-ui-doc-show-with-mouse nil  ; don't disappear on mouseover
+           lsp-ui-doc-show-with-cursor t
+
            lsp-keymap-prefix "C-x L")
   (:when-loaded
     (:with-map lsp-mode-map
@@ -102,9 +110,6 @@
     (:option lsp-ui-doc-max-height 8
              lsp-ui-doc-max-width 72         ; 150 (default) is too wide
              lsp-ui-doc-delay 0.75           ; 0.2 (default) is too naggy
-             ;; lsp-ui doc
-             lsp-ui-doc-show-with-mouse nil  ; don't disappear on mouseover
-             lsp-ui-doc-show-with-cursor t
              ;; lsp-ui sideline
              lsp-ui-sideline-show-hover nil
              lsp-ui-sideline-show-code-actions nil

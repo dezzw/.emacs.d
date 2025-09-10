@@ -214,7 +214,6 @@
        ))))
 
 (setup org-agenda
-  (keymap-global-set "C-c a" 'org-agenda)
   (:when-loaded
     (:option
      org-agenda-sort-notime-is-late nil

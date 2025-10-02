@@ -1,72 +1,6 @@
 ;; lib-transient.el --- Initialize org	-*- lexical-binding: t; -*-
 ;;; Commentary:
 ;;; Code:
-;; 打开当前日期对应的 daily log 文件
-(defun +delete-archived-daily-log-files ()
-  "Delete Daily log files that have no titles in them."
-  (interactive)
-  (let ((dir (concat *org-path* "/daily/"))
-        (deleted-files '()))
-    (dolist (file (directory-files dir nil "^[0-9]\\{4\\}-[0-9]\\{2\\}-[0-9]\\{2\\}\\.org$"))
-      (let* ((fullpath (concat (file-name-as-directory dir) file))
-             (tree (with-temp-buffer
-                     (insert-file-contents fullpath)
-                     (org-element-parse-buffer)))
-             (headlines (org-element-map tree 'headline 'identity))
-             (buffer (find-buffer-visiting fullpath)))
-        (when (zerop (length headlines))
-          (push file deleted-files)
-          (delete-file fullpath)
-          (when buffer (kill-buffer buffer)))))
-    (when deleted-files
-      (message "Deleted archived daily log file: %s" (string-join (nreverse deleted-files) ", ")))))
-
-(defun agenda-files-switcher (&optional args)
-  "Open an agenda file based on ARGS.
-
-ARGS should be a list where the first element is the name of the agenda file
-to open.  The files are located in the '/agenda/' directory."
-  (interactive (list (transient-args 'agenda-transient)))
-  (find-file  (concat *org-path* "/agenda/" (car args))))
-
-(defun journal-options (&optional args)
-  "Perform various journal-related actions based on ARGS.
-
-This function allows you to open specific journal files or perform
-other journal-related actions. ARGS should be a list of arguments
-that can include:
-
-- \"journal.org\": Open the main journal file.
-- \"today\": Open today's journal file.
-- \"yesterday\": Open yesterday's journal file.
-- \"delete\": Delete archived daily log files.
-
-The files are located in the directory specified by `file-path-prefix`."
-  (interactive (list (transient-args 'journal-transient)))
-  (let ((file-path-prefix (concat *org-path* "/denote/daily/"))
-        (today-date-string (format-time-string "%Y-%m-%d" (current-time))))
-    (cond ((member "journal.org" args)
-           (find-file (concat file-path-prefix (car args))))
-          ((member "delete" args)
-           (delete-archived-daily-log-files file-path-prefix)))))
-
-(defun delete-archived-daily-log-files (directory)
-  "Delete all archived daily log files in DIRECTORY that match the pattern `__journal.org` if they have no content."
-  (let ((files (directory-files directory t "__journal\\.org$"))
-        (deleted-files '()))
-    (dolist (file files)
-      (let* ((tree (with-temp-buffer
-                     (insert-file-contents file)
-                     (org-element-parse-buffer)))
-             (headlines (org-element-map tree 'headline 'identity))
-             (buffer (find-buffer-visiting file)))
-        (when (zerop (length headlines))
-          (push (file-name-nondirectory file) deleted-files)
-          (delete-file file)
-          (when buffer (kill-buffer buffer)))))
-    (when deleted-files
-      (message "Deleted archived daily log files: %s" (string-join (nreverse deleted-files) ", ")))))
-
 (defun browse-path (&optional args)
   "Browse files from the repositories cloned by `straight', using `fd'.
 ARGS should be a list where the first element is the path to the repositories."
@@ -97,6 +31,71 @@ method definition in the XML file."
               (message "Jumped to method: %s" method-name)
             (message "Method '%s' not found in XML file." method-name)))
       (message "No corresponding XML file found."))))
+
+;; BSTT Lock Command Helper Functions
+(defvar bstt/lock-port "cli455")
+(defvar bstt/lock-value "0")
+
+(defun bstt/lock-set-port ()
+  (interactive)
+  (setq bstt/lock-port (read-string "Port (-p, blank to omit): " bstt/lock-port)))
+
+(defun bstt/lock-set-value ()
+  (interactive)
+  (setq bstt/lock-value (read-string "Lock (-l, blank to omit): " bstt/lock-value)))
+
+(defun bstt/lock-build-cmd ()
+  (let ((args (list "/home/desmond/workspace/bitstream/test/fpga/linuxPC_Lock.py")))
+    (when (and bstt/lock-port (not (string-empty-p bstt/lock-port)))
+      (setq args (append args (list "-p" bstt/lock-port))))
+    (when (and bstt/lock-value (not (string-empty-p bstt/lock-value)))
+      (setq args (append args (list "-l" bstt/lock-value))))
+    (format "python3 %s" (mapconcat #'shell-quote-argument args " "))))
+
+(defun bstt/lock-run ()
+  (interactive)
+  (let* ((cmd (bstt/lock-build-cmd))
+         (project-root (project-root (project-current t)))
+         (default-directory (expand-file-name "webapp" project-root)))
+    (when (yes-or-no-p (format "Run command in %s: %s ?" default-directory cmd))
+      (compile cmd))))
+
+;; BSTT Webapp Compile Command Helper Functions
+(defvar bstt/webapp-cli-code "CLI109")
+(defvar bstt/webapp-batch-code "B000006")
+(defvar bstt/webapp-browser "chrome")
+(defvar bstt/webapp-repeat "1")
+
+(defun bstt/webapp-compile-set-cli-code ()
+  (interactive)
+  (setq bstt/webapp-cli-code (read-string "CLI Code: " bstt/webapp-cli-code)))
+
+(defun bstt/webapp-compile-set-batch-code ()
+  (interactive)
+  (setq bstt/webapp-batch-code (read-string "Batch Code: " bstt/webapp-batch-code)))
+
+(defun bstt/webapp-compile-set-browser ()
+  (interactive)
+  (setq bstt/webapp-browser (completing-read "Browser: "
+                                            '("chrome" "firefox" "safari" "edge")
+                                            nil t bstt/webapp-browser)))
+
+(defun bstt/webapp-compile-set-repeat ()
+  (interactive)
+  (setq bstt/webapp-repeat (read-string "Repeat count: " bstt/webapp-repeat)))
+
+(defun bstt/webapp-compile-build-cmd ()
+  (format "uv run main.py http %s %s --browser %s --repeat %s"
+          bstt/webapp-cli-code bstt/webapp-batch-code bstt/webapp-browser bstt/webapp-repeat))
+
+(defun bstt/webapp-compile-run ()
+  (interactive)
+  (let* ((cmd (bstt/webapp-compile-build-cmd))
+         (project-root (project-root (project-current t)))
+         (default-directory (expand-file-name "webapp" project-root)))
+    (when (yes-or-no-p (format "Run command in %s: %s ?" default-directory cmd))
+      (compile cmd))))
+
 ;;;; provide
 (provide 'lib-transient)
 ;;; lib-transient.el ends here.

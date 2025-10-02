@@ -32,7 +32,6 @@
                    orderless+basic-try
                    orderless+basic-all
                    "Unholy mix of Orderless and Basic."))))
-
 (setup yasnippet
   (:defer (:pkg yasnippet))
   (:when-loaded
@@ -42,11 +41,15 @@
 (setup lsp-mode
   (:defer (:require lsp-mode))
   (:also-load lib-lsp)
+  (:also-load lsp-ui)
+  (:pkg eldoc-box)
   (:option lsp-enable-folding nil
            lsp-enable-text-document-color nil
            lsp-enable-on-type-formatting nil
-           lsp-headerline-breadcrumb-enable nil
-
+           
+           lsp-headerline-breadcrumb-enable t
+           lsp-headerline-breadcrumb-enable-diagnostics nil
+           
            lsp-modeline-code-actions-enable nil
            lsp-modeline-diagnostics-enable nil
            
@@ -55,11 +58,32 @@
            lsp-semantic-tokens-enable t
            lsp-enable-indentation nil
            lsp-idle-delay 0.500
+
+           lsp-eldoc-enable-hover nil
            
            lsp-ui-doc-show-with-mouse nil  ; don't disappear on mouseover
            lsp-ui-doc-show-with-cursor t
+           lsp-ui-doc-include-signature t
+           
+           lsp-ui-doc-max-height 8
+           lsp-ui-doc-max-width 72         ; 150 (default) is too wide
+           lsp-ui-doc-delay 0.75           ; 0.2 (default) is too naggy
+           
+           ;; lsp-ui sideline
+           lsp-ui-sideline-show-hover nil
+           lsp-ui-sideline-show-code-actions nil
+           
+           ;; lsp signature
+           lsp-signature-render-documentation t
 
            lsp-keymap-prefix "C-x L")
+  
+  (:when-loaded
+    (:with-map lsp-ui-mode-map
+      (:bind
+       [remap xref-find-definitions] lsp-ui-peek-find-definitions
+       [remap xref-find-references] lsp-ui-peek-find-references)))
+
   (:when-loaded
     (:with-map lsp-mode-map
       (:bind "M-<return>" lsp-execute-code-action))
@@ -68,6 +92,10 @@
       (:hook (lambda ()
                (setf (alist-get 'lsp-capf completion-category-defaults)
                      '((styles . (orderless flex)))))))
+    
+    (:with-mode go-ts-mode
+      (:hook lsp-deferred))
+    
     (:with-mode python-ts-mode
       (:hook
        lsp-inlay-hints-mode
@@ -102,24 +130,11 @@
                      (list (cape-capf-super #'cider-complete-at-point #'lsp-completion-at-point)))
          (lsp-deferred))))
 
+    (:with-mode lsp-mode
+      (:hook eldoc-box-hover-mode))
+
     (advice-add 'lsp-resolve-final-command :around #'lsp-booster--advice-final-command)))
 
-(when (featurep 'lsp-mode)
-  (setup lsp-ui
-    (:load-after lsp-mode)
-    (:option lsp-ui-doc-max-height 8
-             lsp-ui-doc-max-width 72         ; 150 (default) is too wide
-             lsp-ui-doc-delay 0.75           ; 0.2 (default) is too naggy
-             ;; lsp-ui sideline
-             lsp-ui-sideline-show-hover nil
-             lsp-ui-sideline-show-code-actions nil
-             ;; lsp signature
-             lsp-signature-render-documentation nil)
-
-    (:with-map lsp-ui-mode-map
-      (:bind
-       [remap xref-find-definitions] lsp-ui-peek-find-definitions
-       [remap xref-find-references] lsp-ui-peek-find-references))))
 
 (when (featurep 'lsp-mode)
   (setup dap-mode
@@ -228,15 +243,16 @@
              corfu-quit-no-match 'separator)
     (:with-mode prog-mode (:hook corfu-mode))
     (:with-mode corfu
-      (:bind "<escape>" corfu-quit
-             "<right>" corfu-quit
+      (:bind "<right>" corfu-quit
              "TAB"  corfu-next
              [tab]  corfu-next
              "S-TAB"  corfu-previous
              [backtab]  corfu-previous))
     (:with-mode eshell-mode
       (:local-set corfu-auto nil)
-      (corfu-mode))))
+      (corfu-mode))
+    (:with-feature meow
+      (add-hook 'meow-insert-mode-hook 'corfu-quit))))
 
 (setup cape
   (:load-after corfu)

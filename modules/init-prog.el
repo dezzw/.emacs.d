@@ -50,6 +50,12 @@
 (setup python
   (:option python-indent-guess-indent-offset t
            python-indent-guess-indent-offset-verbose nil))
+(setup go
+  (:option tab-width 4
+           go-ts-mode-indent-offset 4))
+
+(setup json-ts-mode
+  (:option json-ts-mode-indent-offset 4))
 
 ;; Not support format in region
 ;; (setup apheleia

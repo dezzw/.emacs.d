@@ -22,8 +22,10 @@
                           "Noto Emoji"
                           "Segoe UI Emoji"
                           "Symbola"))
-(defconst *default-font* "MonaspiceAr Nerd Font Mono")
-(defconst *zh-default-font* "LXGW WenKai")
+;; (defconst *default-font* "MonaspiceAr Nerd Font Mono")
+(defconst *default-font* "Maple Mono NF")
+;; (defconst *zh-default-font* "LXGW WenKai")
+(defconst *zh-default-font* "Maple Mono NF CN")
 (defconst *symbol-default-font* "Symbols Nerd Font Mono")
 
 (setq user-full-name "Desmond Wang")

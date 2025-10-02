@@ -13,15 +13,16 @@
 (defun +setup-fonts ()
   "Setup fonts."
   ;; Setting the default
+  (interactive)
   (when (display-graphic-p)
-    (set-face-attribute 'default nil :font *default-font* :weight 'normal :height 120)
+    (set-face-attribute 'default nil :font *default-font* :weight 'normal :height 110)
 
-    (set-face-attribute 'italic nil
-			:font "MonaspiceRn Nerd Font Mono"
-			:slant 'italic)
+    ;; (set-face-attribute 'italic nil
+	;; 		:font "MonaspiceRn Nerd Font Mono"
+	;; 		:slant 'italic)
 
-    (set-face-attribute 'shadow nil
-			:font "MonaspiceKr Nerd Font Mono")
+    ;; (set-face-attribute 'shadow nil
+	;; 		:font "MonaspiceKr Nerd Font Mono")
 
     (set-face-attribute 'font-lock-comment-face nil :inherit 'italic)
     (set-face-attribute 'font-lock-keyword-face nil :inherit 'italic)

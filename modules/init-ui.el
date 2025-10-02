@@ -128,13 +128,15 @@
 
 
 (setup nerd-icons (:defer (:require nerd-icons)))
+(setup all-the-icons (:defer (:pkg all-the-icons)))
 
 ;; (setup window-navigation
 ;;   (:defer (:require window-navigation))
 ;;   (:when-loaded (window-navigation-mode)))
 
 (setup zoom
-  (:hook-into window-setup server-after-make-frame)
+  (:pkg zoom)
+  ;; (:hook-into window-setup server-after-make-frame)
   (:option zoom-size '(0.618 . 0.618)))
 
 (setup popper
@@ -205,15 +207,15 @@
   (:hooks after-init-hook activities-tabs-mode)
   (:option edebug-inhibit-emacs-lisp-mode-bindings t
            activities-kill-buffers t)
-  (keymap-global-set "C-c a n" #'activities-new)
-  (keymap-global-set "C-c a d" #'activities-define)
-  (keymap-global-set "C-c a a" #'activities-resume)
-  (keymap-global-set "C-c a s" #'activities-suspend)
-  (keymap-global-set "C-c a k" #'activities-kill)
-  (keymap-global-set "C-c a RET" #'activities-switch)
-  (keymap-global-set "C-c a b" #'activities-switch-buffer)
-  (keymap-global-set "C-c a g" #'activities-revert)
-  (keymap-global-set "C-c a l" #'activities-list)
+  (keymap-global-set "C-c w n" #'activities-new)
+  (keymap-global-set "C-c w d" #'activities-define)
+  (keymap-global-set "C-c w a" #'activities-resume)
+  (keymap-global-set "C-c w s" #'activities-suspend)
+  (keymap-global-set "C-c w k" #'activities-kill)
+  (keymap-global-set "C-c w RET" #'activities-switch)
+  (keymap-global-set "C-c w b" #'activities-switch-buffer)
+  (keymap-global-set "C-c w g" #'activities-revert)
+  (keymap-global-set "C-c w l" #'activities-list)
   (:when-loaded
     (:after consult
       ;; hide full buffer list (still available with "b" prefix)

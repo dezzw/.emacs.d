@@ -95,13 +95,6 @@
           )
         );
 
-        emacsWithLanguageServers =
-          pkgs.runCommand "emacs-with-language-servers" { nativeBuildInputs = [ pkgs.makeWrapper ]; }
-            ''
-              mkdir -p $out/bin
-              makeWrapper ${emacs-augmented}/bin/emacs $out/bin/emacs --prefix PATH : ${lib.makeBinPath languageServers}
-            '';
-
         packages.demacs = emacs-augmented;
 
         apps.demacs = flake-utils.lib.mkApp {

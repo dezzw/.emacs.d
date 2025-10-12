@@ -63,6 +63,9 @@
             withImageMagick = true;
           }).overrideAttrs
             (old: rec {
+
+              buildInputs = builtins.filter (p: !(p ? pname && p.pname == "mps")) (old.buildInputs or []);
+              
               patches = (old.patches or [ ]) ++ [
                 # Add setting to enable rounded window with no decoration (still have to alter default-frame-alist)
                 (pkgs.fetchpatch {

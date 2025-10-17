@@ -58,26 +58,26 @@
   (:option json-ts-mode-indent-offset 4))
 
 ;; Not support format in region
-;; (setup apheleia
-;;   (:when-loaded
-;;     (:global "C-c C-x C-f" apheleia-format-buffer)
-;;     ;; $ brew install isort black google-java-format stylua libxml2
-;;     ;; $ npm install -g prettier
-;;     (setf (alist-get 'google-java-format apheleia-formatters)
-;;           '("google-java-format" "--aosp" filepath))
-;;     (setf (alist-get 'stylua apheleia-formatters)
-;;           '("stylua" "--indent-type" "Spaces" filepath))
-;;     (setf (alist-get 'xmllint apheleia-formatters)
-;;           '("xmllint" "--encode" "utf-8" "--format" "-"))
+(setup apheleia
+  (:when-loaded
+    (:global "C-c C-x C-f" apheleia-format-buffer)
+    ;; $ brew install isort black google-java-format stylua libxml2
+    ;; $ npm install -g prettier
+    (setf (alist-get 'google-java-format apheleia-formatters)
+          '("google-java-format" "--aosp" filepath))
+    (setf (alist-get 'stylua apheleia-formatters)
+          '("stylua" "--indent-type" "Spaces" filepath))
+    (setf (alist-get 'xmllint apheleia-formatters)
+          '("xmllint" "--encode" "utf-8" "--format" "-"))
 
-;;     (setf (alist-get 'python-ts-mode     apheleia-mode-alist) '(isort black))
-;;     (setf (alist-get 'my-html-mode       apheleia-mode-alist) 'prettier-html)
-;;     (setf (alist-get 'sql-mode           apheleia-mode-alist) 'pgformatter)
-;;     (setf (alist-get 'xml-mode           apheleia-mode-alist) 'xmllint)
-;;     (setf (alist-get 'nxml-mode          apheleia-mode-alist) 'xmllint)
-;;     (setf (alist-get 'css-mode           apheleia-mode-alist) 'prettier)
-;;     (setf (alist-get 'typescript-ts-mode apheleia-mode-alist) 'prettier)
-;;     (setf (alist-get 'js-ts-mode         apheleia-mode-alist) 'prettier)))
+    (setf (alist-get 'python-ts-mode     apheleia-mode-alist) '(isort black))
+    (setf (alist-get 'my-html-mode       apheleia-mode-alist) 'prettier-html)
+    (setf (alist-get 'sql-mode           apheleia-mode-alist) 'pgformatter)
+    (setf (alist-get 'xml-mode           apheleia-mode-alist) 'xmllint)
+    (setf (alist-get 'nxml-mode          apheleia-mode-alist) 'xmllint)
+    (setf (alist-get 'css-mode           apheleia-mode-alist) 'prettier)
+    (setf (alist-get 'typescript-ts-mode apheleia-mode-alist) 'prettier)
+    (setf (alist-get 'js-ts-mode         apheleia-mode-alist) 'prettier)))
 
 (setup reformtter
   (:pkg reformatter)
@@ -223,6 +223,10 @@
 (setup citre
   (:defer (:require citre))
   (:also-load citre-config))
+
+(setup fancy-compilation
+  (:pkg fancy-compilation)
+  (:hook-into compilation-mode))
 
 
 (provide 'init-prog)

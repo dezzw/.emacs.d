@@ -67,6 +67,9 @@
   (undo-fu-session-global-mode)
   (meow-global-mode 1)
   (meow-setup)
+  (:option undo-limit 67108864
+           undo-strong-limit 100663296
+           undo-outer-limit 1006632960)
   (:option meow-use-clipboard t
            wrap-keymap (let ((map (make-keymap)))
                          (suppress-keymap map)

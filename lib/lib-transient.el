@@ -96,6 +96,37 @@ method definition in the XML file."
     (when (yes-or-no-p (format "Run command in %s: %s ?" default-directory cmd))
       (compile cmd))))
 
+;; BSTT Toplevel Command Helper Functions
+(defvar bstt/toplevel-cli-code "CLI455")
+(defvar bstt/toplevel-local-code "B000006")
+(defvar bstt/toplevel-config "")
+
+(defun bstt/toplevel-set-cli-code ()
+  (interactive)
+  (setq bstt/toplevel-cli-code (read-string "CLI Code (-p): " bstt/toplevel-cli-code)))
+
+(defun bstt/toplevel-set-local-code ()
+  (interactive)
+  (setq bstt/toplevel-local-code (read-string "Local Code (--local): " bstt/toplevel-local-code)))
+
+(defun bstt/toplevel-set-config ()
+  (interactive)
+  (setq bstt/toplevel-config (read-string "Config (-c, blank to omit): " bstt/toplevel-config)))
+
+(defun bstt/toplevel-build-cmd ()
+  (let ((args (list "uv" "run" "toplevel.py" "-d" "-p" bstt/toplevel-cli-code "--local" bstt/toplevel-local-code)))
+    (when (and bstt/toplevel-config (not (string-empty-p bstt/toplevel-config)))
+      (setq args (append args (list "-c" bstt/toplevel-config))))
+    (mapconcat #'shell-quote-argument args " ")))
+
+(defun bstt/toplevel-run ()
+  (interactive)
+  (let* ((cmd (bstt/toplevel-build-cmd))
+         (project-root (project-root (project-current t)))
+         (default-directory (expand-file-name "bitstreams" project-root)))
+    (when (yes-or-no-p (format "Run command in %s: %s ?" default-directory cmd))
+      (compile cmd))))
+
 ;;;; provide
 (provide 'lib-transient)
 ;;; lib-transient.el ends here.

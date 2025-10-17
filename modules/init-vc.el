@@ -73,7 +73,12 @@
   (:load-after magit)
   (:when-loaded
     ;; Make it easier to see that a topic was closed.
-    (:face forge-topic-closed ((t (:strike-through t))))))
+    (:face forge-topic-closed ((t (:strike-through t))))
+    (push '("git.netint.ca"               ; GITHOST
+            "git.netint.ca/api/v4"        ; APIHOST
+            "git.netint.ca"               ; WEBHOST and INSTANCE-ID
+            forge-gitlab-repository)    ; CLASS
+          forge-alist)))
 
 (setup diff-hl
   (:defer (diff-hl-mode))

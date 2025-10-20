@@ -65,7 +65,7 @@
             (old: rec {
 
               buildInputs = builtins.filter (p: !(p ? pname && p.pname == "mps")) (old.buildInputs or []);
-              
+
               patches = (old.patches or [ ]) ++ [
                 # Add setting to enable rounded window with no decoration (still have to alter default-frame-alist)
                 (pkgs.fetchpatch {
@@ -84,8 +84,14 @@
               ];
             });
 
+        # Use emacs-igc directly on Linux, patched version on Darwin
+        emacs-base = if pkgs.stdenv.isLinux then
+          pkgs.emacs-igc
+        else
+          emacs-patched;
+
         emacs-augmented = (
-          (pkgs.emacsPackagesFor emacs-patched).emacsWithPackages (
+          (pkgs.emacsPackagesFor emacs-base).emacsWithPackages (
             epkgs: with epkgs; [
               # (callPackage ./site-packages/lsp-bridge/lsp-bridge.nix {
               #   inherit (pkgs) fetchFromGitHub;

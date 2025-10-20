@@ -146,8 +146,8 @@
   (:option popper-window-height (lambda (win)
                                   (fit-window-to-buffer
                                    win
-                                   (max 26 (floor (frame-height) 2))
-                                   26))
+                                   (max 15 (floor (frame-height) 3))
+                                   15))
            popper-reference-buffers
            '(("\\*Messages\\*"
               "Output\\*$"
@@ -158,6 +158,7 @@
              ("\\*xref\\*$")
              ("\\*chatgpt\\*$")
              ("\\*vterm\\*$")
+             ("\\*eat\\*$")
              ("\\*eshell\\*$")
              ("\\*Org Select\\*$")
              ("\\*Telega User\\*$")

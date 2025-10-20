@@ -12,7 +12,8 @@
              "C-c e u" uniline-transient
              "C-c e d" dape-transient
              "C-c e l" bstt/lock
-             "C-c e u" bstt/webapp-compile)
+             "C-c e w" bstt/webapp-compile
+             "C-c e t" bstt/toplevel)
     (:with-map transient-base-map
       (:bind "<escape>" transient-quit-one))
     (:option transient-semantic-coloring t)
@@ -39,6 +40,18 @@
           ("r" (lambda () (format "Repeat: %s" bstt/webapp-repeat)) bstt/webapp-compile-set-repeat :transient t)]
         ["Actions"
           ("RET" "Run command" bstt/webapp-compile-run)
+          ("q" "Quit menu" transient-quit-one)] ])
+
+    ;; BSTT Toplevel Command Transient
+    (transient-define-prefix bstt/toplevel ()
+      "Edit args and run toplevel.py in project_root/bitstreams directory."
+      :info-manual "(bstt-toplevel) BSTT Toplevel Command"
+      [ ["Arguments (press to modify, menu stays open)"
+          ("p" (lambda () (format "CLI Code (-p): %s" bstt/toplevel-cli-code)) bstt/toplevel-set-cli-code :transient t)
+          ("l" (lambda () (format "Local Code (--local): %s" bstt/toplevel-local-code)) bstt/toplevel-set-local-code :transient t)
+          ("c" (lambda () (format "Config (-c): %s" (if (string-empty-p bstt/toplevel-config) "<none>" bstt/toplevel-config))) bstt/toplevel-set-config :transient t)]
+        ["Actions"
+          ("RET" "Run command" bstt/toplevel-run)
           ("q" "Quit menu" transient-quit-one)] ])
 
     ;; file access

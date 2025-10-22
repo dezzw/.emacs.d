@@ -220,14 +220,51 @@
            enable-remote-dir-locals t
            remote-file-name-inhibit-cache 60))
 
+
+;; (setup eglot
+;;   (:when-loaded
+;;     (:also-load lib-eglot)
+;;     (:with-mode (python-ts-mode js-ts-mode typescript-mode tsx-ts-mode vue-mode latex-mode)
+;;       (:hook eglot-ensure))
+;;     (setopt eglot-code-action-indications '(eldoc-hint)
+;;             eglot-events-buffer-config '(:size 0 :format full) ;; 取消 eglot log
+;;             ;; ignore lsp formatting provider, format with apheleia.
+;;             eglot-ignored-server-capabilities '(:documentFormattingProvider
+;;                                                 :documentRangeFormattingProvider))
+;;     (add-to-list 'eglot-server-programs '(my-html-mode . ("vscode-html-language-server" "--stdio")))
+;;     (add-to-list 'eglot-server-programs `((vue-mode vue-ts-mode typescript-ts-mode typescript-mode) . ("vue-language-server" "--stdio" :initializationOptions ,(vue-eglot-init-options))))
+;;     (add-to-list 'eglot-server-programs '(js-mode . ("typescript-language-server" "--stdio")))
+;;     (advice-add 'eglot-completion-at-point :around #'cape-wrap-buster)
+;;     ;; https://github.com/joaotavora/eglot/discussions/898
+;;     (:with-hook eglot-managed-mode-hook
+;;       (:hook (lambda ()
+;;                ;; Show flymake diagnostics first.
+;;                (setq eldoc-documentation-functions
+;;                      (cons #'flymake-eldoc-function
+;;                            (remove #'flymake-eldoc-function eldoc-documentation-functions)))
+;;                ;; Show all eldoc feedback.
+;;                (setq eldoc-documentation-strategy #'eldoc-documentation-compose))))))
+
+;; (setup eglot-booster
+;;   (:pkg (eglot-booster :host github :repo "jdtsmith/eglot-booster"))
+;;   (:load-after eglot)
+;;   (:when-loaded (eglot-booster-mode)))
+
+(setup lsp-proxy
+  (:pkg (lsp-proxy :host github :repo "jadestrong/lsp-proxy" :files ("*.el"))))
+
+(setup compile
+  (:option compilation-always-kill t       ; kill compilation process before starting another
+           compilation-ask-about-save nil  ; save all buffers on `compile'
+           compilation-scroll-output 'first-error)
+  (:when-loaded
+    (autoload 'comint-truncate-buffer "comint" nil t)
+    (add-hook 'compilation-filter-hook #'comint-truncate-buffer)))
+
+
 (setup citre
   (:defer (:require citre))
   (:also-load citre-config))
-
-(setup fancy-compilation
-  (:pkg fancy-compilation)
-  (:hook-into compilation-mode))
-
 
 (provide 'init-prog)
 ;;; init-prog.el ends here

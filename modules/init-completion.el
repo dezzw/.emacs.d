@@ -32,203 +32,7 @@
                    orderless+basic-try
                    orderless+basic-all
                    "Unholy mix of Orderless and Basic."))))
-(setup yasnippet
-  (:defer (:pkg yasnippet))
-  (:when-loaded
-    (yas-global-mode)
-    (:option yas-verbosity 0)))
 
-(setup lsp-mode
-  (:defer (:require lsp-mode))
-  (:also-load lib-lsp)
-  (:also-load lsp-ui)
-  (:pkg eldoc-box)
-  (:option lsp-enable-folding nil
-           lsp-enable-text-document-color nil
-           lsp-enable-on-type-formatting nil
-           
-           lsp-headerline-breadcrumb-enable t
-           lsp-headerline-breadcrumb-enable-diagnostics nil
-           
-           lsp-modeline-code-actions-enable nil
-           lsp-modeline-diagnostics-enable nil
-           
-           lsp-completion-provider :none
-           lsp-enable-snippet nil
-           lsp-semantic-tokens-enable t
-           lsp-enable-indentation nil
-           lsp-idle-delay 0.500
-
-           lsp-eldoc-enable-hover nil
-           
-           lsp-ui-doc-show-with-mouse nil  ; don't disappear on mouseover
-           lsp-ui-doc-show-with-cursor t
-           lsp-ui-doc-include-signature t
-           
-           lsp-ui-doc-max-height 8
-           lsp-ui-doc-max-width 72         ; 150 (default) is too wide
-           lsp-ui-doc-delay 0.75           ; 0.2 (default) is too naggy
-           
-           ;; lsp-ui sideline
-           lsp-ui-sideline-show-hover nil
-           lsp-ui-sideline-show-code-actions nil
-           
-           ;; lsp signature
-           lsp-signature-render-documentation t
-
-           lsp-keymap-prefix "C-x L")
-  
-  (:when-loaded
-    (:with-map lsp-ui-mode-map
-      (:bind
-       [remap xref-find-definitions] lsp-ui-peek-find-definitions
-       [remap xref-find-references] lsp-ui-peek-find-references)))
-
-  (:when-loaded
-    (:with-map lsp-mode-map
-      (:bind "M-<return>" lsp-execute-code-action))
-    (:hook lsp-lens-mode)
-    (:with-mode lsp-completion-mode
-      (:hook (lambda ()
-               (setf (alist-get 'lsp-capf completion-category-defaults)
-                     '((styles . (orderless flex)))))))
-    
-    (:with-mode go-ts-mode
-      (:hook lsp-deferred))
-    
-    (:with-mode python-ts-mode
-      (:hook
-       lsp-inlay-hints-mode
-       (lambda ()
-         (setq lsp-pyright-langserver-command "pyright")
-         (require 'lsp-pyright)
-         (lsp-deferred))))
-
-    (:with-mode java-ts-mode
-      (:hook
-       (lambda ()
-         (require 'lsp-java)
-         (lsp-deferred))))
-
-    (:with-mode swift-mode
-      (:hook
-       (lambda ()
-         (require 'lsp-sourcekit)
-         (setq lsp-sourcekit-executable "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/sourcekit-lsp")
-         (lsp-deferred))))
-
-    (:with-mode lsp-tailwindcss-major-modes
-      (:hook
-       (lambda ()
-         (setq lsp-tailwindcss-add-on-mode t))))
-
-    (:with-mode (clojure-mode clojurescript-mode clojurec-mode)
-      (:hook
-       (lambda ()
-         (aggressive-indent-mode)
-         (setq-local completion-at-point-functions
-                     (list (cape-capf-super #'cider-complete-at-point #'lsp-completion-at-point)))
-         (lsp-deferred))))
-
-    (:with-mode lsp-mode
-      (:hook eldoc-box-hover-mode))
-
-    (advice-add 'lsp-resolve-final-command :around #'lsp-booster--advice-final-command)))
-
-
-(when (featurep 'lsp-mode)
-  (setup dap-mode
-    (:load-after lsp-mode)
-    (:when-loaded
-      (:option dap-auto-configure-features '(sessions locals controls tooltip))
-      (:with-map dap-mode-map
-        (:bind
-         "C-x D D" dap-debug
-         "C-x D d" dap-debug-last)))
-    (:with-mode python-ts-mode
-      (:hook
-       (lambda ()
-         (require 'dap-python)
-         (setq dap-python-debugger 'debugpy))))
-
-    (:with-mode java-ts-mode
-      (:hook
-       (lambda ()
-         (require 'dap-java))))
-
-    (:with-mode java-ts-mode
-      (:hook
-       (lambda ()
-         (require 'dap-java))))))
-
-;; (setup lsp-bridge
-;;   (:pkg (lsp-bridge :type git :host github :repo "manateelazycat/lsp-bridge"
-;;                     :files (:defaults "*.el" "*.py" "acm" "core" "langserver" "multiserver" "resources")
-;;                     :build (:not compile)))
-;;   (:option
-;;    lsp-bridge-python-command "python-for-lsp-bridge"
-
-;;    lsp-bridge-enable-completion-in-minibuffer t
-;;    lsp-bridge-enable-with-tramp t
-;;    ;; ui configuration
-;;    lsp-bridge-signature-show-function 'lsp-bridge-signature-show-with-frame
-;;    lsp-bridge-signature-show-with-frame-position "top-right"
-;;    lsp-bridge-enable-mode-line nil
-;;    lsp-bridge-enable-hover-diagnostic nil
-;;    lsp-bridge-enable-inlay-hint t
-;;    lsp-bridge-enable-org-babel t
-
-;;    ;; acm configuration
-;;    acm-candidate-match-function 'orderless-flex
-;;    acm-backend-yas-match-by-trigger-keyword t
-;;    acm-enable-capf t
-;;    acm-enable-tabnine t
-
-;;    ;;lsp-server configuartion
-;;    lsp-bridge-nix-lsp-server 'nixd
-;;    ;; (acm-enable-tempel t)
-;;    ;; (acm-enable-codeium t)
-;;    ;; (acm-enable-citre t)
-;;    ;; :bind (:map acm-mode-map
-;;    ;;         ("C-n" . acm-select-next)
-;;    ;;         ("C-p" . acm-select-prev))
-;;    )
-;;   (:when-loaded
-;;     (add-to-list 'acm-backend-capf-mode-list 'clojure-mode)
-;;     (add-to-list 'acm-backend-capf-mode-list 'clojurescript-mode)
-
-;;     (setq lsp-bridge-get-project-path-by-filepath
-;;           (lambda (filepath)
-;;             (or (when-let* ((project (project-current nil (file-name-directory filepath)))
-;;                             (root (project-root project)))
-;;                   (expand-file-name root))
-;;                 (file-name-directory filepath))))
-
-;;     (yas-global-mode 1)
-;;     (global-lsp-bridge-mode)))
-
-;; (setup flymake
-;;   (:defer (:require flymake))
-;;   (:when-loaded
-;;     ;; ??:? `flymake-no-changes-timeout` ???? nil ?,
-;;     ;; ???? `eglot-handle-notification` ? `:after` ???
-;;     (:option flymake-no-changes-timeout nil
-;;              ;; emacs@30 feature
-;;              flymake-show-diagnostics-at-end-of-line 'fancy)
-;;     ;; flymake-fringe-indicator-position 'right-fringe)
-;;     (:with-mode prog-mode (:hook flymake-mode))
-;;     (:with-mode emacs-lisp-mode (:hook (lambda()(flymake-mode -1))))))
-
-;; (setup flymake-bridge
-;;   (:pkg (flymake-bridge :type git :host github :repo "eki3z/flymake-bridge"))
-;;   (add-hook 'lsp-bridge-mode-hook #'flymake-bridge-setup))
-
-
-;; (setup flyover
-;;   (:pkg flyover)
-;;   (:hook-into flymake-mode)
-;;   (:option flyover-show-at-eol t
-;;            flyover-checkers '(flymake)))
 
 (setup corfu
   (:defer (:pkg corfu))
@@ -261,6 +65,16 @@
     (add-to-list 'completion-at-point-functions #'cape-emoji)
     (add-to-list 'completion-at-point-functions #'cape-dabbrev)
     (add-to-list 'completion-at-point-functions #'cape-file)))
+
+(setup yasnippet
+  (:defer (:require yasnippet))
+  (:when-loaded
+    (yas-global-mode)
+    (setopt yas-keymap-disable-hook
+            (lambda () (and (frame-live-p corfu--frame)
+                            (frame-visible-p corfu--frame))))
+    (setq yas-verbosity 0)))
+
 
 (provide 'init-completion)
 ;;; init-completion.el ends here

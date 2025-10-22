@@ -66,9 +66,6 @@
        nerd-icons-corfu nerd-icons-completion whitespace-cleanup-mode
        eshell-syntax-highlighting consult-dir dirvish swift-mode
        color-theme-sanityinc-tomorrow highlight-parentheses
-       ;;; lsp
-       lsp-mode lsp-tailwindcss lsp-sourcekit lsp-haskell lsp-java lsp-pyright
-       lsp-ui dap-mode flycheck consult-lsp
 
        ;;; org related
        org-modern org-appear org-remark org-tidy org-cliplink org-download

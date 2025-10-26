@@ -34,7 +34,7 @@ method definition in the XML file."
 
 ;; BSTT Lock Command Helper Functions
 (defvar bstt/lock-port "cli455")
-(defvar bstt/lock-value "0")
+(defvar bstt/lock-value "")
 
 (defun bstt/lock-set-port ()
   (interactive)
@@ -56,7 +56,11 @@ method definition in the XML file."
   (interactive)
   (let* ((cmd (bstt/lock-build-cmd))
          (project-root (project-root (project-current t)))
-         (default-directory (expand-file-name "webapp" project-root)))
+         (default-directory (expand-file-name "webapp" project-root))
+         (compilation-buffer-name-function
+          (lambda (_mode)
+            (format "*%s_compilation*"
+                    (file-name-nondirectory (directory-file-name project-root))))))
     (when (yes-or-no-p (format "Run command in %s: %s ?" default-directory cmd))
       (compile cmd))))
 
@@ -92,7 +96,11 @@ method definition in the XML file."
   (interactive)
   (let* ((cmd (bstt/webapp-compile-build-cmd))
          (project-root (project-root (project-current t)))
-         (default-directory (expand-file-name "webapp" project-root)))
+         (default-directory (expand-file-name "webapp" project-root))
+         (compilation-buffer-name-function
+          (lambda (_mode)
+            (format "*%s_compilation*"
+                    (file-name-nondirectory (directory-file-name project-root))))))
     (when (yes-or-no-p (format "Run command in %s: %s ?" default-directory cmd))
       (compile cmd))))
 
@@ -123,7 +131,11 @@ method definition in the XML file."
   (interactive)
   (let* ((cmd (bstt/toplevel-build-cmd))
          (project-root (project-root (project-current t)))
-         (default-directory (expand-file-name "bitstreams" project-root)))
+         (default-directory (expand-file-name "bitstreams" project-root))
+         (compilation-buffer-name-function
+          (lambda (_mode)
+            (format "*%s_compilation*"
+                    (file-name-nondirectory (directory-file-name project-root))))))
     (when (yes-or-no-p (format "Run command in %s: %s ?" default-directory cmd))
       (compile cmd))))
 

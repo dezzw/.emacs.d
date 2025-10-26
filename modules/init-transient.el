@@ -78,20 +78,18 @@
       [["Code find"
         ("d" "find-definitions"      xref-find-definitions)
         ("D" "find-references"       xref-find-references)
-        ("i" "find-impl"             lsp-find-implementation)
+        ("i" "find-impl"             eglot-find-implementation)
         ("s" "find-symbols"          xref-find-apropos)
         ("x" "find-mapper-xml"       +java-to-xml-mapper)
         ("o" "find-def-other-window" xref-find-definitions-other-window)
         ]
        ["Code action"
-        ("a" "code-actions"      lsp-execute-code-action)
-        ("r" "rename"            lsp-rename)
-        ("f" "format-buffer"     lsp-format-buffer)
-        ("R" "format-region"     lsp-format-region)]
+        ("a" "code-actions"      eglot-code-actions)
+        ("r" "rename"            eglot-rename)]
        ["diagnostic"
-        ("n" "jump-to-next-diagnostic" flycheck-next-error)
-        ("N" "jump-to-prev-diagnostic" flycheck-previous-error)
-        ("l" "list-diagnostics"        consult-flycheck)]
+        ("n" "jump-to-next-diagnostic" flymake-goto-next-error)
+        ("N" "jump-to-prev-diagnostic" flymake-goto-prev-error)
+        ("l" "list-diagnostics"        consult-flymake)]
        ["Navigate"
         ("m" "consult-mark" consult-mark)]])
 

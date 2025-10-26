@@ -220,38 +220,65 @@
            enable-remote-dir-locals t
            remote-file-name-inhibit-cache 60))
 
+(setup flymake
+  (:defer (:require flymake))
+  (:when-loaded
+    ;; 注意：当 `flymake-no-changes-timeout` 被设置为 nil 时，
+    ;; 需要实现 `eglot-handle-notification` 的 `:after` 方法。
+    (setopt flymake-no-changes-timeout nil
+            flymake-fringe-indicator-position 'right-fringe)
+    (when (version<= "31" emacs-version)
+      (setopt flymake-show-diagnostics-at-end-of-line t))
+    (:with-mode prog-mode (:hook flymake-mode))
+    (:with-mode emacs-lisp-mode (:hook (lambda()(flymake-mode -1))))))
 
-;; (setup eglot
-;;   (:when-loaded
-;;     (:also-load lib-eglot)
-;;     (:with-mode (python-ts-mode js-ts-mode typescript-mode tsx-ts-mode vue-mode latex-mode)
-;;       (:hook eglot-ensure))
-;;     (setopt eglot-code-action-indications '(eldoc-hint)
-;;             eglot-events-buffer-config '(:size 0 :format full) ;; 取消 eglot log
-;;             ;; ignore lsp formatting provider, format with apheleia.
-;;             eglot-ignored-server-capabilities '(:documentFormattingProvider
-;;                                                 :documentRangeFormattingProvider))
-;;     (add-to-list 'eglot-server-programs '(my-html-mode . ("vscode-html-language-server" "--stdio")))
-;;     (add-to-list 'eglot-server-programs `((vue-mode vue-ts-mode typescript-ts-mode typescript-mode) . ("vue-language-server" "--stdio" :initializationOptions ,(vue-eglot-init-options))))
-;;     (add-to-list 'eglot-server-programs '(js-mode . ("typescript-language-server" "--stdio")))
-;;     (advice-add 'eglot-completion-at-point :around #'cape-wrap-buster)
-;;     ;; https://github.com/joaotavora/eglot/discussions/898
-;;     (:with-hook eglot-managed-mode-hook
-;;       (:hook (lambda ()
-;;                ;; Show flymake diagnostics first.
-;;                (setq eldoc-documentation-functions
-;;                      (cons #'flymake-eldoc-function
-;;                            (remove #'flymake-eldoc-function eldoc-documentation-functions)))
-;;                ;; Show all eldoc feedback.
-;;                (setq eldoc-documentation-strategy #'eldoc-documentation-compose))))))
+(setup eglot
+  (:when-loaded
+    (:also-load lib-eglot)
+    (:with-mode (python-ts-mode js-ts-mode typescript-mode tsx-ts-mode vue-mode latex-mode)
+      (:hook eglot-ensure))
+    (setopt eglot-code-action-indications '(eldoc-hint)
+            eglot-events-buffer-config '(:size 0 :format full) ;; 取消 eglot log
+            ;; ignore lsp formatting provider, format with apheleia.
+            eglot-ignored-server-capabilities '(:documentFormattingProvider
+                                                :documentRangeFormattingProvider))
+    (add-to-list 'eglot-server-programs '(my-html-mode . ("vscode-html-language-server" "--stdio")))
+    (add-to-list 'eglot-server-programs `((vue-mode vue-ts-mode typescript-ts-mode typescript-mode) . ("vue-language-server" "--stdio" :initializationOptions ,(vue-eglot-init-options))))
+    (add-to-list 'eglot-server-programs '(js-mode . ("typescript-language-server" "--stdio")))
+    (advice-add 'eglot-completion-at-point :around #'cape-wrap-buster)
+    (setq-default
+       eglot-workspace-configuration
+       '(:basedpyright.analysis (
+           :typeCheckingMode "off"
+           :diagnosticSeverityOverrides (
+             :reportUnusedCallResult "none"
+           )
+           :inlayHints (
+             :callArgumentNames :json-false
+           )
+         )))
+    ;; https://github.com/joaotavora/eglot/discussions/898
+    (:with-hook eglot-managed-mode-hook
+      (:hook (lambda ()
+               ;; Show flymake diagnostics first.
+               (setq eldoc-documentation-functions
+                     (cons #'flymake-eldoc-function
+                           (remove #'flymake-eldoc-function eldoc-documentation-functions)))
+               ;; Show all eldoc feedback.
+               (setq eldoc-documentation-strategy #'eldoc-documentation-compose))))))
 
-;; (setup eglot-booster
-;;   (:pkg (eglot-booster :host github :repo "jdtsmith/eglot-booster"))
-;;   (:load-after eglot)
-;;   (:when-loaded (eglot-booster-mode)))
+(setup eglot-booster
+  (:pkg (eglot-booster :host github :repo "jdtsmith/eglot-booster"))
+  (:load-after eglot)
+  (:option eglot-booster-io-only t)
+  (:when-loaded (eglot-booster-mode)))
 
-(setup lsp-proxy
-  (:pkg (lsp-proxy :host github :repo "jadestrong/lsp-proxy" :files ("*.el"))))
+(setup eglot-x
+  (:pkg (eglot-x :host github :repo "nemethf/eglot-x"))
+  (:hooks eglot-managed-mode-hook eglot-x-setup))
+
+;; (setup lsp-proxy
+;;   (:pkg (lsp-proxy :host github :repo "jadestrong/lsp-proxy" :files ("*.el"))))
 
 (setup compile
   (:option compilation-always-kill t       ; kill compilation process before starting another

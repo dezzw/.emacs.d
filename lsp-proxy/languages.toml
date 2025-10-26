@@ -1,7 +1,20 @@
+[language-server.basedpyright]
+command = "basedpyright-langserver"
+args = ["--stdio"]
+
+[language-server.basedpyright.config]
+python.analysis.lint = true
+python.analysis.inlayHints.enable = true
+python.analysis.autoSearchPaths = true
+python.analysis.diagnosticMode = "workspace"
+python.analysis.useLibraryCodeForTypes = true
+python.analysis.logLevel = "Error"
+python.analysis.typeCheckingMode = "off"
+python.analysis.autoImportCompletion = true
+python.analysis.reportOptionalSubscript = false
+python.analysis.reportOptionalMemberAccess = false
+
 [language-server]
-basedpyright = { command = "basedpyright-langserver", args = [
-  "--stdio",
-], config = {} }
 taplo = { command = "taplo", args = ["lsp", "stdio"] }
 tombi = { command = "tombi", args = ["lsp"] }
 bash-language-server = { command = "bash-language-server", args = ["start"] }

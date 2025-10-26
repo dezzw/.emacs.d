@@ -86,8 +86,6 @@
                       inhibit-message nil)
         (redraw-frame))
 
-      (defvar minimal-emacs--default-mode-line-format mode-line-format
-        "Default value of `mode-line-format'.")
       (setq-default mode-line-format nil)
 
       (defun my--startup-load-user-init-file (fn &rest args)
@@ -100,10 +98,7 @@
             (unless init
               ;; If we don't undo inhibit-{message, redisplay} and there's an
               ;; error, we'll see nothing but a blank Emacs frame.
-              (minimal-emacs--reset-inhibited-vars-h))
-            (unless (default-toplevel-value 'mode-line-format)
-              (setq-default mode-line-format
-                            minimal-emacs--default-mode-line-format)))))
+              (minimal-emacs--reset-inhibited-vars-h)))))
 
       (advice-add 'startup--load-user-init-file :around
                   #'my--startup-load-user-init-file))

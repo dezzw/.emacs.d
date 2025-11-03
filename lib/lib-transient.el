@@ -108,6 +108,7 @@ method definition in the XML file."
 (defvar bstt/toplevel-cli-code "CLI455")
 (defvar bstt/toplevel-local-code "B000006")
 (defvar bstt/toplevel-config "")
+(defvar bstt/toplevel-repeat "1")
 
 (defun bstt/toplevel-set-cli-code ()
   (interactive)
@@ -121,8 +122,12 @@ method definition in the XML file."
   (interactive)
   (setq bstt/toplevel-config (read-string "Config (-c, blank to omit): " bstt/toplevel-config)))
 
+(defun bstt/toplevel-set-repeat ()
+  (interactive)
+  (setq bstt/toplevel-repeat (read-string "Repeat (-r): " bstt/toplevel-repeat)))
+
 (defun bstt/toplevel-build-cmd ()
-  (let ((args (list "uv" "run" "toplevel.py" "-d" "-p" bstt/toplevel-cli-code "--local" bstt/toplevel-local-code)))
+  (let ((args (list "uv" "run" "toplevel.py" "-d" "-p" bstt/toplevel-cli-code "--local" bstt/toplevel-local-code "-r" bstt/toplevel-repeat)))
     (when (and bstt/toplevel-config (not (string-empty-p bstt/toplevel-config)))
       (setq args (append args (list "-c" bstt/toplevel-config))))
     (mapconcat #'shell-quote-argument args " ")))
@@ -138,6 +143,49 @@ method definition in the XML file."
                     (file-name-nondirectory (directory-file-name project-root))))))
     (when (yes-or-no-p (format "Run command in %s: %s ?" default-directory cmd))
       (compile cmd))))
+
+;; BSTT Code Submission Check Command Helper Functions
+(defun bstt/code-check-run ()
+  (interactive)
+  (let* ((cmd "uv run code_submission_check.py")
+         (project-root (project-root (project-current t)))
+         (default-directory (expand-file-name "webapp" project-root))
+         (compilation-buffer-name-function
+          (lambda (_mode)
+            (format "*%s_compilation*"
+                    (file-name-nondirectory (directory-file-name project-root))))))
+    (when (yes-or-no-p (format "Run command in %s: %s ?" default-directory cmd))
+      (compile cmd))))
+
+;; Git Worktree Helper Functions
+(defun git-worktree-add-from-develop ()
+  "Create a new git worktree from origin/develop.
+Fetches latest changes, prompts for branch name, and creates a worktree
+in a sibling directory with the new branch."
+  (interactive)
+  (let* ((project-root (project-root (project-current t)))
+         (default-directory project-root)
+         (branch-name (read-string "New branch name: "))
+         (parent-dir (file-name-directory (directory-file-name project-root)))
+         (worktree-path (expand-file-name branch-name parent-dir)))
+    (when (string-empty-p branch-name)
+      (user-error "Branch name cannot be empty"))
+    (when (file-exists-p worktree-path)
+      (user-error "Worktree path already exists: %s" worktree-path))
+    ;; Fetch latest from origin
+    (message "Fetching latest from origin...")
+    (shell-command "git fetch origin")
+    ;; Create worktree with new branch from origin/develop
+    (let ((cmd (format "git worktree add %s -b %s origin/develop"
+                       (shell-quote-argument worktree-path)
+                       (shell-quote-argument branch-name))))
+      (message "Creating worktree: %s" cmd)
+      (if (= 0 (shell-command cmd))
+          (progn
+            (message "Successfully created worktree at: %s" worktree-path)
+            (when (yes-or-no-p (format "Open worktree in new project? "))
+              (project-switch-project worktree-path)))
+        (error "Failed to create worktree")))))
 
 ;;;; provide
 (provide 'lib-transient)

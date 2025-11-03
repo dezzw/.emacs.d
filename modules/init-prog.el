@@ -232,6 +232,11 @@
     (:with-mode prog-mode (:hook flymake-mode))
     (:with-mode emacs-lisp-mode (:hook (lambda()(flymake-mode -1))))))
 
+(setup eldoc-box
+  (:pkg eldoc-box)
+  (:load-after eldoc)
+  (:hooks eglot-managed-mode-hook eldoc-box-hover-mode))
+
 (setup eglot
   (:when-loaded
     (:also-load lib-eglot)

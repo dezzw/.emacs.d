@@ -13,7 +13,8 @@
              "C-c e d" dape-transient
              "C-c e l" bstt/lock
              "C-c e w" bstt/webapp-compile
-             "C-c e t" bstt/toplevel)
+             "C-c e t" bstt/toplevel
+             "C-c e c" bstt/code-check)
     (:with-map transient-base-map
       (:bind "<escape>" transient-quit-one))
     (:option transient-semantic-coloring t)
@@ -49,9 +50,18 @@
       [ ["Arguments (press to modify, menu stays open)"
           ("p" (lambda () (format "CLI Code (-p): %s" bstt/toplevel-cli-code)) bstt/toplevel-set-cli-code :transient t)
           ("l" (lambda () (format "Local Code (--local): %s" bstt/toplevel-local-code)) bstt/toplevel-set-local-code :transient t)
-          ("c" (lambda () (format "Config (-c): %s" (if (string-empty-p bstt/toplevel-config) "<none>" bstt/toplevel-config))) bstt/toplevel-set-config :transient t)]
+          ("c" (lambda () (format "Config (-c): %s" (if (string-empty-p bstt/toplevel-config) "<none>" bstt/toplevel-config))) bstt/toplevel-set-config :transient t)
+          ("r" (lambda () (format "Repeat (-r): %s" bstt/toplevel-repeat)) bstt/toplevel-set-repeat :transient t)]
         ["Actions"
           ("RET" "Run command" bstt/toplevel-run)
+          ("q" "Quit menu" transient-quit-one)] ])
+
+    ;; BSTT Code Submission Check Command Transient
+    (transient-define-prefix bstt/code-check ()
+      "Run code_submission_check.py in project_root/webapp directory."
+      :info-manual "(bstt-code-check) BSTT Code Submission Check Command"
+      [ ["Actions"
+          ("RET" "Run command" bstt/code-check-run)
           ("q" "Quit menu" transient-quit-one)] ])
 
     ;; file access
@@ -102,7 +112,9 @@
         ("s"   "Staged section"           magit-jump-to-staged)
         ("p"   "Unpushed section"         magit-jump-to-unpushed-to-pushremote)
         ("M-p" "previous sibling section" magit-section-backward-sibling)
-        ("M-n" "next sibling section"     magit-section-forward-sibling)]])))
+        ("M-n" "next sibling section"     magit-section-forward-sibling)]
+       ["Git worktree"
+        ("w" "Add worktree from develop" git-worktree-add-from-develop)]])))
 
 (provide 'init-transient)
 ;;; init-transient.el ends here

@@ -2,7 +2,7 @@
 ;;; Commentary:
 ;;; Code:
 (setup orderless
-  (:defer (:pkg orderless))
+  (:defer (:require orderless))
   (:when-loaded
     (:option completion-styles '(orderless flex)
              completion-category-defaults nil
@@ -35,7 +35,7 @@
 
 
 (setup corfu
-  (:defer (:pkg corfu))
+  (:defer (:require corfu))
   (:when-loaded
     (:with-feature nerd-icons-corfu
       ;; Using VS Code icons as an alternative
@@ -60,7 +60,6 @@
 
 (setup cape
   (:load-after corfu)
-  (:pkg cape)
   (:when-loaded
     (add-to-list 'completion-at-point-functions #'cape-emoji)
     (add-to-list 'completion-at-point-functions #'cape-dabbrev)
@@ -70,9 +69,9 @@
   (:defer (:require yasnippet))
   (:when-loaded
     (yas-global-mode)
-    (setopt yas-keymap-disable-hook
-            (lambda () (and (frame-live-p corfu--frame)
-                            (frame-visible-p corfu--frame))))
+    (add-hook 'yas-keymap-disable-hook
+              (lambda () (and (frame-live-p corfu--frame)
+                              (frame-visible-p corfu--frame))))
     (setq yas-verbosity 0)))
 
 

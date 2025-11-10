@@ -50,7 +50,10 @@
 
 ;; Disable package.el in favor of straight.el
 (setq package-enable-at-startup nil
-      package-quickstart nil)
+      package-quickstart nil
+      package-archives nil)
+
+(package-activate-all)
 
 (unless (daemonp)
   (let ((old-value (default-toplevel-value 'file-name-handler-alist)))

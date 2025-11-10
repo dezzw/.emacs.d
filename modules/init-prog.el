@@ -60,7 +60,7 @@
 ;; Not support format in region
 (setup apheleia
   (:when-loaded
-    (:global "C-c C-x C-f" apheleia-format-buffer)
+    (keymap-global-set "C-c C-x C-f" 'apheleia-format-buffer)
     ;; $ brew install isort black google-java-format stylua libxml2
     ;; $ npm install -g prettier
     (setf (alist-get 'google-java-format apheleia-formatters)
@@ -79,11 +79,11 @@
     (setf (alist-get 'typescript-ts-mode apheleia-mode-alist) 'prettier)
     (setf (alist-get 'js-ts-mode         apheleia-mode-alist) 'prettier)))
 
-(setup reformtter
-  (:pkg reformatter)
+(setup reformatter
+  (:defer (:require reformatter))
   (:with-mode python-ts-mode
     (reformatter-define black-format
-                        :program "black"
+                        :program "ruff format"
                         :args '("-"))))
 
 (setup mmm-mode
@@ -228,24 +228,21 @@
     (setopt flymake-no-changes-timeout nil
             flymake-fringe-indicator-position 'right-fringe)
     (when (version<= "31" emacs-version)
-      (setopt flymake-show-diagnostics-at-end-of-line t))
-    (:with-mode prog-mode (:hook flymake-mode))
-    (:with-mode emacs-lisp-mode (:hook (lambda()(flymake-mode -1))))))
+      (setopt flymake-show-diagnostics-at-end-of-line t))))
 
 (setup flymake-ruff
-  (:pkg flymake-ruff)
+  (:load-after flymake)
   (:hooks eglot-managed-mode-hook flymake-ruff-load))
 
 (setup eldoc-box
-  (:pkg eldoc-box)
   (:load-after eldoc)
   (:hooks eglot-managed-mode-hook eldoc-box-hover-mode))
 
 (setup eglot
+  (:with-mode (python-ts-mode js-ts-mode typescript-mode tsx-ts-mode vue-mode latex-mode)
+    (:hook eglot-ensure))
   (:when-loaded
     (:also-load lib-eglot)
-    (:with-mode (python-ts-mode js-ts-mode typescript-mode tsx-ts-mode vue-mode latex-mode)
-      (:hook eglot-ensure))
     (setopt eglot-code-action-indications '(eldoc-hint)
             eglot-events-buffer-config '(:size 0 :format full) ;; 取消 eglot log
             ;; ignore lsp formatting provider, format with apheleia.
@@ -277,17 +274,14 @@
                (setq eldoc-documentation-strategy #'eldoc-documentation-compose))))))
 
 (setup eglot-booster
-  (:pkg (eglot-booster :host github :repo "jdtsmith/eglot-booster"))
   (:load-after eglot)
   (:option eglot-booster-io-only t)
   (:when-loaded (eglot-booster-mode)))
 
 (setup eglot-x
-  (:pkg (eglot-x :host github :repo "nemethf/eglot-x"))
+  (:load-after eglot)
   (:hooks eglot-managed-mode-hook eglot-x-setup))
 
-;; (setup lsp-proxy
-;;   (:pkg (lsp-proxy :host github :repo "jadestrong/lsp-proxy" :files ("*.el"))))
 
 (setup compile
   (:option compilation-always-kill t       ; kill compilation process before starting another

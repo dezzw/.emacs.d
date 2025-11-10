@@ -351,6 +351,7 @@
               swift-mode
               color-theme-sanityinc-tomorrow
               highlight-parentheses
+              yasnippet
 
               # MELPA packages - Org-mode
               org-modern

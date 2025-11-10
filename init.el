@@ -31,9 +31,6 @@
 (setq user-full-name "Desmond Wang")
 (setq user-mail-address "desmond.wang@netint.ca")
 
-;; All packages are now managed by Nix via flake.nix
-;; No need for straight.el bootstrap or package installation here
-;; Package management has been moved to NixOS for reproducibility
 (setq vc-follow-symlinks t)
 
 ;; load module settings

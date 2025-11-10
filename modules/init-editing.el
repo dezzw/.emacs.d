@@ -58,10 +58,8 @@
             set-mark-command-repeat-pop t))
 
 (setup meow
-  (:pkg meow)
-  (:pkg undo-fu)
-  (:pkg undo-fu-session)
-  (:also-load lib-meow)
+  (:require meow)
+  (:also-load undo-fu undo-fu-session lib-meow)
   (:with-function meow-setup (:autoload-this))
   (undo-fu-session-global-mode)
   (meow-global-mode 1)
@@ -203,7 +201,7 @@
                                (or (group-n 1 (1+ (or (syntax word)
                                                       (syntax symbol))))
                                    ;; Add here items that can define a feature:
-                                   (seq "(:" (or "straight" "require" "package")
+                                   (seq "(:" (or "require" "package")
                                         (1+ blank)
                                         (group-n 1 (1+ (or (syntax word)
                                                            (syntax symbol)))))))

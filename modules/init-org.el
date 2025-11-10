@@ -148,26 +148,6 @@
 \n")
     (denote-rename-buffer-mode 1)))
 
-(setup org-clock
-  (:load-after org)
-  (keymap-global-set "C-c o j" 'org-clock-goto)
-  (keymap-global-set "C-c o l" 'org-clock-in-last)
-  (keymap-global-set "C-c o i" 'org-clock-in)
-  (keymap-global-set "C-c o o" 'org-clock-out)
-  (:when-loaded
-    (:option org-clock-persist t
-             org-clock-in-resume t
-             ;; Save clock data and notes in the LOGBOOK drawer
-             org-clock-into-drawer t
-             ;; Save state changes in the LOGBOOK drawer
-             org-log-into-drawer t
-             ;; Removes clocked tasks with 0:00 duration
-             org-clock-out-remove-zero-time-clocks t
-             ;; Show clock sums as hours and minutes, not "n days" etc.
-             org-time-clocksum-format
-             '(:hours "%d" :require-hours t :minutes ":%02d" :require-minutes t))
-    (org-clock-persistence-insinuate)))
-
 (setup ox-latex
   (:load-after org)
   (:when-loaded

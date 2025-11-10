@@ -76,12 +76,11 @@
 
 (setup helpful
   (:defer (:require helpful))
-  (:global
-   [remap describe-function] helpful-function
-   [remap describe-symbol] helpful-symbol
-   [remap describe-variable] helpful-variable
-   [remap describe-command] helpful-command
-   [remap describe-key] helpful-key))
+  (keymap-global-set "<remap> <describe-function>" 'helpful-function)
+  (keymap-global-set "<remap> <describe-symbol>" 'helpful-symbol)
+  (keymap-global-set "<remap> <describe-variable>" 'helpful-variable)
+  (keymap-global-set "<remap> <describe-command>" 'helpful-command)
+  (keymap-global-set "<remap> <describe-key>" 'helpful-key))
 
 (setup leetcode
   (:autoload leetcode-list-all)
@@ -113,35 +112,6 @@
 ;;         (modify-syntax-entry '(#x31350 . #x323AF) "_" st) ; CJK Unified Ideographs Extension H
 ;;         (modify-syntax-entry '(#x2EBF0 . #x2EE5F) "_" st) ; CJK Unified Ideographs Extension I
 ;;         ))))
-
-(setup gptel
-  (:pkg gptel)
-  (:option gptel-default-mode 'org-mode
-           gptel-model "openrouter/auto")
-  (:when-loaded
-    (defun read-file-contents (file-path)
-      "Read the contents of FILE-PATH and return it as a string."
-      (with-temp-buffer
-        (insert-file-contents file-path)
-        (buffer-string)))
-    (setq gptel-backend
-          (gptel-make-openai "NETINT"
-            :host "cursor.netint.ca/openrouter/v1"
-            :endpoint "/chat/completions"
-            :stream t
-            :key (auth-source-pick-first-password :host "cursor.netint.ca" :user "netint")
-            :models '("openrouter/auto" "openai/gpt-5-chat" "anthropic/claude-sonnet-4" "anthropic/claude-3.7-sonnet")
-            )))
-   (:with-hook gptel-post-stream-hook
-      (:hook (lambda ()(meow-insert-exit)))
-      (:hook gptel-auto-scroll))
-    (:hooks gptel-post-response-hook gptel-end-of-response))
-
-(setup elysium
-  (:pkg elysium)
-  (:option
-   elysium-window-size 0.33
-   elysium-window-style 'vertical))
 
 (provide 'init-util)
 ;;; init-util.el ends here

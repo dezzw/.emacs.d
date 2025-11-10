@@ -5,16 +5,16 @@
   (:defer (require 'transient))
   (:when-loaded
     (:also-load lib-transient)
-    (:global "C-c e e" emacs-access-transient
-             "C-c e g" gptel-menu
-             "C-c e p" prog-commands
-             "C-c e m" magit-commands
-             "C-c e u" uniline-transient
-             "C-c e d" dape-transient
-             "C-c e l" bstt/lock
-             "C-c e w" bstt/webapp-compile
-             "C-c e t" bstt/toplevel
-             "C-c e c" bstt/code-check)
+    (keymap-global-set "C-c e e" 'emacs-access-transient)
+    (keymap-global-set "C-c e g" 'gptel-menu)
+    (keymap-global-set "C-c e p" 'prog-commands)
+    (keymap-global-set "C-c e m" 'magit-commands)
+    (keymap-global-set "C-c e u" 'uniline-transient)
+    (keymap-global-set "C-c e d" 'dape-transient)
+    (keymap-global-set "C-c e l" 'bstt/lock)
+    (keymap-global-set "C-c e w" 'bstt/webapp-compile)
+    (keymap-global-set "C-c e t" 'bstt/toplevel)
+    (keymap-global-set "C-c e c" 'bstt/code-check)
     (:with-map transient-base-map
       (:bind "<escape>" transient-quit-one))
     (:option transient-semantic-coloring t)
@@ -69,8 +69,8 @@
       "Emacs quick access"
       :info-manual "Emacs quick access"
       [["Emacs"
-        ("-r" "repos"    "~/.emacs.d/straight/repos/")
-        ("-c" "settings" "~/.emacs.d/lisp/")
+        ("-c" "config"   "~/.emacs.d/")
+        ("-m" "modules"  "~/.emacs.d/modules/")
         ("-p" "projects" "~/IdeaProjects/")]
        ["Files"
         ("-t" "telega" "~/.telega/")

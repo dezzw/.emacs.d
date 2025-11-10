@@ -5,47 +5,8 @@
 
 ;;; Code:
 
-(straight-use-package 'setup)
+;; Setup is now installed via Nix, just require it
 (require 'setup)
-
-(setup-define :pkg
-  (lambda (pkg-or-pkgs)
-    (let ((pkgs (if (and (listp pkg-or-pkgs)
-                         ;; Check if it's a single package with recipe
-                         (not (and (symbolp (car pkg-or-pkgs))
-                                   (keywordp (cadr pkg-or-pkgs)))))
-                    pkg-or-pkgs
-                  (list pkg-or-pkgs))))
-      `(progn
-         ,@(mapcar (lambda (pkg)
-                     (cond
-                      ;; Format: (pkg-name :key val :key val ...)
-                      ((and (listp pkg) (symbolp (car pkg)) (keywordp (cadr pkg)))
-                       (let ((pkg-name (car pkg))
-                             (recipe (cdr pkg)))
-                         `(progn
-                            (unless (featurep ',pkg-name)
-                              (straight-use-package ',(cons pkg-name recipe)))
-                            (require ',pkg-name))))
-                      ;; Format: pkg-name (simple symbol)
-                      ((symbolp pkg)
-                       `(progn
-                          (unless (featurep ',pkg)
-                            (straight-use-package ',pkg))
-                          (require ',pkg)))
-                      ;; Fallback
-                      (t
-                       `(progn
-                          (unless (featurep ',(car pkg))
-                            (straight-use-package ',pkg))
-                          (require ',(car pkg))))))
-                   pkgs))))
-  :documentation "Use straight to install and require PKG-OR-PKGS.
-Can accept:
-- A single package: pkg-name
-- A single package with recipe: (pkg-name :key val ...)
-- A list of any combination of the above"
-  :repeatable t)
 
 (setup-define :defer
   (lambda (features)

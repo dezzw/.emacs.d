@@ -2,24 +2,32 @@
 ;;; Commentary:
 ;;; Code:
 
-;; install claude-code.el, using :depth 1 to reduce download size:
-(setup claude-code
-  (:pkg (claude-code :type git :host github :repo "stevemolitor/claude-code.el" :branch "main" :depth 1
-                   :files ("*.el" (:exclude "images/*"))))
-  (:pkg (monet :type git :host github :repo "stevemolitor/monet"))
+(setup gptel
+  (:option gptel-default-mode 'org-mode
+           gptel-model "openrouter/auto")
   (:when-loaded
-    (keymap-global-set "C-c c" claude-code-command-map)
-    (add-hook 'claude-code-process-environment-functions #'monet-start-server-function)
-    (monet-mode 1)
-
-    (claude-code-mode)))
+    (defun read-file-contents (file-path)
+      "Read the contents of FILE-PATH and return it as a string."
+      (with-temp-buffer
+        (insert-file-contents file-path)
+        (buffer-string)))
+    (setq gptel-backend
+          (gptel-make-openai "NETINT"
+            :host "cursor.netint.ca/openrouter/v1"
+            :endpoint "/chat/completions"
+            :stream t
+            :key (auth-source-pick-first-password :host "cursor.netint.ca" :user "netint")
+            :models '("openrouter/auto" "openai/gpt-5-chat" "anthropic/claude-sonnet-4" "anthropic/claude-3.7-sonnet")
+            )))
+   (:with-hook gptel-post-stream-hook
+      (:hook (lambda ()(meow-insert-exit)))
+      (:hook gptel-auto-scroll))
+    (:hooks gptel-post-response-hook gptel-end-of-response))
 
 (setup ai-code-interface
-  (:pkg claude-code-ide )
-  (:pkg (ai-code-interface :host github :repo "tninja/ai-code-interface.el"))
-  (global-set-key (kbd "C-c l") #'ai-code-menu)
+  (global-set-key (kbd "C-c a") #'ai-code-menu)
   (:when-loaded
-    (ai-code-set-backend  'claude-code-ide) ;; use claude-code-ide as backend
+    (ai-code-set-backend 'claude-code-ide) ;; use claude-code-ide as backend
     (with-eval-after-load 'magit
       (ai-code-magit-setup-transients))))
   

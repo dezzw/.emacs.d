@@ -64,7 +64,7 @@
 ;;     (add-to-list 'doom-modeline-mode-alist '(org-agenda-mode . disable-modification-indication))))
 
 (setup awesome-tray
-  (:pkg (awesome-tray :host github :repo "manateelazycat/awesome-tray"))
+  (:defer (:require awesome-tray))
   (:option awesome-tray-active-modules '("meow" "buffer-name" "file-path" "mode-name" "git" "flymake"))
   (:when-loaded
     (awesome-tray-mode 1)))

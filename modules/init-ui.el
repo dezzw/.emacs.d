@@ -6,7 +6,8 @@
 (setup scroll-bar (:when-loaded (set-scroll-bar-mode nil)))
 (setup tooltip (:when-loaded (:option tooltip-delay 2.5)))
 ;; Change global font size easily
-(setup default-text-scale (:hook-into after-init))
+(setup (:require default-text-scale)
+  (:hook-into after-init))
 ;; Don't scale font on trackpad pinch!
 (global-unset-key (kbd "<pinch>"))
 
@@ -51,7 +52,7 @@
   (:hook-into window-setup-hook))
 
 (when (or window-system (daemonp))
-  (setup panel
+  (setup (:require panel)
     (:option panel-latitude 43.45193874534566
              panel-longitude -80.49129101085033
              panel-path-max-length 35
@@ -76,6 +77,7 @@
 
 (setup custom
   (:when-loaded
+    (:also-load rose-pine)
     (:also-load lib-appearance)
     (keymap-global-set "C-M-8" (lambda () (interactive) (+adjust-opacity nil -2)))
     (keymap-global-set "C-M-7" (lambda () (interactive) (+adjust-opacity nil 2)))
@@ -106,22 +108,13 @@
                             (line-beginning-position 2))))
   (global-hl-line-mode))
 
-(use-package paren
-  :custom-face (show-paren-match ((t (:foreground "SpringGreen3" :underline t :weight bold))))
-  :config
-  (setq show-paren-when-point-inside-paren t
-        show-paren-when-point-in-periphery t
-        show-paren-context-when-offscreen t
-        show-paren-delay 0.2))
-
-(use-package highlight-parentheses
-  :straight t
-  :hook ((minibuffer-setup . highlight-parentheses-minibuffer-setup)
-         (prog-mode . highlight-parentheses-mode))
-  :config
-  (setq highlight-parentheses-colors '("firebrick1" "firebrick3" "orange1" "orange3")
-        highlight-parentheses-attributes '((:underline t) (:underline t) (:underline t))
-        highlight-parentheses-delay 0.2))
+(setup paren
+  (:face show-paren-match ((t (:foreground "SpringGreen3" :underline t :weight bold))))
+  (:when-loaded
+    (:option show-paren-when-point-inside-paren t
+             show-paren-when-point-in-periphery t
+             show-paren-context-when-offscreen t
+             show-paren-delay 0.2)))
 
 (setup highlight-parentheses
   (:defer (:require highlight-parentheses))
@@ -134,14 +127,14 @@
 
 
 (setup nerd-icons (:defer (:require nerd-icons)))
-(setup all-the-icons (:defer (:pkg all-the-icons)))
+(setup all-the-icons (:defer (:require all-the-icons)))
 
 ;; (setup window-navigation
 ;;   (:defer (:require window-navigation))
 ;;   (:when-loaded (window-navigation-mode)))
 
 (setup zoom
-  (:pkg zoom)
+  (:require zoom)
   ;; (:hook-into window-setup server-after-make-frame)
   (:option zoom-size '(0.618 . 0.618)))
 

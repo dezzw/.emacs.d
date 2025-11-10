@@ -44,7 +44,7 @@
   (:when-loaded (org-remark-nov-mode +1)))
 
 (setup elfeed
-  (:global "C-x w" elfeed)
+  (keymap-global-set "C-x w" 'elfeed)
   (:when-loaded
     (:also-load lib-elfeed)
     (:option elfeed-feeds +elfeed-feeds
@@ -56,12 +56,6 @@
 
 (setup markdown-mode
   (:option markdown-command "pandoc --standalone --css=GTD.css"))
-
-(setup md
-  (:defer (:require md))
-  (:when-loaded
-    (:require md-ts-mode)
-    (:with-mode md-ts-mode (:hook md-toc-mode))))
 
 (provide 'init-reader)
 ;;; init-reader.el ends here

@@ -62,6 +62,10 @@
       url = "github:LuciusChen/rose-pine";
       flake = false;
     };
+    setup-el = {
+      url = "git+https://codeberg.org/pkal/setup.el.git";
+      flake = false;
+    };
     telega = {
       url = "github:LuciusChen/telega.el";
       flake = false;
@@ -236,6 +240,12 @@
                   src = inputs.rose-pine;
                 };
 
+                setup = epkgs.trivialBuild {
+                  pname = "setup";
+                  version = timestampToDate inputs.setup-el.lastModified;
+                  src = inputs.setup-el;
+                };
+
                 telega = epkgs.trivialBuild {
                   pname = "telega";
                   version = timestampToDate inputs.telega.lastModified;
@@ -263,6 +273,7 @@
               customPackages.org-modern-indent
               customPackages.panel
               customPackages.rose-pine
+              customPackages.setup
               customPackages.telega
 
               # MELPA packages - Core
@@ -274,7 +285,6 @@
               ultra-scroll
               indent-bars
               vertico-posframe
-              setup
               nov
               sis
               plz

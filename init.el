@@ -40,6 +40,7 @@
 (dolist (dir '("modules" "lib" "site-lisp"))
   (add-to-list 'load-path (expand-file-name dir user-emacs-directory)))
 
+(require 'setup)
 (require 'init-setup)
 (when *is-mac* (require 'init-mac))
 (require 'init-ui)

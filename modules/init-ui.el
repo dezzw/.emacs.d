@@ -44,6 +44,12 @@
       (add-to-list 'default-frame-alist border)
       (add-to-list 'initial-frame-alist border))))
 
+(setup window-divider
+  (:option window-divider-default-right-width 1
+           window-divider-default-bottom-width 1
+           window-divider-default-places t)
+  (:hook-into window-setup-hook))
+
 (when (or window-system (daemonp))
   (setup panel
     (:option panel-latitude 43.45193874534566

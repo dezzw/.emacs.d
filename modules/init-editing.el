@@ -27,7 +27,6 @@
            truncate-partial-width-windows nil
            backward-delete-char-untabify-method 'hungry
            history-length 1000
-           select-enable-primary t
            ))
 
 (setup (:with-hook after-init-hook

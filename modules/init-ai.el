@@ -2,23 +2,6 @@
 ;;; Commentary:
 ;;; Code:
 
-(when *is-mac*
-  (progn
-    (setup copilot-chat
-      (:load-after magit)
-      (:hooks git-commit-setup-hook copilot-chat-insert-commit-message)
-      (:option copilot-chat-model "claude-3.7-sonnet-thought"))))
-
-;; (setup copilot
-;;   (:defer (:require copilot))
-;;   (:hook-into prog-mode)
-;;   (:with-map copilot-mode-map
-;;     (:bind
-;;      "C-e" copilot-accept-completion))
-;;   (:option copilot-indent-offset-warning-disable t))
-;; ))
-
-
 ;; install claude-code.el, using :depth 1 to reduce download size:
 (setup claude-code
   (:pkg (claude-code :type git :host github :repo "stevemolitor/claude-code.el" :branch "main" :depth 1

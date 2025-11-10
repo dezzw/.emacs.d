@@ -32,5 +32,13 @@
                                             :documentColor t))
                   :vue (:hybridMode :json-false))))
 
+(defun my-filter-eglot-diagnostics (diags)
+    "Drop Pyright 'variable not accessed' notes from DIAGS."
+    (list (seq-remove (lambda (d)
+                        (and (eq (flymake-diagnostic-type d) 'eglot-note)
+                             (s-starts-with? "Pyright:" (flymake-diagnostic-text d))
+                             (s-ends-with? "is not accessed" (flymake-diagnostic-text d))))
+                      (car diags))))
+
 (provide 'lib-eglot)
 ;;; lib-eglot.el ends here

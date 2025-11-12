@@ -52,6 +52,7 @@
 
 (require 'init-org)
 (require 'init-reader)
+(require 'init-social)
 
 (require 'init-shell)
 

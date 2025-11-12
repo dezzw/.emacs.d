@@ -320,6 +320,7 @@
               wgrep
               nerd-icons
               corfu
+              company
               vundo
               forge
               verb

@@ -1,0 +1,13 @@
+diff --git a/telega-customize.el b/telega-customize.el
+index 0c3804b..d7012be 100644
+--- a/telega-customize.el
++++ b/telega-customize.el
+@@ -759,7 +759,7 @@ It should be absolute path or binary file searchable in `exec-path'."
+   :type 'string
+   :group 'telega-server)
+ 
+-(defcustom telega-server-libs-prefix "/usr/local"
++(defcustom telega-server-libs-prefix "@tdlibPrefix@"
+   "*Prefix where tdlib and tgvoip libraries are installed.
+ TELEGA-SERVER-LIBS-PREFIX/include is used for headers files.
+ TELEGA-SERVER-LIBS-PREFIX/lib is used for library files."

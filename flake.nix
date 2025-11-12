@@ -246,12 +246,22 @@
                   src = inputs.setup-el;
                 };
 
-                telega = epkgs.trivialBuild {
+                telega = epkgs.melpaBuild {
                   pname = "telega";
                   version = timestampToDate inputs.telega.lastModified;
                   src = inputs.telega;
                   packageRequires = [ visual-fill-column ];
                   buildInputs = [ pkgs.tdlib ];
+                  patches = [
+                    (pkgs.replaceVars ./patches/telega/tdlib-prefix.patch {
+                      tdlibPrefix = pkgs.tdlib;
+                    })
+                  ];
+                  recipe = pkgs.writeText "telega-recipe" ''
+                    (telega :repo "LuciusChen/telega.el"
+                            :fetcher github
+                            :files (:defaults "etc" "server" "contrib"))
+                  '';
                 };
               };
             in

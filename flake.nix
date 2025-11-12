@@ -246,23 +246,39 @@
                   src = inputs.setup-el;
                 };
 
-                telega = epkgs.melpaBuild {
-                  pname = "telega";
-                  version = timestampToDate inputs.telega.lastModified;
-                  src = inputs.telega;
-                  packageRequires = [ visual-fill-column ];
-                  buildInputs = [ pkgs.tdlib ];
-                  patches = [
-                    (pkgs.replaceVars ./patches/telega/tdlib-prefix.patch {
-                      tdlibPrefix = pkgs.tdlib;
-                    })
-                  ];
-                  recipe = pkgs.writeText "telega-recipe" ''
-                    (telega :repo "LuciusChen/telega.el"
-                            :fetcher github
-                            :files (:defaults "Makefile" "etc" "server" "contrib"))
-                  '';
-                };
+                telega =
+                  let
+                    version = timestampToDate inputs.telega.lastModified;
+                  in
+                  epkgs.melpaBuild {
+                    pname = "telega";
+                    inherit version;
+                    src = inputs.telega;
+                    packageRequires = [ visual-fill-column ];
+                    buildInputs = [ pkgs.tdlib ];
+                    nativeBuildInputs = [ pkgs.gnumake pkgs.gcc pkgs.pkg-config ];
+                    postPatch = ''
+                      # Set telega-server-libs-prefix to tdlib path
+                      substituteInPlace telega-customize.el \
+                        --replace-fail '(defcustom telega-server-libs-prefix "/usr/local"' \
+                                       '(defcustom telega-server-libs-prefix "${pkgs.tdlib}"'
+                      # Set telega-server-command to absolute path in the output
+                      substituteInPlace telega-customize.el \
+                        --replace-fail '(defcustom telega-server-command "telega-server"' \
+                                       "(defcustom telega-server-command \"$out/share/emacs/site-lisp/elpa/telega-${version}/telega-server\""
+                    '';
+                    preBuild = ''
+                      make -C server clean
+                      make -C server install \
+                        LIBS_PREFIX=${pkgs.tdlib} \
+                        INSTALL_PREFIX=$out/share/emacs/site-lisp/elpa/telega-${version}
+                    '';
+                    recipe = pkgs.writeText "telega-recipe" ''
+                      (telega :repo "LuciusChen/telega.el"
+                              :fetcher github
+                              :files (:defaults "Makefile" "etc" "server" "contrib"))
+                    '';
+                  };
               };
             in
             [

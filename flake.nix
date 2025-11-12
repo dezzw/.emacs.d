@@ -260,7 +260,7 @@
                   recipe = pkgs.writeText "telega-recipe" ''
                     (telega :repo "LuciusChen/telega.el"
                             :fetcher github
-                            :files (:defaults "etc" "server" "contrib"))
+                            :files (:defaults "Makefile" "etc" "server" "contrib"))
                   '';
                 };
               };

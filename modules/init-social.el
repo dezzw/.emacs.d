@@ -62,7 +62,7 @@
      telega-emoji-use-images nil
      telega-notifications-msg-temex '(and (not outgoing)
                                           (not (chat (or (type channel))))
-                                          (contains "dape\\|jdtls\\|eglot\\|meow\\|[eE]macs\\|telega\\|@Lucius_Chen"))
+                                          (contains "dape\\|jdtls\\|eglot\\|meow\\|[eE]macs\\|telega\\|@wpcdes"))
      ;; telega-msg-heading-with-date-and-status t
      ;; telega-debug t
      ;; telega-server-verbosity 4
@@ -102,7 +102,7 @@
              :symbol ,(nerd-icons-faicon "nf-fa-link")
              :replace " \\1\\2..."))
      ;; telega-root
-     telega-root-default-view-function 'telega-view-folders
+     ;; telega-root-default-view-function 'telega-view-folders
      telega-root-keep-cursor 'track
      telega-root-show-avatars nil
      telega-root-buffer-name "*Telega Root*"

@@ -415,7 +415,7 @@
               consult-notes
               consult-gh
               sideline-blame
-              elysium
+              agent-shell
               all-the-icons
               reformatter
               flymake-ruff

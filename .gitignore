@@ -1,38 +1,83 @@
+# ============================================
+# Operating System Files
+# ============================================
 .DS_Store
-tramp
+
+# ============================================
+# Package Managers & Dependencies
+# ============================================
 elpa/
+site-lisp/
+site-packages/EmacsMacOSModule/
+
+# Straight.el
 straight/repos
 straight/build
 straight/build-cache.el
 straight/modified
-project*
-transient
-org-roam.db
-eln-cache
-auto-save-list
-.org-id-locations
-bookmarks
+
+# External packages
+lsp-bridge/
+mind-wave/
+
+# ============================================
+# Emacs Session & State Files
+# ============================================
 .emacs.desktop
 .cache
-eshell
+auto-save-list
 session.*
+tabsession.el
+tramp
+transient
+bookmarks
+places
+persist/
+
+# ============================================
+# History & Recent Files
+# ============================================
+history
+recentf
+recentf.eld
+ielm-history.eld
+
+# ============================================
+# Org Mode
+# ============================================
+org-roam.db
+.org-id-locations
+org-clock-save.el
+
+# ============================================
+# LSP & Development Tools
+# ============================================
 .lsp-session-*
 .dap-breakpoints
 tree-sitter
-result
-recentf
-history
-tabsession.el
-site-packages/EmacsMacOSModule/
-lsp-bridge/
+eln-cache
+
+# ============================================
+# Project & Profile Files
+# ============================================
+project*
 dev-profile*
-mind-wave/
+result
+
+# ============================================
+# AI & Development Tools
+# ============================================
+.aider*
+.env
+.ai.code.prompt.org
+
+# ============================================
+# Miscellaneous
+# ============================================
+eshell/
 url/
 request/
 devdocs/
 undo-fu-session/
-places
-ielm-history.eld
-site-lisp
-.aider*
-.env
+.helix/
+forge-database.sqlite

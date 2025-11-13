@@ -3,11 +3,11 @@
     "ai-code-interface": {
       "flake": false,
       "locked": {
-        "lastModified": 1762880665,
-        "narHash": "sha256-5iVnNiJiRerpcQkJ9o90UHJAVPW280okV8Tr2/vWlcc=",
+        "lastModified": 1763047373,
+        "narHash": "sha256-0zK4/l1A9fiYz0qeDtVA67tn07sW92SzJj9h0GOm/+o=",
         "owner": "tninja",
         "repo": "ai-code-interface.el",
-        "rev": "254627e2df4841e82ccc900d17087ed37d1ae0d8",
+        "rev": "ffdc76fd0f0b6f64db39218b95628a0ef559d853",
         "type": "github"
       },
       "original": {
@@ -70,16 +70,48 @@
         "nixpkgs-stable": "nixpkgs-stable"
       },
       "locked": {
-        "lastModified": 1762910805,
-        "narHash": "sha256-4rRL4BJySO6REgwlzLC2YDyKj9jcKVA0odRC3H3sTwQ=",
+        "lastModified": 1763051088,
+        "narHash": "sha256-8jrIFYTsXJ6WepYY8I51GU+ky8XVSenwCGklrpy0MdA=",
         "owner": "nix-community",
         "repo": "emacs-overlay",
-        "rev": "d4a5be09cb09698522e7d1cf82dd26355bac4e89",
+        "rev": "6f91e22329ed0b59ac491a81032abcc4414877c5",
         "type": "github"
       },
       "original": {
         "owner": "nix-community",
         "repo": "emacs-overlay",
+        "type": "github"
+      }
+    },
+    "emacs-patches": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1763025006,
+        "narHash": "sha256-LLBhD/yw9eRVn8dCRK6IiFLYxkFJBwQ733dd0BO1VEE=",
+        "owner": "LuciusChen",
+        "repo": ".emacs.d",
+        "rev": "4be4dc343732505d9551ae3aa703e2255d1769f2",
+        "type": "github"
+      },
+      "original": {
+        "owner": "LuciusChen",
+        "repo": ".emacs.d",
+        "type": "github"
+      }
+    },
+    "emacs-plus-patches": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1762005821,
+        "narHash": "sha256-M24JpkYH7xdrm7Uine17wrmnpszfhCn9dBhw13Yt69Q=",
+        "owner": "d12frosted",
+        "repo": "homebrew-emacs-plus",
+        "rev": "89952793a1226de8b47dd6269806693713178b84",
+        "type": "github"
+      },
+      "original": {
+        "owner": "d12frosted",
+        "repo": "homebrew-emacs-plus",
         "type": "github"
       }
     },
@@ -167,11 +199,11 @@
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1762596750,
-        "narHash": "sha256-rXXuz51Bq7DHBlfIjN7jO8Bu3du5TV+3DSADBX7/9YQ=",
+        "lastModified": 1762844143,
+        "narHash": "sha256-SlybxLZ1/e4T2lb1czEtWVzDCVSTvk9WLwGhmxFmBxI=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "b6a8526db03f735b89dd5ff348f53f752e7ddc8e",
+        "rev": "9da7f1cf7f8a6e2a7cb3001b048546c92a8258b4",
         "type": "github"
       },
       "original": {
@@ -199,11 +231,11 @@
     },
     "nixpkgs_2": {
       "locked": {
-        "lastModified": 1762604901,
-        "narHash": "sha256-Pr2jpryIaQr9Yx8p6QssS03wqB6UifnnLr3HJw9veDw=",
+        "lastModified": 1762943920,
+        "narHash": "sha256-ITeH8GBpQTw9457ICZBddQEBjlXMmilML067q0e6vqY=",
         "owner": "nixos",
         "repo": "nixpkgs",
-        "rev": "f6b44b2401525650256b977063dbcf830f762369",
+        "rev": "91c9a64ce2a84e648d0cf9671274bb9c2fb9ba60",
         "type": "github"
       },
       "original": {
@@ -232,11 +264,11 @@
     "panel": {
       "flake": false,
       "locked": {
-        "lastModified": 1743135304,
-        "narHash": "sha256-KxBYeuJ2P2xxyAeQGwYFDdEBrtvqUXS+THzRpPPUspk=",
+        "lastModified": 1763041675,
+        "narHash": "sha256-0C11Xk7txHk63GPwk3aX1XD+7j1/bpZjQ5AyeuFYkWs=",
         "owner": "LuciusChen",
         "repo": "panel",
-        "rev": "7b54957b35d28edbd9182a05120a93631028eb80",
+        "rev": "9d28445c011f56f9b74ba5e97a1a5ed5830a56cb",
         "type": "github"
       },
       "original": {
@@ -252,6 +284,8 @@
         "claude-code-ide": "claude-code-ide",
         "eglot-x": "eglot-x",
         "emacs-overlay": "emacs-overlay",
+        "emacs-patches": "emacs-patches",
+        "emacs-plus-patches": "emacs-plus-patches",
         "emt": "emt",
         "flake-utils": "flake-utils",
         "image-slicing": "image-slicing",

@@ -17,6 +17,16 @@
     flake-utils.url = "github:numtide/flake-utils";
     emacs-overlay.url = "github:nix-community/emacs-overlay";
 
+    # Emacs patches
+    emacs-plus-patches = {
+      url = "github:d12frosted/homebrew-emacs-plus";
+      flake = false;
+    };
+    emacs-patches = {
+      url = "github:LuciusChen/.emacs.d";
+      flake = false;
+    };
+
     # Custom Emacs packages from GitHub
     ai-code-interface = {
       url = "github:tninja/ai-code-interface.el";
@@ -110,34 +120,32 @@
           # "${pkgs.vscode-extensions.ms-vscode.cpptools}/share/vscode/extensions/ms-vscode.cpptools/debugAdapters"
         ];
 
+        # Remove MPS from emacs-igc (it's now built into the emacs repo)
+        emacs-no-mps = pkgs.emacs-igc.overrideAttrs (old: {
+          buildInputs = builtins.filter (p: !(p ? pname && p.pname == "mps")) (old.buildInputs or [ ]);
+        });
+
+        # Add macOS-specific patches and ImageMagick
         emacs-patched =
-          (pkgs.emacs-igc.override {
+          (emacs-no-mps.override {
             withImageMagick = true;
           }).overrideAttrs
-            (old: rec {
-
-              buildInputs = builtins.filter (p: !(p ? pname && p.pname == "mps")) (old.buildInputs or [ ]);
-
+            (old: {
               patches = (old.patches or [ ]) ++ [
                 # Add setting to enable rounded window with no decoration (still have to alter default-frame-alist)
-                (pkgs.fetchpatch {
-                  url = "https://raw.githubusercontent.com/d12frosted/homebrew-emacs-plus/master/patches/emacs-31/round-undecorated-frame.patch";
-                  sha256 = "sha256-WWLg7xUqSa656JnzyUJTfxqyYB/4MCAiiiZUjMOqjuY=";
-                })
+                "${inputs.emacs-plus-patches}/patches/emacs-31/round-undecorated-frame.patch"
 
                 # Make Emacs aware of OS-level light/dark mode
-                (pkgs.fetchpatch {
-                  url = "https://raw.githubusercontent.com/d12frosted/homebrew-emacs-plus/master/patches/emacs-31/system-appearance.patch";
-                  sha256 = "sha256-4+2U+4+2tpuaThNJfZOjy1JPnneGcsoge9r+WpgNDko=";
-                })
+                "${inputs.emacs-plus-patches}/patches/emacs-31/system-appearance.patch"
 
-                ./patches/emacs-31/ns-alpha-background.patch
-                ./patches/emacs-31/smooth-cursor.patch
+                # Custom patches
+                "${inputs.emacs-patches}/patches/emacs-31/ns-alpha-background.patch"
+                "${inputs.emacs-patches}/patches/emacs-31/smooth-cursor.patch"
               ];
             });
 
-        # Use emacs-igc directly on Linux, patched version on Darwin
-        emacs-base = if pkgs.stdenv.isLinux then pkgs.emacs-igc else emacs-patched;
+        # Use emacs-no-mps on Linux, patched version on Darwin
+        emacs-base = if pkgs.stdenv.isLinux then emacs-no-mps else emacs-patched;
 
         emacs-augmented = (
           (pkgs.emacsPackagesFor emacs-base).emacsWithPackages (
@@ -180,11 +188,13 @@
                   src = inputs.awesome-tray;
                 };
 
-                claude-code-ide = epkgs.trivialBuild {
-                  pname = "claude-code-ide";
-                  version = timestampToDate inputs.claude-code-ide.lastModified;
-                  src = inputs.claude-code-ide;
-                };
+                claude-code-ide = (
+                  epkgs.trivialBuild {
+                    pname = "claude-code-ide";
+                    version = timestampToDate inputs.claude-code-ide.lastModified;
+                    src = inputs.claude-code-ide;
+                  }
+                );
 
                 eglot-x = epkgs.trivialBuild {
                   pname = "eglot-x";
@@ -256,7 +266,11 @@
                     src = inputs.telega;
                     packageRequires = [ visual-fill-column ];
                     buildInputs = [ pkgs.tdlib ];
-                    nativeBuildInputs = [ pkgs.gnumake pkgs.gcc pkgs.pkg-config ];
+                    nativeBuildInputs = [
+                      pkgs.gnumake
+                      pkgs.gcc
+                      pkgs.pkg-config
+                    ];
                     postPatch = ''
                       # Set telega-server-libs-prefix to tdlib path
                       substituteInPlace telega-customize.el \

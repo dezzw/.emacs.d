@@ -1,0 +1,61 @@
+name: Update and Build Demacs
+
+on:
+  schedule:
+    # Run daily at midnight UTC
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  update-and-build:
+    name: Update flake inputs and build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v31
+        with:
+          nix_path: nixpkgs=channel:nixos-unstable
+
+      - name: Setup Cachix
+        uses: cachix/cachix-action@v16
+        with:
+          name: demacs
+          authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+
+      - name: Configure Git
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+
+      - name: Update flake inputs
+        run: |
+          nix flake update
+          git add flake.lock
+          git commit -m "chore: update flake inputs" || echo "No changes to commit"
+
+      - name: Push flake dependencies to Cachix
+        run: |
+          nix flake archive --json | \
+          jq -r '.path,(.inputs|to_entries[].value.path)' | \
+          cachix push demacs
+
+      - name: Build demacs
+        run: |
+          nix build --print-build-logs
+
+      - name: Push build to Cachix
+        run: |
+          nix build --no-link --print-out-paths | \
+          cachix push demacs
+
+      - name: Push changes to repository
+        if: success()
+        run: |
+          git pull --rebase --autostash
+          git push || echo "Nothing to push"

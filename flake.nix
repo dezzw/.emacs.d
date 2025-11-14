@@ -139,8 +139,8 @@
                 "${inputs.emacs-plus-patches}/patches/emacs-31/system-appearance.patch"
 
                 # Custom patches
-                "${inputs.emacs-patches}/patches/emacs-31/ns-alpha-background.patch"
-                "${inputs.emacs-patches}/patches/emacs-31/smooth-cursor.patch"
+                # "${inputs.emacs-patches}/patches/emacs-31/ns-alpha-background.patch"
+                # "${inputs.emacs-patches}/patches/emacs-31/smooth-cursor.patch"
               ];
             });
 

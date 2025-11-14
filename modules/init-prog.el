@@ -126,8 +126,10 @@
 (setup sql (:when-loaded (sql-set-product 'mysql)))
 
 (setup project
-  (:option project-vc-extra-root-markers
-           '("package.json" "deps.edn" "project.clj" "Package.swift" ".envrc" ".tags" ".project")))
+  (:when-loaded
+    (keymap-global-set "C-c p" (identity project-prefix-map))
+    (setopt project-vc-extra-root-markers
+             '("package.json" "deps.edn" "project.clj" "Package.swift" ".envrc" ".tags" ".project"))))
 
 (setup js
   (:also-load lib-js)

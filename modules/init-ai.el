@@ -25,7 +25,7 @@
     (:hooks gptel-post-response-hook gptel-end-of-response))
 
 (setup ai-code-interface
-  (global-set-key (kbd "C-c a") #'ai-code-menu)
+  (global-set-key (kbd "C-c l") #'ai-code-menu)
   (:when-loaded
     (ai-code-set-backend 'claude-code-ide) ;; use claude-code-ide as backend
     (with-eval-after-load 'magit
@@ -35,6 +35,11 @@
   (:when-loaded
     (setopt agent-shell-anthropic-claude-environment
           (agent-shell-make-environment-variables :inherit-env t))))
+
+(setup agent-shell-sidebar
+  (:load-after agent-shell)
+  (keymap-global-set "C-c a s" 'agent-shell-sidebar-toggle)
+  (keymap-global-set "C-c a f" 'agent-shell-sidebar-toggle-focus))
 
 (provide 'init-ai)
 ;;; init-ai.el ends here

@@ -72,6 +72,10 @@
       url = "github:LuciusChen/rose-pine";
       flake = false;
     };
+    agent-shell-sidebar = {
+      url = "github:cmacrae/agent-shell-sidebar";
+      flake = false;
+    };
     setup-el = {
       url = "git+https://codeberg.org/pkal/setup.el.git";
       flake = false;
@@ -167,6 +171,13 @@
 
               # Custom package derivations
               customPackages = {
+                agent-shell-sidebar = epkgs.trivialBuild {
+                  pname = "agent-shell-sidebar";
+                  version = timestampToDate inputs.agent-shell-sidebar.lastModified;
+                  src = inputs.agent-shell-sidebar;
+                  packageRequires = [ agent-shell ];
+                };
+
                 ai-code-interface = epkgs.melpaBuild {
                   pname = "ai-code-interface";
                   version = timestampToDate inputs.ai-code-interface.lastModified;
@@ -302,6 +313,7 @@
               pkgs.emacsPackages.treesit-grammars.with-all-grammars
 
               # Custom GitHub packages
+              customPackages.agent-shell-sidebar
               customPackages.ai-code-interface
               customPackages.awesome-tray
               customPackages.claude-code-ide

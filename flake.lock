@@ -1,5 +1,21 @@
 {
   "nodes": {
+    "agent-shell-sidebar": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1762354342,
+        "narHash": "sha256-Yp+iDtOdDTtcsLn/VxRx6Mh4VOYGAZUXL7XcLHFkACk=",
+        "owner": "cmacrae",
+        "repo": "agent-shell-sidebar",
+        "rev": "10fee0b1463cdf210b0908c23e940a44c8d4a8e2",
+        "type": "github"
+      },
+      "original": {
+        "owner": "cmacrae",
+        "repo": "agent-shell-sidebar",
+        "type": "github"
+      }
+    },
     "ai-code-interface": {
       "flake": false,
       "locked": {
@@ -279,6 +295,7 @@
     },
     "root": {
       "inputs": {
+        "agent-shell-sidebar": "agent-shell-sidebar",
         "ai-code-interface": "ai-code-interface",
         "awesome-tray": "awesome-tray",
         "claude-code-ide": "claude-code-ide",

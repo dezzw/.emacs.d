@@ -316,7 +316,7 @@
               customPackages.agent-shell-sidebar
               customPackages.ai-code-interface
               customPackages.awesome-tray
-              customPackages.claude-code-ide
+              # customPackages.claude-code-ide
               customPackages.eglot-x
               customPackages.emt
               customPackages.image-slicing

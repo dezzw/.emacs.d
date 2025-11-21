@@ -19,11 +19,11 @@
     "ai-code-interface": {
       "flake": false,
       "locked": {
-        "lastModified": 1763600046,
-        "narHash": "sha256-XadBwHdzmbqlE03ye7tLJbm6cljD88CL2cT2t+IoblQ=",
+        "lastModified": 1763650009,
+        "narHash": "sha256-cfaGOWsEf9ZIn3AQcL9Fv5l7LTNv8OYGIUPDJgjEPfk=",
         "owner": "tninja",
         "repo": "ai-code-interface.el",
-        "rev": "180b003668ea5437f7136908f313a2eefaa0a98f",
+        "rev": "22e239f98665051aa5e77b973d6edceabcbb4984",
         "type": "github"
       },
       "original": {
@@ -86,11 +86,11 @@
         "nixpkgs-stable": "nixpkgs-stable"
       },
       "locked": {
-        "lastModified": 1763569700,
-        "narHash": "sha256-hDQ+GUaI7FSWBwE2cdb3pbqOdVw+06jfIA9gdujiHaA=",
+        "lastModified": 1763656058,
+        "narHash": "sha256-iPOjkgRT0WA4oPbXyPcmh3DKDDKTBdezemdIojj9QGY=",
         "owner": "nix-community",
         "repo": "emacs-overlay",
-        "rev": "740e023b79482f39c9da78f2f62a5ff7361ff638",
+        "rev": "44c05e37b23d175744d94ce6a67ca978071744b4",
         "type": "github"
       },
       "original": {
@@ -102,11 +102,11 @@
     "emacs-patches": {
       "flake": false,
       "locked": {
-        "lastModified": 1763551684,
-        "narHash": "sha256-XbJLZ8zfdKWETLAye0Us4mup1UuUIt8DLHZtyqxUEVE=",
+        "lastModified": 1763649621,
+        "narHash": "sha256-32SCdo6zptAqJVKFqRNvaIx+9vaWtKWcIFHbg5RBskQ=",
         "owner": "LuciusChen",
         "repo": ".emacs.d",
-        "rev": "19b1630c4612cbf7309bc93d43af51c4704a5642",
+        "rev": "2cf823f0d7a3c22ae952a2c42f3c5242f99832df",
         "type": "github"
       },
       "original": {
@@ -247,11 +247,11 @@
     },
     "nixpkgs_2": {
       "locked": {
-        "lastModified": 1763464769,
-        "narHash": "sha256-AJHrsT7VoeQzErpBRlLJM1SODcaayp0joAoEA35yiwM=",
+        "lastModified": 1763618868,
+        "narHash": "sha256-v5afmLjn/uyD9EQuPBn7nZuaZVV9r+JerayK/4wvdWA=",
         "owner": "nixos",
         "repo": "nixpkgs",
-        "rev": "6f374686605df381de8541c072038472a5ea2e2d",
+        "rev": "a8d610af3f1a5fb71e23e08434d8d61a466fc942",
         "type": "github"
       },
       "original": {
@@ -319,11 +319,11 @@
     "rose-pine": {
       "flake": false,
       "locked": {
-        "lastModified": 1763540838,
-        "narHash": "sha256-mbIJ3txhBMgOoaY4G6FwqA0X3IFTdK3jX/oH57KjOuM=",
+        "lastModified": 1763632024,
+        "narHash": "sha256-6SfH76o4D0EujGHuGMjUTKN4nFIIHb9WyWfxiSjDWZ4=",
         "owner": "LuciusChen",
         "repo": "rose-pine",
-        "rev": "49031b4949cb3ad78bddb9277a54df7c9e6be9ac",
+        "rev": "b2a908c6d63a2791fbf590aad3af7d94d0de6fc6",
         "type": "github"
       },
       "original": {

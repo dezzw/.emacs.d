@@ -49,6 +49,7 @@
 (require 'init-prog)
 (require 'init-util)
 (require 'init-transient)
+(require 'init-bitstream)
 
 (require 'init-org)
 (require 'init-reader)

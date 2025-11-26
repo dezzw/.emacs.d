@@ -84,9 +84,7 @@
   (:defer (diff-hl-mode))
   (:when-loaded
     (:option diff-hl-update-async t)
-    (:hooks magit-post-refresh-hook diff-hl-magit-post-refresh
-            magit-pre-refresh-hook diff-hl-magit-post-refresh
-            prog-mode-hook diff-hl-mode
+    (:hooks prog-mode-hook diff-hl-mode
             conf-mode-hook diff-hl-mode
             dired-mode-hook diff-hl-dired-mode)
     (:with-map diff-hl-mode-map

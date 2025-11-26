@@ -34,7 +34,8 @@
 (setup agent-shell
   (:when-loaded
     (setopt agent-shell-anthropic-claude-environment
-          (agent-shell-make-environment-variables :inherit-env t))))
+          (agent-shell-make-environment-variables :inherit-env t))
+    (setopt agent-shell-file-completion-enabled t)))
 
 (setup agent-shell-sidebar
   (:load-after agent-shell)

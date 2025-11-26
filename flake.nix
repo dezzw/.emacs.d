@@ -84,6 +84,10 @@
       url = "github:LuciusChen/telega.el";
       flake = false;
     };
+    tdlib = {
+      url = "github:tdlib/td";
+      flake = false;
+    };
   };
   outputs =
     inputs@{
@@ -151,24 +155,38 @@
         # Use emacs-no-mps on Linux, patched version on Darwin
         emacs-base = if pkgs.stdenv.isLinux then emacs-no-mps else emacs-patched;
 
+        # Helper to convert timestamp to date string (YYYYMMDD format)
+        timestampToDate =
+          timestamp:
+          let
+            inherit (builtins) substring;
+            dateStr = builtins.readFile (
+              pkgs.runCommand "timestamp-to-date" { } ''
+                date -u -d @${toString timestamp} +%Y%m%d > $out
+              ''
+            );
+          in
+          lib.removeSuffix "\n" dateStr;
+
+        # Build tdlib from HEAD source
+        tdlib-head = pkgs.tdlib.overrideAttrs (old: {
+          version = "head-${timestampToDate inputs.tdlib.lastModified}";
+          src = inputs.tdlib;
+          preConfigure = ''
+            rm -rf build
+          '';
+          enableParallelBuilding = true;
+          preBuild = (old.preBuild or "") + ''
+            export CMAKE_BUILD_PARALLEL_LEVEL=2
+          '';
+          makeFlags = (old.makeFlags or []) ++ [ "-j2" ];
+        });
+
         emacs-augmented = (
           (pkgs.emacsPackagesFor emacs-base).emacsWithPackages (
             epkgs:
             with epkgs;
             let
-              # Helper to convert timestamp to date string (YYYYMMDD format)
-              timestampToDate =
-                timestamp:
-                let
-                  inherit (builtins) substring;
-                  dateStr = builtins.readFile (
-                    pkgs.runCommand "timestamp-to-date" { } ''
-                      date -u -d @${toString timestamp} +%Y%m%d > $out
-                    ''
-                  );
-                in
-                lib.removeSuffix "\n" dateStr;
-
               # Custom package derivations
               customPackages = {
                 agent-shell-sidebar = epkgs.trivialBuild {
@@ -276,18 +294,19 @@
                     inherit version;
                     src = inputs.telega;
                     packageRequires = [ visual-fill-column ];
-                    buildInputs = [ pkgs.tdlib ];
+                    buildInputs = [
+                      tdlib-head
+                      pkgs.zlib
+                    ];
                     nativeBuildInputs = [
                       pkgs.gnumake
                       pkgs.gcc
                       pkgs.pkg-config
                     ];
                     postPatch = ''
-                      # Set telega-server-libs-prefix to tdlib path
                       substituteInPlace telega-customize.el \
                         --replace-fail '(defcustom telega-server-libs-prefix "/usr/local"' \
-                                       '(defcustom telega-server-libs-prefix "${pkgs.tdlib}"'
-                      # Set telega-server-command to absolute path in the output
+                                       '(defcustom telega-server-libs-prefix "${tdlib-head}"'
                       substituteInPlace telega-customize.el \
                         --replace-fail '(defcustom telega-server-command "telega-server"' \
                                        "(defcustom telega-server-command \"$out/share/emacs/site-lisp/elpa/telega-${version}/telega-server\""
@@ -295,7 +314,7 @@
                     preBuild = ''
                       make -C server clean
                       make -C server install \
-                        LIBS_PREFIX=${pkgs.tdlib} \
+                        LIBS_PREFIX=${tdlib-head} \
                         INSTALL_PREFIX=$out/share/emacs/site-lisp/elpa/telega-${version}
                     '';
                     recipe = pkgs.writeText "telega-recipe" ''

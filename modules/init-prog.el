@@ -240,49 +240,63 @@
   (:load-after eldoc)
   (:hooks eglot-managed-mode-hook eldoc-box-hover-mode))
 
-(setup eglot
-  (:with-mode (python-ts-mode js-ts-mode typescript-mode tsx-ts-mode vue-mode latex-mode)
-    (:hook eglot-ensure))
+;; (setup eglot
+;;   (:with-mode (python-ts-mode js-ts-mode typescript-mode tsx-ts-mode vue-mode latex-mode)
+;;     (:hook eglot-ensure))
+;;   (:when-loaded
+;;     (:also-load lib-eglot)
+;;     (setopt eglot-code-action-indications '(eldoc-hint)
+;;             eglot-events-buffer-config '(:size 0 :format full) ;; 取消 eglot log
+;;             ;; ignore lsp formatting provider, format with apheleia.
+;;             eglot-ignored-server-capabilities '(:documentFormattingProvider
+;;                                                 :documentRangeFormattingProvider))
+;;     (add-to-list 'eglot-server-programs '(my-html-mode . ("vscode-html-language-server" "--stdio")))
+;;     (add-to-list 'eglot-server-programs `((vue-mode vue-ts-mode typescript-ts-mode typescript-mode) . ("vue-language-server" "--stdio" :initializationOptions ,(vue-eglot-init-options))))
+;;     (add-to-list 'eglot-server-programs '(js-mode . ("typescript-language-server" "--stdio")))
+;;     (advice-add 'eglot-completion-at-point :around #'cape-wrap-buster)
+;;     (setq-default
+;;        eglot-workspace-configuration
+;;        '(:basedpyright.analysis (
+;;            :typeCheckingMode "off"
+;;            :diagnosticSeverityOverrides (
+;;              :reportUnusedCallResult "none"
+;;            )
+;;            :inlayHints (
+;;              :callArgumentNames :json-false
+;;            )
+;;          )))
+;;     ;; https://github.com/joaotavora/eglot/discussions/898
+;;     (:with-hook eglot-managed-mode-hook
+;;       (:hook (lambda ()
+;;                ;; Show flymake diagnostics first.
+;;                (setq eldoc-documentation-functions
+;;                      (cons #'flymake-eldoc-function
+;;                            (remove #'flymake-eldoc-function eldoc-documentation-functions)))
+;;                ;; Show all eldoc feedback.
+;;                (setq eldoc-documentation-strategy #'eldoc-documentation-compose))))))
+
+;; (setup eglot-booster
+;;   (:load-after eglot)
+;;   (:option eglot-booster-io-only t)
+;;   (:when-loaded (eglot-booster-mode)))
+
+;; (setup eglot-x
+;;   (:load-after eglot)
+;;   (:hooks eglot-managed-mode-hook eglot-x-setup))
+
+(setup lsp-proxy
+  (:defer (:require lsp-proxy))
   (:when-loaded
-    (:also-load lib-eglot)
-    (setopt eglot-code-action-indications '(eldoc-hint)
-            eglot-events-buffer-config '(:size 0 :format full) ;; 取消 eglot log
-            ;; ignore lsp formatting provider, format with apheleia.
-            eglot-ignored-server-capabilities '(:documentFormattingProvider
-                                                :documentRangeFormattingProvider))
-    (add-to-list 'eglot-server-programs '(my-html-mode . ("vscode-html-language-server" "--stdio")))
-    (add-to-list 'eglot-server-programs `((vue-mode vue-ts-mode typescript-ts-mode typescript-mode) . ("vue-language-server" "--stdio" :initializationOptions ,(vue-eglot-init-options))))
-    (add-to-list 'eglot-server-programs '(js-mode . ("typescript-language-server" "--stdio")))
-    (advice-add 'eglot-completion-at-point :around #'cape-wrap-buster)
-    (setq-default
-       eglot-workspace-configuration
-       '(:basedpyright.analysis (
-           :typeCheckingMode "off"
-           :diagnosticSeverityOverrides (
-             :reportUnusedCallResult "none"
-           )
-           :inlayHints (
-             :callArgumentNames :json-false
-           )
-         )))
-    ;; https://github.com/joaotavora/eglot/discussions/898
-    (:with-hook eglot-managed-mode-hook
-      (:hook (lambda ()
-               ;; Show flymake diagnostics first.
-               (setq eldoc-documentation-functions
-                     (cons #'flymake-eldoc-function
-                           (remove #'flymake-eldoc-function eldoc-documentation-functions)))
-               ;; Show all eldoc feedback.
-               (setq eldoc-documentation-strategy #'eldoc-documentation-compose))))))
-
-(setup eglot-booster
-  (:load-after eglot)
-  (:option eglot-booster-io-only t)
-  (:when-loaded (eglot-booster-mode)))
-
-(setup eglot-x
-  (:load-after eglot)
-  (:hooks eglot-managed-mode-hook eglot-x-setup))
+    ;; Enable lsp-proxy for various modes
+    (:with-mode (python-ts-mode js-ts-mode typescript-mode tsx-ts-mode vue-mode)
+      (:hook lsp-proxy-mode))
+    (setq lsp-proxy-diagnostics-provider :flymake)
+    ;; Set up xref backend
+    (setq xref-backend-functions
+          (cons #'lsp-proxy-xref-backend
+                (remove #'lsp-proxy-xref-backend xref-backend-functions)))
+    ;; Set up completion at point
+    (add-to-list 'completion-at-point-functions #'lsp-proxy-completion-at-point)))
 
 
 (setup compile

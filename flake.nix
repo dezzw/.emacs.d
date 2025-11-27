@@ -88,6 +88,14 @@
       url = "github:tdlib/td";
       flake = false;
     };
+    blame-reveal = {
+      url = "github:LuciusChen/blame-reveal";
+      flake = false;
+    };
+    lsp-proxy = {
+      url = "github:jadestrong/lsp-proxy";
+      flake = false;
+    };
   };
   outputs =
     inputs@{
@@ -181,6 +189,14 @@
           '';
           makeFlags = (old.makeFlags or []) ++ [ "-j2" ];
         });
+
+        # Build lsp-proxy Rust binary from HEAD source
+        emacs-lsp-proxy-binary = pkgs.rustPlatform.buildRustPackage {
+          pname = "emacs-lsp-proxy";
+          version = "unstable-${timestampToDate inputs.lsp-proxy.lastModified}";
+          src = inputs.lsp-proxy;
+          cargoHash = "sha256-ITxGdjRuMIzLhBuEEe4+2yg+1oHuIVajHNOGbFJn8qA=";
+        };
 
         emacs-augmented = (
           (pkgs.emacsPackagesFor emacs-base).emacsWithPackages (
@@ -285,6 +301,33 @@
                   src = inputs.setup-el;
                 };
 
+                lsp-proxy = epkgs.trivialBuild {
+                  pname = "lsp-proxy";
+                  version = timestampToDate inputs.lsp-proxy.lastModified;
+                  src = inputs.lsp-proxy;
+                  # Patch lsp-proxy-core.el to use the Nix-built binary
+                  # Add the Nix binary path as the first candidate (highest priority)
+                  postPatch = ''
+                    substituteInPlace lsp-proxy-core.el \
+                      --replace '(list (executable-find exe-name)' \
+                      '(list "${emacs-lsp-proxy-binary}/bin/emacs-lsp-proxy" (executable-find exe-name)'
+                  '';
+                  packageRequires = [
+                    s
+                    eldoc
+                    ht
+                    dash
+                    f
+                    yasnippet
+                  ];
+                };
+
+                blame-reveal = epkgs.trivialBuild {
+                  pname = "blame-reveal";
+                  version = timestampToDate inputs.blame-reveal.lastModified;
+                  src = inputs.blame-reveal;
+                };
+
                 telega =
                   let
                     version = timestampToDate inputs.telega.lastModified;
@@ -345,6 +388,8 @@
               customPackages.panel
               customPackages.rose-pine
               customPackages.setup
+              customPackages.lsp-proxy
+              customPackages.blame-reveal
               customPackages.telega
 
               # MELPA packages - Core

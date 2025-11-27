@@ -37,8 +37,48 @@
 (setup corfu
   (:defer (:require corfu))
   (:when-loaded
+    ;; Make lsp-proxy compatible with nerd-icons-corfu
+    (with-eval-after-load 'lsp-proxy-completion
+      (defun lsp-proxy--candidate-kind-normalize (orig-fun &rest args)
+        "Convert lsp-proxy kind strings to symbols for nerd-icons-corfu compatibility."
+        (when-let* ((kind-string (apply orig-fun args)))
+          (let ((result (intern
+                         (pcase kind-string
+                           ("Text" "text")
+                           ("Method" "method")
+                           ("Function" "function")
+                           ("Constructor" "constructor")
+                           ("Field" "field")
+                           ("Variable" "variable")
+                           ("Class" "class")
+                           ("Interface" "interface")
+                           ("Module" "module")
+                           ("Property" "property")
+                           ("Unit" "unit")
+                           ("Value" "value")
+                           ("Enum" "enum")
+                           ("Keyword" "keyword")
+                           ("Snippet" "snippet")
+                           ("Color" "color")
+                           ("File" "file")
+                           ("Reference" "reference")
+                           ("Folder" "folder")
+                           ("EnumMember" "enum-member")
+                           ("Constant" "constant")
+                           ("Struct" "struct")
+                           ("Event" "event")
+                           ("Operator" "operator")
+                           ("TypeParameter" "type-parameter")
+                           (_ (downcase kind-string))))))
+            ;; Debug: uncomment next line to see the conversion
+            (message "lsp-proxy kind: %S -> %S" kind-string result)
+            result)))
+      ;; Remove old advice if it exists, then add the new one
+      (advice-remove 'lsp-proxy--candidate-kind #'lsp-proxy--candidate-kind-normalize)
+      (advice-add 'lsp-proxy--candidate-kind :around #'lsp-proxy--candidate-kind-normalize)
+      (message "lsp-proxy-corfu: Advice installed for nerd-icons compatibility"))
+
     (:with-feature nerd-icons-corfu
-      ;; Using VS Code icons as an alternative
       (add-to-list 'corfu-margin-formatters #'nerd-icons-corfu-formatter))
     (global-corfu-mode)
     (:option corfu-cycle t

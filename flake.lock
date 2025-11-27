@@ -48,6 +48,22 @@
         "type": "github"
       }
     },
+    "blame-reveal": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1764210544,
+        "narHash": "sha256-dLI6tPN5osgBZq5LuW8ubKcE62wNbNOYtJ5ZoYnyb4A=",
+        "owner": "LuciusChen",
+        "repo": "blame-reveal",
+        "rev": "695d1630c8a1edc4865a37f2db0fc74c75ea1884",
+        "type": "github"
+      },
+      "original": {
+        "owner": "LuciusChen",
+        "repo": "blame-reveal",
+        "type": "github"
+      }
+    },
     "claude-code-ide": {
       "flake": false,
       "locked": {
@@ -197,6 +213,22 @@
         "type": "github"
       }
     },
+    "lsp-proxy": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1764126615,
+        "narHash": "sha256-bfgVzogDoAXzdJ2wUDFM2Y4YJCrLqfN7wm3wYjNSFeI=",
+        "owner": "jadestrong",
+        "repo": "lsp-proxy",
+        "rev": "64afff85dd0ac11c7c98ba56fc03f786bf9373d7",
+        "type": "github"
+      },
+      "original": {
+        "owner": "jadestrong",
+        "repo": "lsp-proxy",
+        "type": "github"
+      }
+    },
     "monet": {
       "flake": false,
       "locked": {
@@ -298,6 +330,7 @@
         "agent-shell-sidebar": "agent-shell-sidebar",
         "ai-code-interface": "ai-code-interface",
         "awesome-tray": "awesome-tray",
+        "blame-reveal": "blame-reveal",
         "claude-code-ide": "claude-code-ide",
         "eglot-x": "eglot-x",
         "emacs-overlay": "emacs-overlay",
@@ -307,6 +340,7 @@
         "flake-utils": "flake-utils",
         "image-slicing": "image-slicing",
         "leetcode-emacs": "leetcode-emacs",
+        "lsp-proxy": "lsp-proxy",
         "monet": "monet",
         "nixpkgs": "nixpkgs_2",
         "org-modern-indent": "org-modern-indent",

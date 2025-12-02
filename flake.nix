@@ -428,7 +428,6 @@
               diff-hl
               goggles
               web-mode
-              js2-mode
               move-dup
               diminish
               doom-modeline

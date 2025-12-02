@@ -21,7 +21,7 @@
   (:with-mode lua-ts-mode (:match-file "*.lua"))
   (:with-mode tsx-ts-mode (:match-file "*.tsx")
               (:match-file "*.jsx"))
-  (:with-mode js-mode (:match-file "*.js")
+  (:with-mode js-ts-mode (:match-file "*.js")
               (:match-file "*.es6"))
   (:with-mode typescript-ts-mode (:match-file "*.mjs")
               (:match-file "*.mts")
@@ -131,27 +131,14 @@
     (setopt project-vc-extra-root-markers
              '("package.json" "deps.edn" "project.clj" "Package.swift" ".envrc" ".tags" ".project"))))
 
-(setup js
+;; js-ts-mode
+(setup js-ts-mode
   (:also-load lib-js)
   (:when-loaded
     (setq-default js-indent-level 2)
-    (+major-mode-lighter 'js-mode "JS")
-    (+major-mode-lighter 'js-jsx-mode "JSX")))
-
-;; js2-mode
-(setup js2-mode
-  (:when-loaded
-    (:hooks js-mode-hook +enable-js2-checks-if-flymake-inactive
-            js2-mode-hook +enable-js2-checks-if-flymake-inactive)
-    ;; Change some defaults: customize them to override
-    (setq-default js2-bounce-indent-p nil)
-    ;; Disable js2 mode's syntax error highlighting by default...
-    (setq-default js2-mode-show-parse-errors nil
-                  js2-mode-show-strict-warnings nil)
-    (js2-imenu-extras-setup)
-    (add-to-list 'interpreter-mode-alist (cons "node" 'js2-mode))
-    (+major-mode-lighter 'js2-mode "JS2")
-    (+major-mode-lighter 'js2-jsx-mode "JSX2")))
+    (:option treesit-simple-imenu-sort nil)
+    (add-to-list 'interpreter-mode-alist (cons "node" 'js-ts-mode))
+    (+major-mode-lighter 'js-ts-mode "JS")))
 
 (setup xref
   ;; 用 Popper 替代了 +xref-show-xrefs 以及 :option 配置
@@ -184,7 +171,7 @@
 
 
 (setup indent-bars
-  (:with-mode (java-ts-mode python-ts-mode vue-mode typescript-mode typescript-ts-mode js-mode)
+  (:with-mode (java-ts-mode python-ts-mode vue-mode typescript-mode typescript-ts-mode js-ts-mode)
     (:require indent-bars)
     (:hook indent-bars-mode))
   (:when-loaded
@@ -240,63 +227,63 @@
   (:load-after eldoc)
   (:hooks eglot-managed-mode-hook eldoc-box-hover-mode))
 
-;; (setup eglot
-;;   (:with-mode (python-ts-mode js-ts-mode typescript-mode tsx-ts-mode vue-mode latex-mode)
-;;     (:hook eglot-ensure))
-;;   (:when-loaded
-;;     (:also-load lib-eglot)
-;;     (setopt eglot-code-action-indications '(eldoc-hint)
-;;             eglot-events-buffer-config '(:size 0 :format full) ;; 取消 eglot log
-;;             ;; ignore lsp formatting provider, format with apheleia.
-;;             eglot-ignored-server-capabilities '(:documentFormattingProvider
-;;                                                 :documentRangeFormattingProvider))
-;;     (add-to-list 'eglot-server-programs '(my-html-mode . ("vscode-html-language-server" "--stdio")))
-;;     (add-to-list 'eglot-server-programs `((vue-mode vue-ts-mode typescript-ts-mode typescript-mode) . ("vue-language-server" "--stdio" :initializationOptions ,(vue-eglot-init-options))))
-;;     (add-to-list 'eglot-server-programs '(js-mode . ("typescript-language-server" "--stdio")))
-;;     (advice-add 'eglot-completion-at-point :around #'cape-wrap-buster)
-;;     (setq-default
-;;        eglot-workspace-configuration
-;;        '(:basedpyright.analysis (
-;;            :typeCheckingMode "off"
-;;            :diagnosticSeverityOverrides (
-;;              :reportUnusedCallResult "none"
-;;            )
-;;            :inlayHints (
-;;              :callArgumentNames :json-false
-;;            )
-;;          )))
-;;     ;; https://github.com/joaotavora/eglot/discussions/898
-;;     (:with-hook eglot-managed-mode-hook
-;;       (:hook (lambda ()
-;;                ;; Show flymake diagnostics first.
-;;                (setq eldoc-documentation-functions
-;;                      (cons #'flymake-eldoc-function
-;;                            (remove #'flymake-eldoc-function eldoc-documentation-functions)))
-;;                ;; Show all eldoc feedback.
-;;                (setq eldoc-documentation-strategy #'eldoc-documentation-compose))))))
-
-;; (setup eglot-booster
-;;   (:load-after eglot)
-;;   (:option eglot-booster-io-only t)
-;;   (:when-loaded (eglot-booster-mode)))
-
-;; (setup eglot-x
-;;   (:load-after eglot)
-;;   (:hooks eglot-managed-mode-hook eglot-x-setup))
-
-(setup lsp-proxy
-  (:defer (:require lsp-proxy))
+(setup eglot
+  (:with-mode (python-ts-mode js-ts-mode typescript-mode tsx-ts-mode vue-mode latex-mode)
+    (:hook eglot-ensure))
   (:when-loaded
-    ;; Enable lsp-proxy for various modes
-    (:with-mode (python-ts-mode js-ts-mode typescript-mode tsx-ts-mode vue-mode)
-      (:hook lsp-proxy-mode))
-    (setq lsp-proxy-diagnostics-provider :flymake)
-    ;; Set up xref backend
-    (setq xref-backend-functions
-          (cons #'lsp-proxy-xref-backend
-                (remove #'lsp-proxy-xref-backend xref-backend-functions)))
-    ;; Set up completion at point
-    (add-to-list 'completion-at-point-functions #'lsp-proxy-completion-at-point)))
+    (:also-load lib-eglot)
+    (setopt eglot-code-action-indications '(eldoc-hint)
+            eglot-events-buffer-config '(:size 0 :format full) ;; 取消 eglot log
+            ;; ignore lsp formatting provider, format with apheleia.
+            eglot-ignored-server-capabilities '(:documentFormattingProvider
+                                                :documentRangeFormattingProvider))
+    (add-to-list 'eglot-server-programs '(my-html-mode . ("vscode-html-language-server" "--stdio")))
+    (add-to-list 'eglot-server-programs `((vue-mode vue-ts-mode typescript-ts-mode typescript-mode) . ("vue-language-server" "--stdio" :initializationOptions ,(vue-eglot-init-options))))
+    (add-to-list 'eglot-server-programs '(js-mode . ("typescript-language-server" "--stdio")))
+    (advice-add 'eglot-completion-at-point :around #'cape-wrap-buster)
+    (setq-default
+       eglot-workspace-configuration
+       '(:basedpyright.analysis (
+           :typeCheckingMode "off"
+           :diagnosticSeverityOverrides (
+             :reportUnusedCallResult "none"
+           )
+           :inlayHints (
+             :callArgumentNames :json-false
+           )
+         )))
+    ;; https://github.com/joaotavora/eglot/discussions/898
+    (:with-hook eglot-managed-mode-hook
+      (:hook (lambda ()
+               ;; Show flymake diagnostics first.
+               (setq eldoc-documentation-functions
+                     (cons #'flymake-eldoc-function
+                           (remove #'flymake-eldoc-function eldoc-documentation-functions)))
+               ;; Show all eldoc feedback.
+               (setq eldoc-documentation-strategy #'eldoc-documentation-compose))))))
+
+(setup eglot-booster
+  (:load-after eglot)
+  (:option eglot-booster-io-only t)
+  (:when-loaded (eglot-booster-mode)))
+
+(setup eglot-x
+  (:load-after eglot)
+  (:hooks eglot-managed-mode-hook eglot-x-setup))
+
+;; (setup lsp-proxy
+;;   (:defer (:require lsp-proxy))
+;;   (:when-loaded
+;;     ;; Enable lsp-proxy for various modes
+;;     (:with-mode (python-ts-mode js-ts-mode typescript-mode tsx-ts-mode vue-mode)
+;;       (:hook lsp-proxy-mode))
+;;     (setq lsp-proxy-diagnostics-provider :flymake)
+;;     ;; Set up xref backend
+;;     (setq xref-backend-functions
+;;           (cons #'lsp-proxy-xref-backend
+;;                 (remove #'lsp-proxy-xref-backend xref-backend-functions)))
+;;     ;; Set up completion at point
+;;     (add-to-list 'completion-at-point-functions #'lsp-proxy-completion-at-point)))
 
 
 (setup compile
@@ -305,7 +292,9 @@
            compilation-scroll-output 'first-error)
   (:when-loaded
     (autoload 'comint-truncate-buffer "comint" nil t)
-    (add-hook 'compilation-filter-hook #'comint-truncate-buffer)))
+    (require 'ansi-color)
+    (add-hook 'compilation-filter-hook #'comint-truncate-buffer)
+    (add-hook 'compilation-filter-hook 'ansi-color-compilation-filter)))
 
 
 (setup citre

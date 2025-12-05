@@ -24,12 +24,12 @@
       (:hook gptel-auto-scroll))
     (:hooks gptel-post-response-hook gptel-end-of-response))
 
-(setup ai-code-interface
-  (global-set-key (kbd "C-c l") #'ai-code-menu)
-  (:when-loaded
-    (ai-code-set-backend 'claude-code-ide) ;; use claude-code-ide as backend
-    (with-eval-after-load 'magit
-      (ai-code-magit-setup-transients))))
+;; (setup ai-code-interface
+;;   (global-set-key (kbd "C-c l") #'ai-code-menu)
+;;   (:when-loaded
+;;     (ai-code-set-backend 'claude-code-ide) ;; use claude-code-ide as backend
+;;     (with-eval-after-load 'magit
+;;       (ai-code-magit-setup-transients))))
 
 (setup agent-shell
   (:when-loaded

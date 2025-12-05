@@ -28,10 +28,6 @@
     };
 
     # Custom Emacs packages from GitHub
-    ai-code-interface = {
-      url = "github:tninja/ai-code-interface.el";
-      flake = false;
-    };
     awesome-tray = {
       url = "github:manateelazycat/awesome-tray";
       flake = false;
@@ -212,21 +208,6 @@
                   packageRequires = [ agent-shell ];
                 };
 
-                ai-code-interface = epkgs.melpaBuild {
-                  pname = "ai-code-interface";
-                  version = timestampToDate inputs.ai-code-interface.lastModified;
-                  src = inputs.ai-code-interface;
-                  packageRequires = [
-                    magit
-                    claude-code
-                  ];
-                  recipe = pkgs.writeText "recipe" ''
-                    (ai-code-interface :repo "tninja/ai-code-interface.el"
-                                       :fetcher github
-                                       :files ("*.el" (:exclude "test_*.el")))
-                  '';
-                };
-
                 awesome-tray = epkgs.trivialBuild {
                   pname = "awesome-tray";
                   version = timestampToDate inputs.awesome-tray.lastModified;
@@ -376,7 +357,6 @@
 
               # Custom GitHub packages
               customPackages.agent-shell-sidebar
-              customPackages.ai-code-interface
               customPackages.awesome-tray
               customPackages.claude-code-ide
               customPackages.eglot-x

@@ -145,10 +145,10 @@
             (old: {
               patches = (old.patches or [ ]) ++ [
                 # Add setting to enable rounded window with no decoration (still have to alter default-frame-alist)
-                "${inputs.emacs-plus-patches}/patches/emacs-31/round-undecorated-frame.patch"
+                # "${inputs.emacs-plus-patches}/patches/emacs-31/round-undecorated-frame.patch"
 
                 # Make Emacs aware of OS-level light/dark mode
-                "${inputs.emacs-plus-patches}/patches/emacs-31/system-appearance.patch"
+                # "${inputs.emacs-plus-patches}/patches/emacs-31/system-appearance.patch"
 
                 # Custom patches
                 # "${inputs.emacs-patches}/patches/emacs-31/ns-alpha-background.patch"
@@ -191,7 +191,7 @@
           pname = "emacs-lsp-proxy";
           version = "unstable-${timestampToDate inputs.lsp-proxy.lastModified}";
           src = inputs.lsp-proxy;
-          cargoHash = "sha256-ITxGdjRuMIzLhBuEEe4+2yg+1oHuIVajHNOGbFJn8qA=";
+          cargoHash = "sha256-ZWmV/wCMPSuRQNn/7bI3baLYrMcoa35EVikmUDjUguw=";
         };
 
         emacs-augmented = (

@@ -19,16 +19,27 @@
             :key (auth-source-pick-first-password :host "cursor.netint.ca" :user "netint")
             :models '("openrouter/auto" "openai/gpt-5-chat" "anthropic/claude-sonnet-4" "anthropic/claude-3.7-sonnet")
             )))
-   (:with-hook gptel-post-stream-hook
-      (:hook (lambda ()(meow-insert-exit)))
-      (:hook gptel-auto-scroll))
-    (:hooks gptel-post-response-hook gptel-end-of-response))
+  (:with-hook gptel-post-stream-hook
+    (:hook (lambda ()(meow-insert-exit)))
+    (:hook gptel-auto-scroll))
+  (:hooks gptel-post-response-hook gptel-end-of-response))
 
 (setup agent-shell
   (:when-loaded
     (setopt agent-shell-anthropic-claude-environment
-          (agent-shell-make-environment-variables :inherit-env t))
-    (setopt agent-shell-file-completion-enabled t)))
+            (agent-shell-make-environment-variables :inherit-env t))
+    (setq agent-shell-preferred-agent-config
+          (agent-shell-anthropic-make-claude-code-config))
+
+    (setopt agent-shell-file-completion-enabled t)
+    ;; Make agent-shell bookmark-able
+    (defun my/agent-shell-bookmark (_bookmark)
+      (agent-shell))
+    (add-hook 'agent-shell-mode-hook
+              (lambda ()
+                (setq-local bookmark-make-record-function
+                            (lambda ()
+                              `((handler . my/agent-shell-bookmark))))))))
 
 (setup agent-shell-sidebar
   ;; (:load-after agent-shell)
@@ -36,10 +47,7 @@
   (keymap-global-set "C-c a f" 'agent-shell-sidebar-toggle-focus))
 
 (setup agent-review
-  (:load-after agent-shell)
-  (:when-loaded
-    (setq agent-shell-preferred-agent-config
-      (agent-shell-anthropic-make-claude-code-config))))
+  (:load-after agent-shell))
 
 (provide 'init-ai)
 ;;; init-ai.el ends here

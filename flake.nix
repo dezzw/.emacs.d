@@ -470,6 +470,8 @@
               eldoc-box
               undo-fu
               undo-fu-session
+
+              jira
             ]
           )
         );

@@ -1,6 +1,10 @@
 ;;; init-bitstream.el --- Bitstream-related configurations -*- lexical-binding: t -*-
 ;;; Commentary:
 ;;; Code:
+(setup jira
+  (:when-loaded
+     (setq jira-base-url "https://netint.atlassian.net")))
+
 (setup transient
   (:defer (require 'transient))
   (:when-loaded

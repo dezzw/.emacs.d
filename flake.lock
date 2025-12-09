@@ -1,5 +1,21 @@
 {
   "nodes": {
+    "agent-review": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1763417379,
+        "narHash": "sha256-zADIjNEknbyLskt3St4YW2skQS8aNAB9M1MVA3PiV+s=",
+        "owner": "nineluj",
+        "repo": "agent-review",
+        "rev": "df684c4558f0fd83bd81a58503235ab62fd37af5",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nineluj",
+        "repo": "agent-review",
+        "type": "github"
+      }
+    },
     "agent-shell-sidebar": {
       "flake": false,
       "locked": {
@@ -45,22 +61,6 @@
       "original": {
         "owner": "LuciusChen",
         "repo": "blame-reveal",
-        "type": "github"
-      }
-    },
-    "claude-code-ide": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1757951389,
-        "narHash": "sha256-OrcnUZXqRijJCgf1QE5kkPKKdWSJ4oMYt47Sn/EdQy0=",
-        "owner": "manzaltu",
-        "repo": "claude-code-ide.el",
-        "rev": "32d853e20b9d245a6ee89c4a153a4e568250c62c",
-        "type": "github"
-      },
-      "original": {
-        "owner": "manzaltu",
-        "repo": "claude-code-ide.el",
         "type": "github"
       }
     },
@@ -311,10 +311,10 @@
     },
     "root": {
       "inputs": {
+        "agent-review": "agent-review",
         "agent-shell-sidebar": "agent-shell-sidebar",
         "awesome-tray": "awesome-tray",
         "blame-reveal": "blame-reveal",
-        "claude-code-ide": "claude-code-ide",
         "eglot-x": "eglot-x",
         "emacs-overlay": "emacs-overlay",
         "emacs-patches": "emacs-patches",

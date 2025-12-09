@@ -32,10 +32,6 @@
       url = "github:manateelazycat/awesome-tray";
       flake = false;
     };
-    claude-code-ide = {
-      url = "github:manzaltu/claude-code-ide.el";
-      flake = false;
-    };
     eglot-x = {
       url = "github:nemethf/eglot-x";
       flake = false;
@@ -92,6 +88,10 @@
       url = "github:jadestrong/lsp-proxy";
       flake = false;
     };
+    agent-review = {
+      url = "github:nineluj/agent-review";
+      flake = false;
+    };
   };
   outputs =
     inputs@{
@@ -111,26 +111,6 @@
         lib = pkgs.lib;
       in
       rec {
-        languageServers = with pkgs; [
-          ccls
-
-          ruff
-          basedpyright
-
-          vscode-langservers-extracted
-          typescript-language-server
-          bash-language-server
-
-          neil
-          clj-kondo
-
-          nixd
-          texlab
-          lua-language-server
-          fennel-ls
-
-          # "${pkgs.vscode-extensions.ms-vscode.cpptools}/share/vscode/extensions/ms-vscode.cpptools/debugAdapters"
-        ];
 
         # Remove MPS from emacs-igc (it's now built into the emacs repo)
         emacs-no-mps = pkgs.emacs-igc.overrideAttrs (old: {
@@ -207,6 +187,13 @@
                   src = inputs.agent-shell-sidebar;
                   packageRequires = [ agent-shell ];
                 };
+                
+                agent-review = epkgs.trivialBuild {
+                  pname = "agent-review";
+                  version = timestampToDate inputs.agent-review.lastModified;
+                  src = inputs.agent-review;
+                  packageRequires = [ acp agent-shell markdown-mode ];
+                };
 
                 awesome-tray = epkgs.trivialBuild {
                   pname = "awesome-tray";
@@ -214,13 +201,6 @@
                   src = inputs.awesome-tray;
                 };
 
-                claude-code-ide = (
-                  epkgs.trivialBuild {
-                    pname = "claude-code-ide";
-                    version = timestampToDate inputs.claude-code-ide.lastModified;
-                    src = inputs.claude-code-ide;
-                  }
-                );
 
                 eglot-x = epkgs.trivialBuild {
                   pname = "eglot-x";
@@ -358,7 +338,6 @@
               # Custom GitHub packages
               customPackages.agent-shell-sidebar
               customPackages.awesome-tray
-              customPackages.claude-code-ide
               customPackages.eglot-x
               customPackages.emt
               customPackages.image-slicing
@@ -370,11 +349,11 @@
               customPackages.setup
               customPackages.lsp-proxy
               customPackages.blame-reveal
+              customPackages.agent-review
               customPackages.telega
 
               # MELPA packages - Core
               eglot-booster
-              claude-code
               eat
               meow
               gptel

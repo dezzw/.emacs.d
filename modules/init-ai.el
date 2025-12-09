@@ -24,13 +24,6 @@
       (:hook gptel-auto-scroll))
     (:hooks gptel-post-response-hook gptel-end-of-response))
 
-;; (setup ai-code-interface
-;;   (global-set-key (kbd "C-c l") #'ai-code-menu)
-;;   (:when-loaded
-;;     (ai-code-set-backend 'claude-code-ide) ;; use claude-code-ide as backend
-;;     (with-eval-after-load 'magit
-;;       (ai-code-magit-setup-transients))))
-
 (setup agent-shell
   (:when-loaded
     (setopt agent-shell-anthropic-claude-environment
@@ -38,9 +31,15 @@
     (setopt agent-shell-file-completion-enabled t)))
 
 (setup agent-shell-sidebar
-  (:load-after agent-shell)
+  ;; (:load-after agent-shell)
   (keymap-global-set "C-c a s" 'agent-shell-sidebar-toggle)
   (keymap-global-set "C-c a f" 'agent-shell-sidebar-toggle-focus))
+
+(setup agent-review
+  (:load-after agent-shell)
+  (:when-loaded
+    (setq agent-shell-preferred-agent-config
+      (agent-shell-anthropic-make-claude-code-config))))
 
 (provide 'init-ai)
 ;;; init-ai.el ends here

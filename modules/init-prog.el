@@ -82,9 +82,9 @@
 (setup reformatter
   (:defer (:require reformatter))
   (:with-mode python-ts-mode
-    (reformatter-define black-format
-                        :program "ruff format"
-                        :args '("-"))))
+    (reformatter-define ruff-format
+                        :program "ruff"
+                        :args '("format" "-"))))
 
 (setup mmm-mode
   (:with-mode prog-mode (:require mmm-mode))

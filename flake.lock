@@ -200,11 +200,11 @@
     "lsp-proxy": {
       "flake": false,
       "locked": {
-        "lastModified": 1765184995,
-        "narHash": "sha256-XkT//KYOxZ4kSaTMkDU/lzHCDPQEI3mhkSz9kn+3eLc=",
+        "lastModified": 1765329452,
+        "narHash": "sha256-E5kjYEcpdytEYqOLXTq7mQ1d+/CHLqfj+9DxS7bn0gA=",
         "owner": "jadestrong",
         "repo": "lsp-proxy",
-        "rev": "66df5f49dace64dc23af3a043fbe118de6124b44",
+        "rev": "4c756489fd3d6e58a91e877fdcba6833c86b0acb",
         "type": "github"
       },
       "original": {
@@ -263,11 +263,11 @@
     },
     "nixpkgs_2": {
       "locked": {
-        "lastModified": 1764947035,
-        "narHash": "sha256-EYHSjVM4Ox4lvCXUMiKKs2vETUSL5mx+J2FfutM7T9w=",
+        "lastModified": 1765270179,
+        "narHash": "sha256-g2a4MhRKu4ymR4xwo+I+auTknXt/+j37Lnf0Mvfl1rE=",
         "owner": "nixos",
         "repo": "nixpkgs",
-        "rev": "a672be65651c80d3f592a89b3945466584a22069",
+        "rev": "677fbe97984e7af3175b6c121f3c39ee5c8d62c9",
         "type": "github"
       },
       "original": {

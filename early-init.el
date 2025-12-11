@@ -176,8 +176,9 @@
 (when (fboundp 'horizontal-scroll-bar-mode)
   (horizontal-scroll-bar-mode -1))
 
-;; tab-bar
+;; tab-bar & tab-line
 (setq tab-bar-mode t)
+(setq tab-line-mode t)
 
 (setenv "LSP_USE_PLISTS" "true")
 

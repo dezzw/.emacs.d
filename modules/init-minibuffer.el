@@ -31,41 +31,9 @@
            ;; 将阈值设置为 4 表示只有当需要补全的字符数大于 4 时才会执行循环补全
            completion-cycle-threshold 4))
 
-;; (setup doom-modeline
-;;   (:defer (:require doom-modeline))
-;;   (:when-loaded
-;;     (doom-modeline-mode)
-;;     (:option doom-modeline-height 18
-;;              doom-modeline-buffer-file-name-style 'auto
-;;              doom-modeline-buffer-modification-icon t
-;;              doom-modeline-bar-width 4
-;;              doom-modeline-hud t
-;;              doom-modeline-hud-min-height 1)
-;;     (doom-modeline-def-segment +buffer-info
-;;       "Customize doom-modeline to remove modification indication"
-;;       (let ((buffer-name (doom-modeline--buffer-name)))
-;;         (when (derived-mode-p 'telega-root-mode 'telega-chat-mode 'org-agenda-mode)
-;;           (setq buffer-name
-;;                 (propertize buffer-name 'face
-;;                             `(:inherit doom-modeline))))
-;;         (concat
-;;          (doom-modeline-spc)
-;;          (doom-modeline--buffer-mode-icon)
-;;          (doom-modeline--buffer-state-icon)
-;;          buffer-name)))
-
-;;     (doom-modeline-def-modeline 'disable-modification-indication
-;;       '(bar workspace-name window-number modals +buffer-info selection-info)
-;;       '(misc-info minor-modes buffer-encoding major-mode time))
-
-;;     (:hooks doom-modeline-mode-hook
-;;             (lambda ()
-;;               (doom-modeline-set-modeline 'disable-modification-indication 'default)))
-;;     (add-to-list 'doom-modeline-mode-alist '(org-agenda-mode . disable-modification-indication))))
-
 (setup awesome-tray
   (:defer (:require awesome-tray))
-  (:option awesome-tray-active-modules '("meow" "buffer-name" "file-path" "mode-name" "git" "flymake"))
+  (:option awesome-tray-active-modules '("meow" "file-path" "mode-name" "git" "flymake"))
   (:when-loaded
     (awesome-tray-mode 1)))
 

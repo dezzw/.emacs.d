@@ -328,26 +328,9 @@
         "nixpkgs": "nixpkgs_2",
         "org-modern-indent": "org-modern-indent",
         "panel": "panel",
-        "rose-pine": "rose-pine",
         "setup-el": "setup-el",
         "tdlib": "tdlib",
         "telega": "telega"
-      }
-    },
-    "rose-pine": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1765242767,
-        "narHash": "sha256-KsJ67TqsiXWmNcPo2fyqqYKdhe/Rd9c0RFr8VuQVq7Q=",
-        "owner": "LuciusChen",
-        "repo": "rose-pine",
-        "rev": "d0767e1c571468c6910eaff322ff72ae20138239",
-        "type": "github"
-      },
-      "original": {
-        "owner": "LuciusChen",
-        "repo": "rose-pine",
-        "type": "github"
       }
     },
     "setup-el": {

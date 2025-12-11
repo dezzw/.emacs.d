@@ -34,13 +34,23 @@
 (setq vc-follow-symlinks t)
 
 ;; load module settings
-(dolist (dir '("modules" "lib" "site-lisp"))
+(dolist (dir '("modules" "lib" "site-lisp" "themes"))
   (add-to-list 'load-path (expand-file-name dir user-emacs-directory)))
 
 (require 'setup)
 (require 'init-setup)
 
 (setup (:require keyfreq)
+  (setq keyfreq-excluded-commands
+      '(self-insert-command
+        forward-char
+        meow-next
+        meow-prev
+        execute-extended-command
+        vertico-next
+        backward-char
+        previous-line
+        next-line))
   (keyfreq-mode 1)
   (keyfreq-autosave-mode 1))
 

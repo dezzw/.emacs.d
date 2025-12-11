@@ -60,10 +60,6 @@
       url = "github:LuciusChen/panel";
       flake = false;
     };
-    rose-pine = {
-      url = "github:LuciusChen/rose-pine";
-      flake = false;
-    };
     agent-shell-sidebar = {
       url = "github:cmacrae/agent-shell-sidebar";
       flake = false;
@@ -171,7 +167,9 @@
           pname = "emacs-lsp-proxy";
           version = "unstable-${timestampToDate inputs.lsp-proxy.lastModified}";
           src = inputs.lsp-proxy;
-          cargoHash = "sha256-ZWmV/wCMPSuRQNn/7bI3baLYrMcoa35EVikmUDjUguw=";
+          cargoLock = {
+            lockFile = "${inputs.lsp-proxy}/Cargo.lock";
+          };
         };
 
         emacs-augmented = (
@@ -248,12 +246,6 @@
                     async
                     nerd-icons
                   ];
-                };
-
-                rose-pine = epkgs.trivialBuild {
-                  pname = "rose-pine";
-                  version = timestampToDate inputs.rose-pine.lastModified;
-                  src = inputs.rose-pine;
                 };
 
                 setup = epkgs.trivialBuild {
@@ -345,7 +337,6 @@
               customPackages.monet
               customPackages.org-modern-indent
               customPackages.panel
-              customPackages.rose-pine
               customPackages.setup
               customPackages.lsp-proxy
               customPackages.blame-reveal

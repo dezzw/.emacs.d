@@ -25,21 +25,21 @@
   (:hooks gptel-post-response-hook gptel-end-of-response))
 
 (setup agent-shell
+  ;; Make agent-shell bookmark-able
+  (defun my/agent-shell-bookmark (_bookmark)
+      (agent-shell))
+  (add-hook 'agent-shell-mode-hook
+              (lambda ()
+                (setq-local bookmark-make-record-function
+                            (lambda ()
+                              `((handler . my/agent-shell-bookmark))))))
   (:when-loaded
     (setopt agent-shell-anthropic-claude-environment
             (agent-shell-make-environment-variables :inherit-env t))
     (setq agent-shell-preferred-agent-config
           (agent-shell-anthropic-make-claude-code-config))
 
-    (setopt agent-shell-file-completion-enabled t)
-    ;; Make agent-shell bookmark-able
-    (defun my/agent-shell-bookmark (_bookmark)
-      (agent-shell))
-    (add-hook 'agent-shell-mode-hook
-              (lambda ()
-                (setq-local bookmark-make-record-function
-                            (lambda ()
-                              `((handler . my/agent-shell-bookmark))))))))
+    (setopt agent-shell-file-completion-enabled t)))
 
 (setup agent-shell-sidebar
   (:defer (:require agent-shell-sidebar))

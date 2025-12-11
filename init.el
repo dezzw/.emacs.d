@@ -39,6 +39,11 @@
 
 (require 'setup)
 (require 'init-setup)
+
+(setup (:require keyfreq)
+  (keyfreq-mode 1)
+  (keyfreq-autosave-mode 1))
+
 (when *is-mac* (require 'init-mac))
 (require 'init-ui)
 

@@ -2,8 +2,7 @@
 ;;; Commentary:
 ;;; Code:
 (setup jira
-  (:when-loaded
-     (setq jira-base-url "https://netint.atlassian.net")))
+  (setq jira-base-url "https://netint.atlassian.net"))
 
 (setup transient
   (:defer (require 'transient))

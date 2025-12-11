@@ -472,6 +472,8 @@
               undo-fu-session
 
               jira
+
+              keyfreq
             ]
           )
         );

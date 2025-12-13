@@ -51,11 +51,11 @@
     "blame-reveal": {
       "flake": false,
       "locked": {
-        "lastModified": 1765359238,
-        "narHash": "sha256-yqnxwhSTR1e7wOiaWL6gsHlkJsKUct5ZK2s5TVHWOGU=",
+        "lastModified": 1765536083,
+        "narHash": "sha256-T5gsRhV8zBI+3aDAOtesnhNWh32kWsHlMgeCDT4EYb4=",
         "owner": "LuciusChen",
         "repo": "blame-reveal",
-        "rev": "f174b183cb615096d4d9394bd7f784c8281f26a0",
+        "rev": "d10f05305371816f911d75650f74df01dd72ae93",
         "type": "github"
       },
       "original": {
@@ -102,11 +102,11 @@
     "emacs-patches": {
       "flake": false,
       "locked": {
-        "lastModified": 1765267540,
-        "narHash": "sha256-A+UzzmVxPFPu6f9i+vdRNCeUDG91ccHNUnMaiF6WyvY=",
+        "lastModified": 1765509920,
+        "narHash": "sha256-HwucRnPKVoUtjKB9Evtl5QebUun/64xGYj7VXcZti48=",
         "owner": "LuciusChen",
         "repo": ".emacs.d",
-        "rev": "49ac7838edbdb3aa2cf50c1a4486a5182c15e1b6",
+        "rev": "2d4aa17eacd802ce2a85b119766b9ae76d18ad5b",
         "type": "github"
       },
       "original": {
@@ -263,11 +263,11 @@
     },
     "nixpkgs_2": {
       "locked": {
-        "lastModified": 1765270179,
-        "narHash": "sha256-g2a4MhRKu4ymR4xwo+I+auTknXt/+j37Lnf0Mvfl1rE=",
+        "lastModified": 1765425892,
+        "narHash": "sha256-jlQpSkg2sK6IJVzTQBDyRxQZgKADC2HKMRfGCSgNMHo=",
         "owner": "nixos",
         "repo": "nixpkgs",
-        "rev": "677fbe97984e7af3175b6c121f3c39ee5c8d62c9",
+        "rev": "5d6bdbddb4695a62f0d00a3620b37a15275a5093",
         "type": "github"
       },
       "original": {

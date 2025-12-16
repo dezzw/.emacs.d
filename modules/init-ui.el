@@ -77,6 +77,9 @@
 
 (setup custom
   (:when-loaded
+    ;; Suppress org-level face warnings by ensuring org-faces are defined early
+    (unless (facep 'org-level-1)
+      (require 'org-faces nil t))
     (:also-load rose-pine)
     (:also-load lib-appearance)
     (keymap-global-set "C-M-8" (lambda () (interactive) (+adjust-opacity nil -2)))
@@ -114,7 +117,8 @@
     (:option show-paren-when-point-inside-paren t
              show-paren-when-point-in-periphery t
              show-paren-context-when-offscreen t
-             show-paren-delay 0.2)))
+             show-paren-delay 0.2
+             blink-matching-paren-highlight-offscreen t)))
 
 (setup highlight-parentheses
   (:defer (:require highlight-parentheses))
@@ -129,9 +133,7 @@
 (setup nerd-icons (:defer (:require nerd-icons)))
 (setup all-the-icons (:defer (:require all-the-icons)))
 
-;; (setup window-navigation
-;;   (:defer (:require window-navigation))
-;;   (:when-loaded (window-navigation-mode)))
+
 
 (setup zoom
   (:require zoom)

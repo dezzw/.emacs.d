@@ -37,12 +37,7 @@
 (setup indent (:option tab-always-indent 'complete))
 (setup mouse (:option mouse-yank-at-point t))
 
-(setup paren
-  (:option show-paren-when-point-inside-paren t
-           show-paren-when-point-in-periphery t
-           show-paren-context-when-offscreen t
-           show-paren-delay 0.2
-           blink-matching-paren-highlight-offscreen t))
+
 
 (setup simple
   (keymap-global-set "C-." 'set-mark-command)
@@ -136,9 +131,7 @@
         ('other
          (setq sis--prefix-override-map-enable t))))))
 
-;; (setup auto-space
-;;   (:defer (:require auto-space))
-;;   (:when-loaded (auto-space-mode)))
+
 
 ;; 剪贴板查找
 (setup browse-kill-ring

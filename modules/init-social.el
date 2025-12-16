@@ -177,14 +177,6 @@
           (setcdr (assq t org-file-apps-gnu) 'browse-url-default-macosx-browser)
           (setcdr (assq t org-file-apps-gnu) 'browse-url-xdg-open)))))
 
-;; (setup mastodon
-;;   (:when-loaded
-;;     (:also-load lib-mastodon)
-;;     (:with-map mastodon-mode-map
-;;       (:bind "a" mastodon-detect-and-translate))
-;;     (setopt mastodon-instance-url "https://mastodon.social"
-;;             mastodon-active-user "Lucius_Chen"
-;;             mastodon-tl--show-avatars t)
-;;     (:advice mastodon-detect-and-translate :before #'mastodon-detect-and-toggle-if-folded)))
+
 (provide 'init-social)
 ;;; init-social.el ends here

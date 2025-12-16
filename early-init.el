@@ -178,7 +178,7 @@
 
 ;; tab-bar & tab-line
 (setq tab-bar-mode t)
-(setq tab-line-mode t)
+(global-tab-line-mode t)
 
 (setenv "LSP_USE_PLISTS" "true")
 

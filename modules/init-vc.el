@@ -90,11 +90,7 @@
     (:with-map diff-hl-mode-map
       (:bind "<left-fringe> <mouse-1>" diff-hl-diff-goto-hunk))))
 
-;; (setup sideline-blame
-;;   (:defer (:require sideline-blame))
-;;   (:option sideline-backends-right '((sideline-blame . up)))
-;;   (:when-loaded
-;;     (global-sideline-mode 1)))
+
 
 (setup blame-reveal
   (:defer (:require blame-reveal))

@@ -367,20 +367,17 @@
               elfeed
               popper
               embark
-              dimmer
               vertico
               diredfl
               separedit
               cdlatex
               consult
               mmm-mode
-              scratch
               diff-hl
               goggles
               web-mode
               move-dup
               diminish
-              doom-modeline
               git-link
               apheleia
               ox-pandoc
@@ -389,7 +386,6 @@
               orderless
               kind-icon
               git-modes
-              git-blamed
               ace-pinyin
               marginalia
               rainbow-mode
@@ -403,7 +399,6 @@
               speed-type
               typescript-mode
               nerd-icons-dired
-              command-log-mode
               browse-kill-ring
               rainbow-delimiters
               default-text-scale
@@ -449,13 +444,8 @@
               jinx
               envrc
               helpful
-              aggressive-indent
-              browser-hist
               consult-notes
-              consult-gh
-              sideline-blame
               agent-shell
-              all-the-icons
               reformatter
               flymake-ruff
               eldoc-box

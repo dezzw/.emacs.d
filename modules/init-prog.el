@@ -219,10 +219,6 @@
     (when (version<= "31" emacs-version)
       (setopt flymake-show-diagnostics-at-end-of-line t))))
 
-(setup flymake-ruff
-  (:load-after flymake)
-  (:hooks eglot-managed-mode-hook flymake-ruff-load))
-
 (setup eldoc-box
   (:load-after eldoc)
   (:hooks eglot-managed-mode-hook eldoc-box-hover-mode))
@@ -237,6 +233,7 @@
             ;; ignore lsp formatting provider, format with apheleia.
             eglot-ignored-server-capabilities '(:documentFormattingProvider
                                                 :documentRangeFormattingProvider))
+    (add-to-list 'eglot-server-programs '((python-mode python-ts-mode) . ("rass" "python")))
     (add-to-list 'eglot-server-programs '(my-html-mode . ("vscode-html-language-server" "--stdio")))
     (add-to-list 'eglot-server-programs `((vue-mode vue-ts-mode typescript-ts-mode typescript-mode) . ("vue-language-server" "--stdio" :initializationOptions ,(vue-eglot-init-options))))
     (add-to-list 'eglot-server-programs '(js-mode . ("typescript-language-server" "--stdio")))
@@ -271,19 +268,7 @@
   (:load-after eglot)
   (:hooks eglot-managed-mode-hook eglot-x-setup))
 
-;; (setup lsp-proxy
-;;   (:defer (:require lsp-proxy))
-;;   (:when-loaded
-;;     ;; Enable lsp-proxy for various modes
-;;     (:with-mode (python-ts-mode js-ts-mode typescript-mode tsx-ts-mode vue-mode)
-;;       (:hook lsp-proxy-mode))
-;;     (setq lsp-proxy-diagnostics-provider :flymake)
-;;     ;; Set up xref backend
-;;     (setq xref-backend-functions
-;;           (cons #'lsp-proxy-xref-backend
-;;                 (remove #'lsp-proxy-xref-backend xref-backend-functions)))
-;;     ;; Set up completion at point
-;;     (add-to-list 'completion-at-point-functions #'lsp-proxy-completion-at-point)))
+
 
 
 (setup compile

@@ -163,7 +163,7 @@ jobs:
       - name: Commit and push changes
         run: |
           git add flake.lock
-          git commit -m "chore: update flake inputs
+          git commit -m "[Chore] Update flake inputs
 
           ✅ Builds verified on Linux and macOS"
           git pull --rebase --autostash

@@ -204,14 +204,14 @@
                   pname = "agent-shell-sidebar";
                   version = timestampToDate inputs.agent-shell-sidebar.lastModified;
                   src = inputs.agent-shell-sidebar;
-                  packageRequires = [ agent-shell ];
+                  packageRequires = [ epkgs.agent-shell ];
                 };
                 
                 agent-review = epkgs.trivialBuild {
                   pname = "agent-review";
                   version = timestampToDate inputs.agent-review.lastModified;
                   src = inputs.agent-review;
-                  packageRequires = [ acp agent-shell markdown-mode ];
+                  packageRequires = [ epkgs.acp epkgs.agent-shell epkgs.markdown-mode ];
                 };
 
                 awesome-tray = epkgs.trivialBuild {
@@ -250,7 +250,7 @@
                   pname = "monet";
                   version = timestampToDate inputs.monet.lastModified;
                   src = inputs.monet;
-                  packageRequires = [ websocket ];
+                  packageRequires = [ epkgs.websocket ];
                 };
 
                 org-modern-indent = epkgs.trivialBuild {
@@ -264,8 +264,8 @@
                   version = timestampToDate inputs.panel.lastModified;
                   src = inputs.panel;
                   packageRequires = [
-                    async
-                    nerd-icons
+                    epkgs.async
+                    epkgs.nerd-icons
                   ];
                 };
 
@@ -287,12 +287,12 @@
                       '(list "${emacs-lsp-proxy-binary}/bin/emacs-lsp-proxy" (executable-find exe-name)'
                   '';
                   packageRequires = [
-                    s
-                    eldoc
-                    ht
-                    dash
-                    f
-                    yasnippet
+                    epkgs.s
+                    epkgs.eldoc
+                    epkgs.ht
+                    epkgs.dash
+                    epkgs.f
+                    epkgs.yasnippet
                   ];
                 };
 
@@ -310,7 +310,7 @@
                     pname = "telega";
                     inherit version;
                     src = inputs.telega;
-                    packageRequires = [ visual-fill-column ];
+                    packageRequires = [ epkgs.visual-fill-column ];
                     buildInputs = [
                       tdlib-head
                       pkgs.zlib
@@ -343,7 +343,8 @@
         };
 
         # Package list (shared across all Emacs versions)
-        packageList = epkgs: customPkgs: [
+        packageList = epkgs: customPkgs:
+          with epkgs; [
           # Native compiled packages
           vterm
           pdf-tools
@@ -478,7 +479,7 @@
           jira
 
           keyfreq
-        ];
+          ];
 
         # ============================================================================
         # Build Function

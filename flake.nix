@@ -359,6 +359,7 @@
               cape
               wgrep
               nerd-icons
+              all-the-icons
               corfu
               company
               vundo

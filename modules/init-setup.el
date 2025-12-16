@@ -12,7 +12,8 @@
   (lambda (features)
     `(run-with-idle-timer 1 nil
                           (lambda ()
-                            ,features)))
+                            (catch 'setup-quit
+                              ,features))))
   :documentation "Delay loading the feature until a certain amount of idle time has passed."
   :repeatable t)
 

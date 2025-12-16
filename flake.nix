@@ -107,39 +107,14 @@
         lib = pkgs.lib;
       in
       rec {
-
-        # Remove MPS from emacs-igc (it's now built into the emacs repo)
-        emacs-no-mps = pkgs.emacs-igc.overrideAttrs (old: {
-          buildInputs = builtins.filter (p: !(p ? pname && p.pname == "mps")) (old.buildInputs or [ ]);
-        });
-
-        # Add macOS-specific patches and ImageMagick
-        emacs-patched =
-          (emacs-no-mps.override {
-            withImageMagick = true;
-          }).overrideAttrs
-            (old: {
-              patches = (old.patches or [ ]) ++ [
-                # Add setting to enable rounded window with no decoration (still have to alter default-frame-alist)
-                # "${inputs.emacs-plus-patches}/patches/emacs-31/round-undecorated-frame.patch"
-
-                # Make Emacs aware of OS-level light/dark mode
-                # "${inputs.emacs-plus-patches}/patches/emacs-31/system-appearance.patch"
-
-                # Custom patches
-                # "${inputs.emacs-patches}/patches/emacs-31/ns-alpha-background.patch"
-                # "${inputs.emacs-patches}/patches/emacs-31/smooth-cursor.patch"
-              ];
-            });
-
-        # Use emacs-no-mps on Linux, patched version on Darwin
-        emacs-base = if pkgs.stdenv.isLinux then emacs-no-mps else emacs-patched;
+        # ============================================================================
+        # Helper Functions
+        # ============================================================================
 
         # Helper to convert timestamp to date string (YYYYMMDD format)
         timestampToDate =
           timestamp:
           let
-            inherit (builtins) substring;
             dateStr = builtins.readFile (
               pkgs.runCommand "timestamp-to-date" { } ''
                 date -u -d @${toString timestamp} +%Y%m%d > $out
@@ -147,6 +122,53 @@
             );
           in
           lib.removeSuffix "\n" dateStr;
+
+        # Function to apply patches to an Emacs derivation
+        applyPatches = emacs-base: extraPatches:
+          emacs-base.overrideAttrs (old: {
+            patches = (old.patches or [ ]) ++ extraPatches;
+          });
+
+        # Custom patches list (can be enabled/disabled as needed)
+        customPatches = [
+          # Add setting to enable rounded window with no decoration
+          "${inputs.emacs-plus-patches}/patches/emacs-31/round-undecorated-frame.patch"
+          # Make Emacs aware of OS-level light/dark mode
+          "${inputs.emacs-plus-patches}/patches/emacs-31/system-appearance.patch"
+          # Custom patches
+          "${inputs.emacs-patches}/patches/emacs-31/ns-alpha-background.patch"
+          "${inputs.emacs-patches}/patches/emacs-31/smooth-cursor.patch"
+        ];
+
+        # ============================================================================
+        # Emacs Base Versions
+        # ============================================================================
+
+        # IGC base: Remove MPS (now built into emacs repo)
+        emacs-igc-base = pkgs.emacs-igc.overrideAttrs (old: {
+          buildInputs = builtins.filter (p: !(p ? pname && p.pname == "mps")) (old.buildInputs or [ ]);
+        });
+
+        # Master base: Use emacsGit from emacs-overlay (has vc-run-delayed-success)
+        emacs-master-base = pkgs.emacs-git;
+
+        # ============================================================================
+        # Emacs Patched Versions
+        # ============================================================================
+
+        # IGC patched: Add ImageMagick and custom patches
+        emacs-igc-patched = applyPatches
+          (emacs-igc-base.override { withImageMagick = true; })
+          customPatches;
+
+        # Master patched: Add ImageMagick and custom patches
+        emacs-master-patched = applyPatches
+          (emacs-master-base.override { withImageMagick = true; })
+          customPatches;
+
+        # ============================================================================
+        # Build Dependencies
+        # ============================================================================
 
         # Build tdlib from HEAD source
         tdlib-head = pkgs.tdlib.overrideAttrs (old: {
@@ -172,13 +194,12 @@
           };
         };
 
-        emacs-augmented = (
-          (pkgs.emacsPackagesFor emacs-base).emacsWithPackages (
-            epkgs:
-            with epkgs;
-            let
-              # Custom package derivations
-              customPackages = {
+        # ============================================================================
+        # Package Definitions
+        # ============================================================================
+
+        # Custom package derivations (shared across all Emacs versions)
+        customPackages = epkgs: {
                 agent-shell-sidebar = epkgs.trivialBuild {
                   pname = "agent-shell-sidebar";
                   version = timestampToDate inputs.agent-shell-sidebar.lastModified;
@@ -216,7 +237,7 @@
                   pname = "image-slicing";
                   version = timestampToDate inputs.image-slicing.lastModified;
                   src = inputs.image-slicing;
-                  packageRequires = [ f ];
+                  packageRequires = [ epkgs.f ];
                 };
 
                 leetcode-emacs = epkgs.trivialBuild {
@@ -319,155 +340,200 @@
                               :files (:defaults "Makefile" "etc" "server" "contrib"))
                     '';
                   };
-              };
+        };
+
+        # Package list (shared across all Emacs versions)
+        packageList = epkgs: customPkgs: [
+          # Native compiled packages
+          vterm
+          pdf-tools
+          pkgs.emacsPackages.treesit-grammars.with-all-grammars
+
+          # Custom GitHub packages
+          customPkgs.agent-shell-sidebar
+          customPkgs.awesome-tray
+          customPkgs.eglot-x
+          customPkgs.emt
+          customPkgs.image-slicing
+          customPkgs.leetcode-emacs
+          customPkgs.monet
+          customPkgs.org-modern-indent
+          customPkgs.panel
+          customPkgs.setup
+          customPkgs.lsp-proxy
+          customPkgs.blame-reveal
+          customPkgs.agent-review
+          customPkgs.telega
+
+          # MELPA packages - Core
+          eglot-booster
+          eat
+          meow
+          gptel
+          ultra-scroll
+          indent-bars
+          vertico-posframe
+          nov
+          sis
+          plz
+          avy
+          mpv
+          cape
+          wgrep
+          nerd-icons
+          all-the-icons
+          corfu
+          company
+          vundo
+          forge
+          verb
+          elfeed
+          popper
+          embark
+          vertico
+          diredfl
+          separedit
+          cdlatex
+          consult
+          mmm-mode
+          diff-hl
+          goggles
+          web-mode
+          move-dup
+          diminish
+          git-link
+          apheleia
+          ox-pandoc
+          macrostep
+          json-mode
+          orderless
+          kind-icon
+          git-modes
+          ace-pinyin
+          marginalia
+          rainbow-mode
+          prettier-js
+          vterm-toggle
+          language-detection
+          meow-tree-sitter
+          markdown-mode
+          mode-line-bell
+          embark-consult
+          speed-type
+          typescript-mode
+          nerd-icons-dired
+          browse-kill-ring
+          rainbow-delimiters
+          default-text-scale
+          denote
+          nerd-icons-corfu
+          nerd-icons-completion
+          whitespace-cleanup-mode
+          eshell-syntax-highlighting
+          consult-dir
+          dirvish
+          swift-mode
+          color-theme-sanityinc-tomorrow
+          highlight-parentheses
+          yasnippet
+
+          # MELPA packages - Org-mode
+          org-modern
+          org-appear
+          org-remark
+          org-tidy
+          org-cliplink
+          org-download
+          visual-fill-column
+          valign
+          ob-async
+          denote-org
+          denote-markdown
+
+          # MELPA packages - Language support
+          clojure-ts-mode
+          cider
+          babashka
+          neil
+          auctex
+          fennel-mode
+          nix-ts-mode
+          geiser-chez
+
+          # MELPA packages - Utilities
+          zoom
+          activities
+          citre
+          jinx
+          envrc
+          helpful
+          consult-notes
+          agent-shell
+          reformatter
+          flymake-ruff
+          eldoc-box
+          undo-fu
+          undo-fu-session
+
+          jira
+
+          keyfreq
+        ];
+
+        # ============================================================================
+        # Build Function
+        # ============================================================================
+
+        # Function to build emacs-augmented with a given emacs-base
+        buildEmacsAugmented = emacs-base: (
+          (pkgs.emacsPackagesFor emacs-base).emacsWithPackages (
+            epkgs:
+            with epkgs;
+            let
+              customPkgs = customPackages epkgs;
             in
-            [
-              # Native compiled packages
-              vterm
-              pdf-tools
-              pkgs.emacsPackages.treesit-grammars.with-all-grammars
-
-              # Custom GitHub packages
-              customPackages.agent-shell-sidebar
-              customPackages.awesome-tray
-              customPackages.eglot-x
-              customPackages.emt
-              customPackages.image-slicing
-              customPackages.leetcode-emacs
-              customPackages.monet
-              customPackages.org-modern-indent
-              customPackages.panel
-              customPackages.setup
-              customPackages.lsp-proxy
-              customPackages.blame-reveal
-              customPackages.agent-review
-              customPackages.telega
-
-              # MELPA packages - Core
-              eglot-booster
-              eat
-              meow
-              gptel
-              ultra-scroll
-              indent-bars
-              vertico-posframe
-              nov
-              sis
-              plz
-              avy
-              mpv
-              cape
-              wgrep
-              nerd-icons
-              all-the-icons
-              corfu
-              company
-              vundo
-              forge
-              verb
-              elfeed
-              popper
-              embark
-              vertico
-              diredfl
-              separedit
-              cdlatex
-              consult
-              mmm-mode
-              diff-hl
-              goggles
-              web-mode
-              move-dup
-              diminish
-              git-link
-              apheleia
-              ox-pandoc
-              macrostep
-              json-mode
-              orderless
-              kind-icon
-              git-modes
-              ace-pinyin
-              marginalia
-              rainbow-mode
-              prettier-js
-              vterm-toggle
-              language-detection
-              meow-tree-sitter
-              markdown-mode
-              mode-line-bell
-              embark-consult
-              speed-type
-              typescript-mode
-              nerd-icons-dired
-              browse-kill-ring
-              rainbow-delimiters
-              default-text-scale
-              denote
-              nerd-icons-corfu
-              nerd-icons-completion
-              whitespace-cleanup-mode
-              eshell-syntax-highlighting
-              consult-dir
-              dirvish
-              swift-mode
-              color-theme-sanityinc-tomorrow
-              highlight-parentheses
-              yasnippet
-
-              # MELPA packages - Org-mode
-              org-modern
-              org-appear
-              org-remark
-              org-tidy
-              org-cliplink
-              org-download
-              visual-fill-column
-              valign
-              ob-async
-              denote-org
-              denote-markdown
-
-              # MELPA packages - Language support
-              clojure-ts-mode
-              cider
-              babashka
-              neil
-              auctex
-              fennel-mode
-              nix-ts-mode
-              geiser-chez
-
-              # MELPA packages - Utilities
-              zoom
-              activities
-              citre
-              jinx
-              envrc
-              helpful
-              consult-notes
-              agent-shell
-              reformatter
-              flymake-ruff
-              eldoc-box
-              undo-fu
-              undo-fu-session
-
-              jira
-
-              keyfreq
-            ]
+            packageList epkgs customPkgs
           )
         );
 
-        packages.demacs = emacs-augmented;
+        # ============================================================================
+        # Build All Versions
+        # ============================================================================
 
-        apps.demacs = flake-utils.lib.mkApp {
-          drv = packages.demacs;
-          name = "demacs";
+        # Build all four versions
+        emacs-augmented-igc = buildEmacsAugmented emacs-igc-base;
+        emacs-augmented-igc-patched = buildEmacsAugmented emacs-igc-patched;
+        emacs-augmented-master = buildEmacsAugmented emacs-master-base;
+        emacs-augmented-master-patched = buildEmacsAugmented emacs-master-patched;
+
+        # ============================================================================
+        # Package Outputs
+        # ============================================================================
+
+        packages.demacs-igc = emacs-augmented-igc;
+        packages.demacs-igc-patched = emacs-augmented-igc-patched;
+        packages.demacs-master = emacs-augmented-master;
+        packages.demacs-master-patched = emacs-augmented-master-patched;
+        
+        # Default is IGC for backward compatibility
+        packages.demacs = emacs-augmented-igc;
+        packages.default = packages.demacs;
+
+        # ============================================================================
+        # App Outputs
+        # ============================================================================
+
+        mkApp = name: drv: flake-utils.lib.mkApp {
+          inherit drv;
+          name = "demacs-${name}";
           exePath = "/bin/emacs";
         };
-        packages.default = packages.demacs;
+
+        apps.demacs-igc = mkApp "igc" packages.demacs-igc;
+        apps.demacs-igc-patched = mkApp "igc-patched" packages.demacs-igc-patched;
+        apps.demacs-master = mkApp "master" packages.demacs-master;
+        apps.demacs-master-patched = mkApp "master-patched" packages.demacs-master-patched;
+        apps.demacs = apps.demacs-igc;
         apps.default = apps.demacs;
       }
     );

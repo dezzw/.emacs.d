@@ -89,13 +89,11 @@ jobs:
 
       - name: Build demacs-${{ matrix.version }}
         id: build
-        continue-on-error: true
         run: |
           nix build .#demacs-${{ matrix.version }} --print-build-logs
-          echo "build_success=true" >> $GITHUB_OUTPUT
 
       - name: Push build to Cachix
-        if: steps.build.outcome == 'success'
+        if: success()
         run: |
           nix build .#demacs-${{ matrix.version }} --no-link --print-out-paths | \
           cachix push demacs

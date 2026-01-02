@@ -88,6 +88,10 @@
       url = "github:nineluj/agent-review";
       flake = false;
     };
+    tree-sitter-clojure = {
+      url = "github:sogaiu/tree-sitter-clojure?ref=unstable-20250526";
+      flake = false;
+    };
   };
   outputs =
     inputs@{
@@ -197,6 +201,23 @@
         # ============================================================================
         # Package Definitions
         # ============================================================================
+
+        # Override tree-sitter clojure grammar
+        treesit-grammars-with-clojure-override = 
+          let
+            clojure-grammar = pkgs.tree-sitter.buildGrammar {
+              language = "clojure";
+              version = "unstable-${timestampToDate inputs.tree-sitter-clojure.lastModified}";
+              src = inputs.tree-sitter-clojure;
+            };
+          in
+          pkgs.emacsPackages.treesit-grammars.with-grammars (grammars:
+            let
+              grammarList = builtins.attrValues grammars;
+              filtered = builtins.filter (g: g.language or "" != "clojure") grammarList;
+            in
+            filtered ++ [ clojure-grammar ]
+          );
 
         # Custom package derivations (shared across all Emacs versions)
         customPackages = epkgs: {
@@ -348,7 +369,7 @@
           # Native compiled packages
           vterm
           pdf-tools
-          pkgs.emacsPackages.treesit-grammars.with-all-grammars
+          treesit-grammars-with-clojure-override
 
           # Custom GitHub packages
           customPkgs.agent-shell-sidebar

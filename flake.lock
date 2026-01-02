@@ -330,7 +330,8 @@
         "panel": "panel",
         "setup-el": "setup-el",
         "tdlib": "tdlib",
-        "telega": "telega"
+        "telega": "telega",
+        "tree-sitter-clojure": "tree-sitter-clojure"
       }
     },
     "setup-el": {
@@ -393,6 +394,23 @@
       "original": {
         "owner": "LuciusChen",
         "repo": "telega.el",
+        "type": "github"
+      }
+    },
+    "tree-sitter-clojure": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1748266291,
+        "narHash": "sha256-+Miraf8kI8rZg7SYdfNM+mb78k9xNDUKYg3VTFzUHMo=",
+        "owner": "sogaiu",
+        "repo": "tree-sitter-clojure",
+        "rev": "69070d2e4563f8f58c7f57b0c8e093a08d7a5814",
+        "type": "github"
+      },
+      "original": {
+        "owner": "sogaiu",
+        "ref": "unstable-20250526",
+        "repo": "tree-sitter-clojure",
         "type": "github"
       }
     }

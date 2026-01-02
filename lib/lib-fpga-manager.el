@@ -182,8 +182,8 @@ Returns a list with section headers and entries."
 
 ;;; Script Execution
 
-(defun fpga-manager--run-script (args)
-  "Run linuxPC_Lock.py with ARGS and return output."
+(defun fpga-manager--run-script-sync (args)
+  "Run linuxPC_Lock.py with ARGS synchronously and return output."
   (let* ((proj (project-current))
          (proj-root (if proj (project-root proj) default-directory))
          (fpga-dir (expand-file-name "fpga" proj-root))
@@ -193,19 +193,30 @@ Returns a list with section headers and entries."
                       args)))
     (shell-command-to-string cmd)))
 
-(defun fpga-manager--show-command-output (cmd output)
-  "Show command CMD OUTPUT in a buffer."
-  (let ((buffer (get-buffer-create "*FPGA Manager Output*")))
-    (with-current-buffer buffer
-      (let ((inhibit-read-only t))
-        (erase-buffer)
-        (insert (format "Command: %s\n\n" cmd))
-        (insert output)
-        (goto-char (point-min))
-        (special-mode)))
-    (display-buffer buffer '((display-buffer-reuse-window
-                              display-buffer-below-selected)
-                             (inhibit-same-window . t)))))
+(defun fpga-manager--run-script-compile (args &optional on-success)
+  "Run linuxPC_Lock.py with ARGS in compilation mode.
+If ON-SUCCESS is provided, it will be called after successful compilation."
+  (let* ((proj (project-current))
+         (proj-root (if proj (project-root proj) default-directory))
+         (fpga-dir (expand-file-name "fpga" proj-root))
+         (default-directory fpga-dir)
+         (cmd (format "%s linuxPC_Lock.py %s"
+                      fpga-manager-python-command
+                      args))
+         (compilation-buffer-name-function
+          (lambda (_mode) "*FPGA Manager Output*")))
+    (when on-success
+      ;; Set up a one-time hook to run on-success after compilation finishes
+      (let ((hook-fn (lambda (buffer result)
+                       (when (and (string-match "^finished" result)
+                                  (equal (buffer-name buffer) "*FPGA Manager Output*"))
+                         (funcall on-success)))))
+        (add-hook 'compilation-finish-functions hook-fn)
+        ;; Remove the hook after it runs once
+        (run-with-timer 0.1 nil
+                        (lambda ()
+                          (remove-hook 'compilation-finish-functions hook-fn)))))
+    (compile cmd)))
 
 ;;; Interactive Commands - Lock/Unlock
 
@@ -217,11 +228,13 @@ Returns a list with section headers and entries."
             (status-buffer (current-buffer)))
         (if (fpga-manager--is-locked-p entry)
             (message "%s is already locked" env)
-          (let ((output (fpga-manager--run-script (format "-p %s -l 1" env))))
-            (fpga-manager--show-command-output (format "Lock %s" env) output)
-            (sit-for 1)
-            (with-current-buffer status-buffer
-              (fpga-manager-refresh)))))
+          (message "Locking %s..." env)
+          (fpga-manager--run-script-compile
+           (format "-p %s -l 1" env)
+           (lambda ()
+             (when (buffer-live-p status-buffer)
+               (with-current-buffer status-buffer
+                 (fpga-manager-refresh)))))))
     (message "No ENV found at point")))
 
 (defun fpga-manager-unlock ()
@@ -232,11 +245,13 @@ Returns a list with section headers and entries."
             (status-buffer (current-buffer)))
         (if (not (fpga-manager--is-locked-p entry))
             (message "%s is not locked" env)
-          (let ((output (fpga-manager--run-script (format "-p %s -l 0" env))))
-            (fpga-manager--show-command-output (format "Unlock %s" env) output)
-            (sit-for 1)
-            (with-current-buffer status-buffer
-              (fpga-manager-refresh)))))
+          (message "Unlocking %s..." env)
+          (fpga-manager--run-script-compile
+           (format "-p %s -l 0" env)
+           (lambda ()
+             (when (buffer-live-p status-buffer)
+               (with-current-buffer status-buffer
+                 (fpga-manager-refresh)))))))
     (message "No ENV found at point")))
 
 (defun fpga-manager-force-unlock ()
@@ -245,11 +260,13 @@ Returns a list with section headers and entries."
   (if-let* ((env (fpga-manager--get-env-at-point)))
       (let ((status-buffer (current-buffer)))
         (when (yes-or-no-p (format "Force unlock %s? " env))
-          (let ((output (fpga-manager--run-script (format "-p %s -l 2" env))))
-            (fpga-manager--show-command-output (format "Force unlock %s" env) output)
-            (sit-for 1)
-            (with-current-buffer status-buffer
-              (fpga-manager-refresh)))))
+          (message "Force unlocking %s..." env)
+          (fpga-manager--run-script-compile
+           (format "-p %s -l 2" env)
+           (lambda ()
+             (when (buffer-live-p status-buffer)
+               (with-current-buffer status-buffer
+                 (fpga-manager-refresh)))))))
     (message "No ENV found at point")))
 
 ;;; Interactive Commands - View
@@ -258,7 +275,7 @@ Returns a list with section headers and entries."
   "Refresh the FPGA lock table."
   (interactive)
   (message "Fetching FPGA status...")
-  (let* ((output (fpga-manager--run-script ""))
+  (let* ((output (fpga-manager--run-script-sync ""))
          (entries (fpga-manager--parse-output output))
          (categorized (fpga-manager--categorize-entries entries)))
     (setq fpga-manager--entries entries)
@@ -298,6 +315,33 @@ Returns a list with section headers and entries."
 
 ;;; Test Functions
 
+(defvar fpga-manager-test-type 'bitstream
+  "Current test type: 'bitstream or 'webapp.")
+
+(defvar fpga-manager-test-repeat-history nil
+  "History for repeat count argument.")
+
+(defvar fpga-manager-test-log-level-history nil
+  "History for log level argument.")
+
+(defvar fpga-manager-test-custom-args-history nil
+  "History for custom arguments.")
+
+(defvar fpga-manager-test-local-tags-history nil
+  "History for local tags argument.")
+
+(defvar fpga-manager-webapp-protocol-history '("https")
+  "History for webapp protocol argument.")
+
+(defvar fpga-manager-webapp-fqdn-history nil
+  "History for webapp FQDN argument.")
+
+(defvar fpga-manager-webapp-browser-history '("chrome")
+  "History for webapp browser argument.")
+
+(defvar fpga-manager-webapp-test-ids-history '("webapp")
+  "History for webapp test IDs argument.")
+
 (defun fpga-manager-find-toplevel-script ()
   "Find toplevel.py script in current directory tree."
   (if-let* ((search-path (locate-dominating-file default-directory "bitstreams"))
@@ -306,9 +350,30 @@ Returns a list with section headers and entries."
       script-path
     (error "Could not find bitstreams/toplevel.py in directory tree")))
 
-(defun fpga-manager-run-toplevel (&optional args)
-  "Run toplevel.py with ARGS for the CLI at point."
+(defun fpga-manager-find-webapp-script ()
+  "Find webapp/main.py script in current directory tree."
+  (if-let* ((search-path (locate-dominating-file default-directory "webapp"))
+            (script-path (expand-file-name "webapp/main.py" search-path))
+            ((file-exists-p script-path)))
+      script-path
+    (error "Could not find webapp/main.py in directory tree")))
+
+(defun fpga-manager-toggle-test-type ()
+  "Toggle between bitstream and webapp test types."
+  (interactive)
+  (setq fpga-manager-test-type
+        (if (eq fpga-manager-test-type 'bitstream) 'webapp 'bitstream))
+  (message "Test type: %s" fpga-manager-test-type))
+
+(defun fpga-manager-run-test (&optional args)
+  "Run test (bitstream or webapp) with ARGS."
   (interactive (list (transient-args 'fpga-manager-test-menu)))
+  (if (eq fpga-manager-test-type 'bitstream)
+      (fpga-manager-run-bitstream-test args)
+    (fpga-manager-run-webapp-test args)))
+
+(defun fpga-manager-run-bitstream-test (args)
+  "Run bitstream toplevel.py test with ARGS for the CLI at point."
   (if-let* ((env (fpga-manager--get-env-at-point)))
       (let* ((status-buffer (current-buffer))
              (script-path (fpga-manager-find-toplevel-script))
@@ -319,21 +384,10 @@ Returns a list with section headers and entries."
                           (file-name-nondirectory script-path)
                           env
                           args-string))
-             (output-buffer (get-buffer-create "*FPGA Test Output*"))
-             (status-window (selected-window)))
-        (message "Running test: %s" cmd)
-        (with-current-buffer output-buffer
-          (let ((inhibit-read-only t))
-            (erase-buffer)
-            (insert (format "Running: %s\n" cmd))
-            (insert (format "In directory: %s\n\n" default-directory))
-            (insert "Test started...\n")
-            (special-mode)))
-        (display-buffer output-buffer '((display-buffer-reuse-window
-                                         display-buffer-below-selected)
-                                        (inhibit-same-window . t)))
-        (select-window status-window)
-        (async-shell-command cmd output-buffer)
+             (compilation-buffer-name-function
+              (lambda (_mode) "*FPGA Test Output*")))
+        (message "Running bitstream test: %s" cmd)
+        (compile cmd)
         (run-with-timer 2 nil
                         (lambda ()
                           (when (buffer-live-p status-buffer)
@@ -341,22 +395,148 @@ Returns a list with section headers and entries."
                               (fpga-manager-refresh))))))
     (message "No ENV found at point")))
 
+(defun fpga-manager-run-webapp-test (args)
+  "Run webapp main.py test with ARGS."
+  (let* ((script-path (fpga-manager-find-webapp-script))
+         (default-directory (file-name-directory script-path))
+         ;; Parse args: extract protocol, fqdn, test-ids, and other flags
+         (protocol nil)
+         (fqdn nil)
+         (test-ids nil)
+         (browser nil)
+         (repeat nil)
+         (delay nil)
+         (remaining-args '()))
+    
+    ;; Parse the args list
+    (let ((args-list (if (listp args) args (list args))))
+      (while args-list
+        (let ((arg (car args-list)))
+          (cond
+           ((string-prefix-p "--protocol=" arg)
+            (setq protocol (substring arg 11)))
+           ((string-prefix-p "--fqdn=" arg)
+            (setq fqdn (substring arg 7)))
+           ((string-prefix-p "--test-ids=" arg)
+            (setq test-ids (substring arg 11)))
+           ((string-prefix-p "--browser=" arg)
+            (setq browser (substring arg 10)))
+           ((string-prefix-p "-r " arg)
+            (setq repeat (substring arg 3)))
+           ((string= arg "-d")
+            (setq delay t))
+           (t
+            (push arg remaining-args))))
+        (setq args-list (cdr args-list))))
+    
+    ;; Validate required arguments
+    (unless protocol
+      (error "Protocol is required for webapp tests"))
+    (unless fqdn
+      (error "FQDN is required for webapp tests"))
+    
+    ;; Build command
+    (let* ((cmd-parts (list fpga-manager-python-command
+                           (file-name-nondirectory script-path)
+                           protocol
+                           fqdn))
+           (cmd-parts (if delay
+                          (append cmd-parts '("-d"))
+                        cmd-parts))
+           (cmd-parts (if repeat
+                          (append cmd-parts (list "--repeat" repeat))
+                        cmd-parts))
+           (cmd-parts (if browser
+                          (append cmd-parts (list "--browser" browser))
+                        cmd-parts))
+           (cmd-parts (append cmd-parts (nreverse remaining-args)))
+           (cmd-parts (append cmd-parts (list (or test-ids "webapp"))))
+           (cmd (string-join cmd-parts " "))
+           (compilation-buffer-name-function
+            (lambda (_mode) "*FPGA Test Output*")))
+      (message "Running webapp test: %s" cmd)
+      (compile cmd))))
+
 (transient-define-prefix fpga-manager-test-menu ()
   "Transient menu for running FPGA tests."
-  ["FPGA Test Options"
-   ["Switches"
-    ("-d" "Debug mode (skip Build/Burn/Power)" "-d")
-    ("-a" "Admin mode (force restricted CLI)" "-a")]
-   ["Arguments"
-    ("-r" "Repeat count" "-r " :class transient-option :prompt "Repeat: ")
-    ("-l" "Log level" "-l " :class transient-option
-     :choices ("20" "50") :prompt "Level: ")
-    ("-c" "Custom args" "-c " :class transient-option
-     :prompt "Custom (key:value): ")
-    ("-L" "Local tags" "--local " :class transient-option :prompt "Tags: ")]]
+  :value (lambda () (list (format "--test-type=%s" fpga-manager-test-type)))
+  ["Test Type"
+   ("T" 
+    (lambda () (format "Test: %s" (propertize (symbol-name fpga-manager-test-type) 'face 'success)))
+    fpga-manager-toggle-test-type
+    :transient t)]
+  ["Common Options"
+   ["Shared"
+    ("-d" "Debug/Delay mode" "-d")
+    ("-r" "Repeat count" "-r "
+     :class transient-option
+     :prompt "Repeat: "
+     :reader (lambda (prompt _initial-input history)
+               (read-string prompt
+                            (car fpga-manager-test-repeat-history)
+                            'fpga-manager-test-repeat-history)))]]
+  ["Bitstream Options"
+   :if (lambda () (eq fpga-manager-test-type 'bitstream))
+   [""
+    ("-a" "Admin mode (force restricted CLI)" "-a")
+    ("-l" "Log level" "-l "
+     :class transient-option
+     :prompt "Level: "
+     :choices ("20" "50")
+     :reader (lambda (prompt _initial-input history)
+               (completing-read prompt '("20" "50") nil nil
+                                (car fpga-manager-test-log-level-history)
+                                'fpga-manager-test-log-level-history)))
+    ("-c" "Custom args" "-c "
+     :class transient-option
+     :prompt "Custom (key:value): "
+     :reader (lambda (prompt _initial-input history)
+               (read-string prompt
+                            (car fpga-manager-test-custom-args-history)
+                            'fpga-manager-test-custom-args-history)))
+    ("-L" "Local tags" "--local "
+     :class transient-option
+     :prompt "Tags: "
+     :reader (lambda (prompt _initial-input history)
+               (read-string prompt
+                            (car fpga-manager-test-local-tags-history)
+                            'fpga-manager-test-local-tags-history)))]]
+  ["Webapp Options"
+   :if (lambda () (eq fpga-manager-test-type 'webapp))
+   [""
+    ("-p" "Protocol" "--protocol="
+     :class transient-option
+     :prompt "Protocol (http/https): "
+     :choices ("http" "https")
+     :reader (lambda (prompt _initial-input history)
+               (completing-read prompt '("http" "https") nil nil
+                                (car fpga-manager-webapp-protocol-history)
+                                'fpga-manager-webapp-protocol-history)))
+    ("-f" "FQDN" "--fqdn="
+     :class transient-option
+     :prompt "FQDN: "
+     :reader (lambda (prompt _initial-input history)
+               (read-string prompt
+                            (car fpga-manager-webapp-fqdn-history)
+                            'fpga-manager-webapp-fqdn-history)))
+    ("-b" "Browser" "--browser="
+     :class transient-option
+     :prompt "Browser: "
+     :choices ("chrome" "firefox" "safari" "edge")
+     :reader (lambda (prompt _initial-input history)
+               (completing-read prompt '("chrome" "firefox" "safari" "edge") nil nil
+                                (car fpga-manager-webapp-browser-history)
+                                'fpga-manager-webapp-browser-history)))
+    ("-t" "Test IDs" "--test-ids="
+     :class transient-option
+     :prompt "Test IDs (space-separated or 'webapp'): "
+     :reader (lambda (prompt _initial-input history)
+               (read-string prompt
+                            (car fpga-manager-webapp-test-ids-history)
+                            'fpga-manager-webapp-test-ids-history)))]]
   ["Actions"
-   ("RET" "Run test" fpga-manager-run-toplevel)
-   ("r" "Run test" fpga-manager-run-toplevel)
+   ("RET" "Run test" fpga-manager-run-test)
+   ("r" "Run test" fpga-manager-run-test)
    ("q" "Quit" transient-quit-one)])
 
 ;;; Major Mode

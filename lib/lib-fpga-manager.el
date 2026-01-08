@@ -135,7 +135,7 @@ Each entry is (id [env user date reserved motherboard numofcards model])."
 (defun fpga-manager--get-env-at-point ()
   "Get the ENV (CLI*) name from the current row.
 Returns nil if point is on a section header."
-  (when-let ((id (tabulated-list-get-id)))
+  (when-let* ((id (tabulated-list-get-id)))
     (unless (string-prefix-p "SECTION:" id)
       id)))
 
@@ -171,15 +171,15 @@ Returns t if the user field contains the current username."
 
 (defun fpga-manager--add-section (result title entries)
   "Add a section with TITLE and ENTRIES to RESULT.
-Returns the updated RESULT."
+Returns the updated RESULT with section prepended."
   (if (null entries)
       result
-    (append (when result
-              (list (fpga-manager--make-section-header "")))
-            (list (fpga-manager--make-separator)
+    (append (list (fpga-manager--make-separator)
                   (fpga-manager--make-section-header title)
                   (fpga-manager--make-separator))
-            (reverse entries)
+            entries
+            (when result
+              (list (fpga-manager--make-section-header "")))
             result)))
 
 (defun fpga-manager--categorize-entries (entries)
@@ -194,13 +194,13 @@ Returns a list with section headers and entries."
        ((fpga-manager--entry-mine-p entry) (push entry mine))
        ((fpga-manager--entry-locked-p entry) (push entry in-use))
        (t (push entry free))))
-    ;; Build result with sections in order: mine, free, in-use
-    (reverse
+    ;; Build result with sections in order: MY FPGAs, FREE, IN USE
+    ;; We build backwards (last section first) since add-section prepends
+    (fpga-manager--add-section
      (fpga-manager--add-section
-      (fpga-manager--add-section
-       (fpga-manager--add-section nil "  MY FPGAs" mine)
-       "  FREE" free)
-      "  IN USE" in-use))))
+      (fpga-manager--add-section nil "  IN USE" (nreverse in-use))
+      "  FREE" (nreverse free))
+     "  MY FPGAs" (nreverse mine))))
 
 ;;; Script Execution
 
@@ -223,15 +223,13 @@ If ON-SUCCESS is provided, it will be called after successful compilation."
         (compilation-buffer-name-function
          (lambda (_mode) "*FPGA Manager Output*")))
     (when on-success
-      (let ((hook-fn
-             (lambda (buffer result)
-               (when (and (string-match "^finished" result)
-                          (equal (buffer-name buffer) "*FPGA Manager Output*"))
-                 (funcall on-success)))))
-        (add-hook 'compilation-finish-functions hook-fn)
-        (run-with-timer 0.1 nil
-                        (lambda ()
-                          (remove-hook 'compilation-finish-functions hook-fn)))))
+      (letrec ((hook-fn
+                (lambda (buffer result)
+                  (when (equal (buffer-name buffer) "*FPGA Manager Output*")
+                    (remove-hook 'compilation-finish-functions hook-fn)
+                    (when (string-match "^finished" result)
+                      (funcall on-success))))))
+        (add-hook 'compilation-finish-functions hook-fn)))
     (compile (format "%s linuxPC_Lock.py %s" fpga-manager-python-command args))))
 
 ;;; Interactive Commands - Lock/Unlock
@@ -239,7 +237,7 @@ If ON-SUCCESS is provided, it will be called after successful compilation."
 (defun fpga-manager--with-env-at-point (action)
   "Execute ACTION with ENV at point if available.
 ACTION is a function that takes ENV as argument."
-  (if-let ((env (fpga-manager--get-env-at-point)))
+  (if-let* ((env (fpga-manager--get-env-at-point)))
       (funcall action env)
     (message "No ENV found at point")))
 
@@ -450,10 +448,10 @@ Converts \\='-i\\=' to \\='--local\\=' for bitstream tests."
             (converted-args (fpga-manager--convert-bitstream-args args))
             (args-string (string-join converted-args " "))
             (cmd (format "%s %s -p %s %s"
-                        fpga-manager-python-command
-                        (file-name-nondirectory script-path)
-                        env
-                        args-string))
+                         fpga-manager-python-command
+                         (file-name-nondirectory script-path)
+                         env
+                         args-string))
             (compilation-buffer-name-function
              (lambda (_mode) "*FPGA Test Output*")))
        (message "Running bitstream test: %s" cmd)
@@ -476,23 +474,23 @@ Converts \\='-i\\=' to \\='--local\\=' for bitstream tests."
        (unless protocol
          (error "Protocol is required for webapp tests"))
        (let* ((base-parts (list fpga-manager-python-command
-                               (file-name-nondirectory script-path)
-                               protocol
-                               env))
+                                (file-name-nondirectory script-path)
+                                protocol
+                                env))
               (cmd-parts (fpga-manager--build-command-parts
-                         base-parts
-                         (cons (cons 'test-ids
-                                    (or (alist-get 'test-ids parsed) "webapp"))
-                               parsed)))
+                          base-parts
+                          (cons (cons 'test-ids
+                                      (or (alist-get 'test-ids parsed) "webapp"))
+                                parsed)))
               (cmd (if headless
                        (concat "env -u XDG_CURRENT_DESKTOP "
-                              (string-join cmd-parts " "))
+                               (string-join cmd-parts " "))
                      (string-join cmd-parts " ")))
               (compilation-buffer-name-function
                (lambda (_mode) "*FPGA Test Output*")))
          (message "Running webapp test%s: %s"
-                 (if headless " (headless)" "")
-                 cmd)
+                  (if headless " (headless)" "")
+                  cmd)
          (compile cmd))))))
 
 ;;; Transient Test Menu
@@ -523,15 +521,15 @@ Converts \\='-i\\=' to \\='--local\\=' for bitstream tests."
      :prompt "Repeat: "
      :reader (lambda (prompt _initial-input history)
                (read-string prompt
-                           (car fpga-manager-test-repeat-history)
-                           'fpga-manager-test-repeat-history)))
+                            (car fpga-manager-test-repeat-history)
+                            'fpga-manager-test-repeat-history)))
     ("-I" "Test ID" "-i "
      :class transient-option
      :prompt "Test ID: "
      :reader (lambda (prompt _initial-input history)
                (read-string prompt
-                           (car fpga-manager-test-id-history)
-                           'fpga-manager-test-id-history)))]
+                            (car fpga-manager-test-id-history)
+                            'fpga-manager-test-id-history)))]
    ["Bitstream Options"
     :if (lambda () (eq fpga-manager-test-type 'bitstream))
     ("-d" "Debug/Delay mode" "-d")
@@ -542,15 +540,15 @@ Converts \\='-i\\=' to \\='--local\\=' for bitstream tests."
      :choices ("20" "50")
      :reader (lambda (prompt _initial-input history)
                (completing-read prompt '("20" "50") nil nil
-                               (car fpga-manager-test-log-level-history)
-                               'fpga-manager-test-log-level-history)))
+                                (car fpga-manager-test-log-level-history)
+                                'fpga-manager-test-log-level-history)))
     ("-c" "Custom args" "-c "
      :class transient-option
      :prompt "Custom (key:value): "
      :reader (lambda (prompt _initial-input history)
                (read-string prompt
-                           (car fpga-manager-test-custom-args-history)
-                           'fpga-manager-test-custom-args-history)))]
+                            (car fpga-manager-test-custom-args-history)
+                            'fpga-manager-test-custom-args-history)))]
    ["Webapp Options"
     :if (lambda () (eq fpga-manager-test-type 'webapp))
     ("-h" "Headless mode" "--headless")
@@ -560,16 +558,16 @@ Converts \\='-i\\=' to \\='--local\\=' for bitstream tests."
      :choices ("http" "https")
      :reader (lambda (prompt _initial-input history)
                (completing-read prompt '("http" "https") nil nil
-                               (car fpga-manager-webapp-protocol-history)
-                               'fpga-manager-webapp-protocol-history)))
+                                (car fpga-manager-webapp-protocol-history)
+                                'fpga-manager-webapp-protocol-history)))
     ("-b" "Browser" "--browser="
      :class transient-option
      :prompt "Browser: "
      :choices ("chrome" "firefox" "safari" "edge")
      :reader (lambda (prompt _initial-input history)
                (completing-read prompt '("chrome" "firefox" "safari" "edge") nil nil
-                               (car fpga-manager-webapp-browser-history)
-                               'fpga-manager-webapp-browser-history)))]]
+                                (car fpga-manager-webapp-browser-history)
+                                'fpga-manager-webapp-browser-history)))]]
   [["Actions"
     ("RET" "Run test" fpga-manager-run-test)
     ("q" "Quit" transient-quit-one)]])
@@ -636,7 +634,7 @@ Section headers and separators are styled differently."
 If in a project, use project name. Otherwise use default name."
   (if-let* ((proj (project-current))
             (proj-name (file-name-nondirectory
-                       (directory-file-name (project-root proj)))))
+                        (directory-file-name (project-root proj)))))
       (format "*FPGA Manager: %s*" proj-name)
     "*FPGA Manager*"))
 

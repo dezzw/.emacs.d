@@ -131,7 +131,6 @@
 
 
 (setup nerd-icons (:defer (:require nerd-icons)))
-(setup all-the-icons (:defer (:require all-the-icons)))
 
 
 
@@ -163,8 +162,10 @@
              "\\*chatgpt\\*$"
              ;; Terminal emulators
              "\\*vterm\\*$"
+             "\\*.*-vterm\\*$"
              "\\*eat\\*$"
              "\\*eshell\\*$"
+             "\\*.*-eshell\\*$"
              ;; Org mode
              "\\*Org Select\\*$"
              ;; Telegram buffers

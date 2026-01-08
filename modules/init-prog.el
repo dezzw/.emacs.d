@@ -59,6 +59,7 @@
 
 ;; Not support format in region
 (setup apheleia
+  (:hook-into prog-mode)
   (:when-loaded
     (keymap-global-set "C-c C-x C-f" 'apheleia-format-buffer)
     ;; $ brew install isort black google-java-format stylua libxml2
@@ -70,7 +71,7 @@
     (setf (alist-get 'xmllint apheleia-formatters)
           '("xmllint" "--encode" "utf-8" "--format" "-"))
 
-    (setf (alist-get 'python-ts-mode     apheleia-mode-alist) '(isort black))
+    (setf (alist-get 'python-ts-mode     apheleia-mode-alist) 'ruff)
     (setf (alist-get 'my-html-mode       apheleia-mode-alist) 'prettier-html)
     (setf (alist-get 'sql-mode           apheleia-mode-alist) 'pgformatter)
     (setf (alist-get 'xml-mode           apheleia-mode-alist) 'xmllint)
@@ -83,8 +84,8 @@
   (:defer (:require reformatter))
   (:with-mode python-ts-mode
     (reformatter-define ruff-format
-                        :program "ruff"
-                        :args '("format" "-"))))
+      :program "ruff"
+      :args '("format" "-"))))
 
 (setup mmm-mode
   (:with-mode prog-mode (:require mmm-mode))
@@ -128,8 +129,10 @@
 (setup project
   (:when-loaded
     (keymap-global-set "C-c p" (identity project-prefix-map))
+    (:with-map project-prefix-map
+      (:bind "t" project-vterm))
     (setopt project-vc-extra-root-markers
-             '("package.json" "deps.edn" "project.clj" "Package.swift" ".envrc" ".tags" ".project"))))
+            '("package.json" "deps.edn" "project.clj" "Package.swift" ".envrc" ".tags" ".project"))))
 
 ;; js-ts-mode
 (setup js-ts-mode
@@ -171,7 +174,7 @@
 
 
 (setup indent-bars
-  (:with-mode (java-ts-mode python-ts-mode vue-mode typescript-mode typescript-ts-mode js-ts-mode)
+  (:with-mode (java-ts-mode python-ts-mode vue-mode typescript-ts-mode js-ts-mode)
     (:require indent-bars)
     (:hook indent-bars-mode))
   (:when-loaded
@@ -224,7 +227,7 @@
   (:hooks eglot-managed-mode-hook eldoc-box-hover-mode))
 
 (setup eglot
-  (:with-mode (python-ts-mode js-ts-mode typescript-mode tsx-ts-mode vue-mode latex-mode)
+  (:with-mode (python-ts-mode js-ts-mode tsx-ts-mode vue-mode latex-mode)
     (:hook eglot-ensure))
   (:when-loaded
     (:also-load lib-eglot)
@@ -235,20 +238,20 @@
                                                 :documentRangeFormattingProvider))
     (add-to-list 'eglot-server-programs '((python-mode python-ts-mode) . ("rass" "python")))
     (add-to-list 'eglot-server-programs '(my-html-mode . ("vscode-html-language-server" "--stdio")))
-    (add-to-list 'eglot-server-programs `((vue-mode vue-ts-mode typescript-ts-mode typescript-mode) . ("vue-language-server" "--stdio" :initializationOptions ,(vue-eglot-init-options))))
+    (add-to-list 'eglot-server-programs `((vue-mode vue-ts-mode typescript-ts-mode) . ("vue-language-server" "--stdio" :initializationOptions ,(vue-eglot-init-options))))
     (add-to-list 'eglot-server-programs '(js-mode . ("typescript-language-server" "--stdio")))
     (advice-add 'eglot-completion-at-point :around #'cape-wrap-buster)
     (setq-default
-       eglot-workspace-configuration
-       '(:basedpyright.analysis (
-           :typeCheckingMode "off"
-           :diagnosticSeverityOverrides (
-             :reportUnusedCallResult "none"
-           )
-           :inlayHints (
-             :callArgumentNames :json-false
-           )
-         )))
+     eglot-workspace-configuration
+     '(:basedpyright.analysis (
+                               :typeCheckingMode "off"
+                               :diagnosticSeverityOverrides (
+                                                             :reportUnusedCallResult "none"
+                                                             )
+                               :inlayHints (
+                                            :callArgumentNames :json-false
+                                            )
+                               )))
     ;; https://github.com/joaotavora/eglot/discussions/898
     (:with-hook eglot-managed-mode-hook
       (:hook (lambda ()

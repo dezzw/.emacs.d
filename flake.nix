@@ -48,10 +48,7 @@
       url = "github:ginqi7/leetcode-emacs";
       flake = false;
     };
-    monet = {
-      url = "github:stevemolitor/monet";
-      flake = false;
-    };
+
     org-modern-indent = {
       url = "github:jdtsmith/org-modern-indent";
       flake = false;
@@ -128,7 +125,8 @@
           lib.removeSuffix "\n" dateStr;
 
         # Function to apply patches to an Emacs derivation
-        applyPatches = emacs-base: extraPatches:
+        applyPatches =
+          emacs-base: extraPatches:
           emacs-base.overrideAttrs (old: {
             patches = (old.patches or [ ]) ++ extraPatches;
           });
@@ -161,14 +159,14 @@
         # ============================================================================
 
         # IGC patched: Add ImageMagick and custom patches
-        emacs-igc-patched = applyPatches
-          (emacs-igc-base.override { withImageMagick = true; })
-          customPatches;
+        emacs-igc-patched = applyPatches (emacs-igc-base.override {
+          withImageMagick = true;
+        }) customPatches;
 
         # Master patched: Add ImageMagick and custom patches
-        emacs-master-patched = applyPatches
-          (emacs-master-base.override { withImageMagick = true; })
-          customPatches;
+        emacs-master-patched = applyPatches (emacs-master-base.override {
+          withImageMagick = true;
+        }) customPatches;
 
         # ============================================================================
         # Build Dependencies
@@ -185,7 +183,7 @@
           preBuild = (old.preBuild or "") + ''
             export CMAKE_BUILD_PARALLEL_LEVEL=2
           '';
-          makeFlags = (old.makeFlags or []) ++ [ "-j2" ];
+          makeFlags = (old.makeFlags or [ ]) ++ [ "-j2" ];
         });
 
         # Build lsp-proxy Rust binary from HEAD source
@@ -203,7 +201,7 @@
         # ============================================================================
 
         # Override tree-sitter clojure grammar
-        treesit-grammars-with-clojure-override = 
+        treesit-grammars-with-clojure-override =
           let
             clojure-grammar = pkgs.tree-sitter.buildGrammar {
               language = "clojure";
@@ -211,7 +209,8 @@
               src = inputs.tree-sitter-clojure;
             };
           in
-          pkgs.emacsPackages.treesit-grammars.with-grammars (grammars:
+          pkgs.emacsPackages.treesit-grammars.with-grammars (
+            grammars:
             let
               grammarList = builtins.attrValues grammars;
               filtered = builtins.filter (g: g.language or "" != "clojure") grammarList;
@@ -221,285 +220,270 @@
 
         # Custom package derivations (shared across all Emacs versions)
         customPackages = epkgs: {
-                agent-shell-sidebar = epkgs.trivialBuild {
-                  pname = "agent-shell-sidebar";
-                  version = timestampToDate inputs.agent-shell-sidebar.lastModified;
-                  src = inputs.agent-shell-sidebar;
-                  packageRequires = [ epkgs.agent-shell ];
-                };
-                
-                agent-review = epkgs.trivialBuild {
-                  pname = "agent-review";
-                  version = timestampToDate inputs.agent-review.lastModified;
-                  src = inputs.agent-review;
-                  packageRequires = [ epkgs.acp epkgs.agent-shell epkgs.markdown-mode ];
-                };
+          agent-shell-sidebar = epkgs.trivialBuild {
+            pname = "agent-shell-sidebar";
+            version = timestampToDate inputs.agent-shell-sidebar.lastModified;
+            src = inputs.agent-shell-sidebar;
+            packageRequires = [ epkgs.agent-shell ];
+          };
 
-                awesome-tray = epkgs.trivialBuild {
-                  pname = "awesome-tray";
-                  version = timestampToDate inputs.awesome-tray.lastModified;
-                  src = inputs.awesome-tray;
-                };
+          agent-review = epkgs.trivialBuild {
+            pname = "agent-review";
+            version = timestampToDate inputs.agent-review.lastModified;
+            src = inputs.agent-review;
+            packageRequires = [
+              epkgs.acp
+              epkgs.agent-shell
+              epkgs.markdown-mode
+            ];
+          };
 
+          awesome-tray = epkgs.trivialBuild {
+            pname = "awesome-tray";
+            version = timestampToDate inputs.awesome-tray.lastModified;
+            src = inputs.awesome-tray;
+          };
 
-                eglot-x = epkgs.trivialBuild {
-                  pname = "eglot-x";
-                  version = timestampToDate inputs.eglot-x.lastModified;
-                  src = inputs.eglot-x;
-                };
+          eglot-x = epkgs.trivialBuild {
+            pname = "eglot-x";
+            version = timestampToDate inputs.eglot-x.lastModified;
+            src = inputs.eglot-x;
+          };
 
-                emt = epkgs.trivialBuild {
-                  pname = "emt";
-                  version = timestampToDate inputs.emt.lastModified;
-                  src = inputs.emt;
-                };
+          emt = epkgs.trivialBuild {
+            pname = "emt";
+            version = timestampToDate inputs.emt.lastModified;
+            src = inputs.emt;
+          };
 
-                image-slicing = epkgs.trivialBuild {
-                  pname = "image-slicing";
-                  version = timestampToDate inputs.image-slicing.lastModified;
-                  src = inputs.image-slicing;
-                  packageRequires = [ epkgs.f ];
-                };
+          image-slicing = epkgs.trivialBuild {
+            pname = "image-slicing";
+            version = timestampToDate inputs.image-slicing.lastModified;
+            src = inputs.image-slicing;
+            packageRequires = [ epkgs.f ];
+          };
 
-                leetcode-emacs = epkgs.trivialBuild {
-                  pname = "leetcode-emacs";
-                  version = timestampToDate inputs.leetcode-emacs.lastModified;
-                  src = inputs.leetcode-emacs;
-                };
+          leetcode-emacs = epkgs.trivialBuild {
+            pname = "leetcode-emacs";
+            version = timestampToDate inputs.leetcode-emacs.lastModified;
+            src = inputs.leetcode-emacs;
+          };
 
-                monet = epkgs.trivialBuild {
-                  pname = "monet";
-                  version = timestampToDate inputs.monet.lastModified;
-                  src = inputs.monet;
-                  packageRequires = [ epkgs.websocket ];
-                };
+          org-modern-indent = epkgs.trivialBuild {
+            pname = "org-modern-indent";
+            version = timestampToDate inputs.org-modern-indent.lastModified;
+            src = inputs.org-modern-indent;
+          };
 
-                org-modern-indent = epkgs.trivialBuild {
-                  pname = "org-modern-indent";
-                  version = timestampToDate inputs.org-modern-indent.lastModified;
-                  src = inputs.org-modern-indent;
-                };
+          panel = epkgs.trivialBuild {
+            pname = "panel";
+            version = timestampToDate inputs.panel.lastModified;
+            src = inputs.panel;
+            packageRequires = [
+              epkgs.async
+              epkgs.nerd-icons
+            ];
+          };
 
-                panel = epkgs.trivialBuild {
-                  pname = "panel";
-                  version = timestampToDate inputs.panel.lastModified;
-                  src = inputs.panel;
-                  packageRequires = [
-                    epkgs.async
-                    epkgs.nerd-icons
-                  ];
-                };
+          setup = epkgs.trivialBuild {
+            pname = "setup";
+            version = timestampToDate inputs.setup-el.lastModified;
+            src = inputs.setup-el;
+          };
 
-                setup = epkgs.trivialBuild {
-                  pname = "setup";
-                  version = timestampToDate inputs.setup-el.lastModified;
-                  src = inputs.setup-el;
-                };
+          lsp-proxy = epkgs.trivialBuild {
+            pname = "lsp-proxy";
+            version = timestampToDate inputs.lsp-proxy.lastModified;
+            src = inputs.lsp-proxy;
+            # Patch lsp-proxy-core.el to use the Nix-built binary
+            # Add the Nix binary path as the first candidate (highest priority)
+            postPatch = ''
+              substituteInPlace lsp-proxy-core.el \
+                --replace '(list (executable-find exe-name)' \
+                '(list "${emacs-lsp-proxy-binary}/bin/emacs-lsp-proxy" (executable-find exe-name)'
+            '';
+            packageRequires = [
+              epkgs.s
+              epkgs.eldoc
+              epkgs.ht
+              epkgs.dash
+              epkgs.f
+              epkgs.yasnippet
+            ];
+          };
 
-                lsp-proxy = epkgs.trivialBuild {
-                  pname = "lsp-proxy";
-                  version = timestampToDate inputs.lsp-proxy.lastModified;
-                  src = inputs.lsp-proxy;
-                  # Patch lsp-proxy-core.el to use the Nix-built binary
-                  # Add the Nix binary path as the first candidate (highest priority)
-                  postPatch = ''
-                    substituteInPlace lsp-proxy-core.el \
-                      --replace '(list (executable-find exe-name)' \
-                      '(list "${emacs-lsp-proxy-binary}/bin/emacs-lsp-proxy" (executable-find exe-name)'
-                  '';
-                  packageRequires = [
-                    epkgs.s
-                    epkgs.eldoc
-                    epkgs.ht
-                    epkgs.dash
-                    epkgs.f
-                    epkgs.yasnippet
-                  ];
-                };
+          blame-reveal = epkgs.trivialBuild {
+            pname = "blame-reveal";
+            version = timestampToDate inputs.blame-reveal.lastModified;
+            src = inputs.blame-reveal;
+          };
 
-                blame-reveal = epkgs.trivialBuild {
-                  pname = "blame-reveal";
-                  version = timestampToDate inputs.blame-reveal.lastModified;
-                  src = inputs.blame-reveal;
-                };
-
-                telega =
-                  let
-                    version = timestampToDate inputs.telega.lastModified;
-                  in
-                  epkgs.melpaBuild {
-                    pname = "telega";
-                    inherit version;
-                    src = inputs.telega;
-                    packageRequires = [ epkgs.visual-fill-column ];
-                    buildInputs = [
-                      tdlib-head
-                      pkgs.zlib
-                    ];
-                    nativeBuildInputs = [
-                      pkgs.gnumake
-                      pkgs.gcc
-                      pkgs.pkg-config
-                    ];
-                    postPatch = ''
-                      substituteInPlace telega-customize.el \
-                        --replace-fail '(defcustom telega-server-libs-prefix "/usr/local"' \
-                                       '(defcustom telega-server-libs-prefix "${tdlib-head}"'
-                      substituteInPlace telega-customize.el \
-                        --replace-fail '(defcustom telega-server-command "telega-server"' \
-                                       "(defcustom telega-server-command \"$out/share/emacs/site-lisp/elpa/telega-${version}/telega-server\""
-                    '';
-                    preBuild = ''
-                      make -C server clean
-                      make -C server install \
-                        LIBS_PREFIX=${tdlib-head} \
-                        INSTALL_PREFIX=$out/share/emacs/site-lisp/elpa/telega-${version}
-                    '';
-                    recipe = pkgs.writeText "telega-recipe" ''
-                      (telega :repo "LuciusChen/telega.el"
-                              :fetcher github
-                              :files (:defaults "Makefile" "etc" "server" "contrib"))
-                    '';
-                  };
+          telega =
+            let
+              version = timestampToDate inputs.telega.lastModified;
+            in
+            epkgs.melpaBuild {
+              pname = "telega";
+              inherit version;
+              src = inputs.telega;
+              packageRequires = [ epkgs.visual-fill-column ];
+              buildInputs = [
+                tdlib-head
+                pkgs.zlib
+              ];
+              nativeBuildInputs = [
+                pkgs.gnumake
+                pkgs.gcc
+                pkgs.pkg-config
+              ];
+              postPatch = ''
+                substituteInPlace telega-customize.el \
+                  --replace-fail '(defcustom telega-server-libs-prefix "/usr/local"' \
+                                 '(defcustom telega-server-libs-prefix "${tdlib-head}"'
+                substituteInPlace telega-customize.el \
+                  --replace-fail '(defcustom telega-server-command "telega-server"' \
+                                 "(defcustom telega-server-command \"$out/share/emacs/site-lisp/elpa/telega-${version}/telega-server\""
+              '';
+              preBuild = ''
+                make -C server clean
+                make -C server install \
+                  LIBS_PREFIX=${tdlib-head} \
+                  INSTALL_PREFIX=$out/share/emacs/site-lisp/elpa/telega-${version}
+              '';
+              recipe = pkgs.writeText "telega-recipe" ''
+                (telega :repo "LuciusChen/telega.el"
+                        :fetcher github
+                        :files (:defaults "Makefile" "etc" "server" "contrib"))
+              '';
+            };
         };
 
         # Package list (shared across all Emacs versions)
-        packageList = epkgs: customPkgs:
-          with epkgs; [
-          # Native compiled packages
-          vterm
-          pdf-tools
-          treesit-grammars-with-clojure-override
+        packageList =
+          epkgs: customPkgs: with epkgs; [
+            # Native compiled packages
+            vterm
+            pdf-tools
+            treesit-grammars-with-clojure-override
 
-          # Custom GitHub packages
-          customPkgs.agent-shell-sidebar
-          customPkgs.awesome-tray
-          customPkgs.eglot-x
-          customPkgs.emt
-          customPkgs.image-slicing
-          customPkgs.leetcode-emacs
-          customPkgs.monet
-          customPkgs.org-modern-indent
-          customPkgs.panel
-          customPkgs.setup
-          customPkgs.lsp-proxy
-          customPkgs.blame-reveal
-          customPkgs.agent-review
-          customPkgs.telega
+            # Custom GitHub packages
+            customPkgs.agent-shell-sidebar
+            customPkgs.awesome-tray
+            customPkgs.eglot-x
+            customPkgs.emt
+            customPkgs.image-slicing
+            customPkgs.leetcode-emacs
+            customPkgs.org-modern-indent
+            customPkgs.panel
+            customPkgs.setup
+            customPkgs.lsp-proxy
+            customPkgs.blame-reveal
+            customPkgs.agent-review
+            customPkgs.telega
 
-          # MELPA packages - Core
-          eglot-booster
-          eat
-          meow
-          gptel
-          ultra-scroll
-          indent-bars
-          vertico-posframe
-          nov
-          sis
-          plz
-          avy
-          mpv
-          cape
-          wgrep
-          nerd-icons
-          all-the-icons
-          corfu
-          company
-          vundo
-          forge
-          verb
-          elfeed
-          popper
-          embark
-          vertico
-          diredfl
-          separedit
-          cdlatex
-          consult
-          mmm-mode
-          diff-hl
-          goggles
-          web-mode
-          move-dup
-          diminish
-          git-link
-          apheleia
-          ox-pandoc
-          macrostep
-          json-mode
-          orderless
-          kind-icon
-          git-modes
-          ace-pinyin
-          marginalia
-          rainbow-mode
-          prettier-js
-          vterm-toggle
-          language-detection
-          meow-tree-sitter
-          markdown-mode
-          mode-line-bell
-          embark-consult
-          speed-type
-          typescript-mode
-          nerd-icons-dired
-          browse-kill-ring
-          rainbow-delimiters
-          default-text-scale
-          denote
-          nerd-icons-corfu
-          nerd-icons-completion
-          whitespace-cleanup-mode
-          eshell-syntax-highlighting
-          consult-dir
-          dirvish
-          swift-mode
-          color-theme-sanityinc-tomorrow
-          highlight-parentheses
-          yasnippet
+            # MELPA packages - Core
+            eglot-booster
+            eat
+            meow
+            gptel
+            ultra-scroll
+            indent-bars
+            vertico-posframe
+            nov
+            sis
+            plz
+            avy
+            mpv
+            cape
+            nerd-icons
+            corfu
+            company
+            vundo
+            forge
+            verb
+            elfeed
+            popper
+            embark
+            vertico
+            diredfl
+            separedit
+            cdlatex
+            consult
+            mmm-mode
+            diff-hl
+            goggles
+            web-mode
+            move-dup
+            git-link
+            apheleia
+            ox-pandoc
+            macrostep
+            orderless
+            git-modes
+            ace-pinyin
+            marginalia
+            rainbow-mode
+            language-detection
+            meow-tree-sitter
+            markdown-mode
+            mode-line-bell
+            embark-consult
+            speed-type
+            nerd-icons-dired
+            browse-kill-ring
+            rainbow-delimiters
+            default-text-scale
+            denote
+            nerd-icons-corfu
+            nerd-icons-completion
+            whitespace-cleanup-mode
+            eshell-syntax-highlighting
+            consult-dir
+            dirvish
+            swift-mode
+            highlight-parentheses
+            yasnippet
 
-          # MELPA packages - Org-mode
-          org-modern
-          org-appear
-          org-remark
-          org-tidy
-          org-cliplink
-          org-download
-          visual-fill-column
-          valign
-          ob-async
-          denote-org
-          denote-markdown
+            # MELPA packages - Org-mode
+            org-modern
+            org-appear
+            org-remark
+            org-tidy
+            org-cliplink
+            org-download
+            visual-fill-column
+            valign
+            ob-async
+            denote-org
+            denote-markdown
 
-          # MELPA packages - Language support
-          clojure-ts-mode
-          cider
-          babashka
-          neil
-          auctex
-          fennel-mode
-          nix-ts-mode
-          geiser-chez
+            # MELPA packages - Language support
+            clojure-ts-mode
+            cider
+            babashka
+            neil
+            auctex
+            fennel-mode
+            nix-ts-mode
+            geiser-chez
 
-          # MELPA packages - Utilities
-          zoom
-          activities
-          citre
-          jinx
-          envrc
-          helpful
-          consult-notes
-          agent-shell
-          reformatter
-          flymake-ruff
-          eldoc-box
-          undo-fu
-          undo-fu-session
+            # MELPA packages - Utilities
+            zoom
+            activities
+            citre
+            jinx
+            envrc
+            helpful
+            consult-notes
+            agent-shell
+            reformatter
+            eldoc-box
+            undo-fu
+            undo-fu-session
 
-          jira
+            jira
 
-          keyfreq
+            keyfreq
           ];
 
         # ============================================================================
@@ -507,16 +491,16 @@
         # ============================================================================
 
         # Function to build emacs-augmented with a given emacs-base
-        buildEmacsAugmented = emacs-base: (
-          (pkgs.emacsPackagesFor emacs-base).emacsWithPackages (
+        buildEmacsAugmented =
+          emacs-base:
+          ((pkgs.emacsPackagesFor emacs-base).emacsWithPackages (
             epkgs:
             with epkgs;
             let
               customPkgs = customPackages epkgs;
             in
             packageList epkgs customPkgs
-          )
-        );
+          ));
 
         # ============================================================================
         # Build All Versions
@@ -536,7 +520,7 @@
         packages.demacs-igc-patched = emacs-augmented-igc-patched;
         packages.demacs-master = emacs-augmented-master;
         packages.demacs-master-patched = emacs-augmented-master-patched;
-        
+
         # Default is IGC for backward compatibility
         packages.demacs = emacs-augmented-igc;
         packages.default = packages.demacs;
@@ -545,11 +529,13 @@
         # App Outputs
         # ============================================================================
 
-        mkApp = name: drv: flake-utils.lib.mkApp {
-          inherit drv;
-          name = "demacs-${name}";
-          exePath = "/bin/emacs";
-        };
+        mkApp =
+          name: drv:
+          flake-utils.lib.mkApp {
+            inherit drv;
+            name = "demacs-${name}";
+            exePath = "/bin/emacs";
+          };
 
         apps.demacs-igc = mkApp "igc" packages.demacs-igc;
         apps.demacs-igc-patched = mkApp "igc-patched" packages.demacs-igc-patched;

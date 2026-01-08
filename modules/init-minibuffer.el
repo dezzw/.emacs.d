@@ -127,12 +127,6 @@
   (:when-loaded
     (marginalia-mode)))
 
-(setup wgrep
-  (:with-map grep-mode-map
-    (:bind "e" wgrep-change-to-wgrep-mode
-           "C-x C-q" wgrep-change-to-wgrep-mode
-           "C-c C-c" wgrep-finish-edit)))
-
 (setup nerd-icons-completion
   (:load-after vertico)
   (:when-loaded (nerd-icons-completion-mode)))

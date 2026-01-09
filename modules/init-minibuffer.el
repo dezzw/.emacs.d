@@ -71,7 +71,7 @@
     (keymap-global-set "C-c f l" 'consult-line)
     (keymap-global-set "C-c f i" 'consult-imenu)
     (keymap-global-set "C-c f f" 'consult-fd)
-    (keymap-global-set "C-c f r" 'consult-ripgrep)
+    (keymap-global-set "C-c f r" 'consult-ripfd)
     (keymap-global-set "C-c f g" 'consult-goto-line)
     (keymap-global-set "C-c f p" 'consult-project-buffer)
     (keymap-global-set "C-c f b" 'consult-buffer)

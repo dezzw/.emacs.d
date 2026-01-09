@@ -16,8 +16,8 @@
   (keymap-global-set "M-`" 'ns-next-frame))
 
 (setup (:only-if (and (display-graphic-p)))
-   (:require lib-env)
-   (+load-env-file))
+  (:require lib-env)
+  (+load-env-file))
 
 (setup emt
   (:defer (:require emt))
@@ -25,6 +25,10 @@
     (keymap-global-set "M-f" 'emt-forward-word)
     (keymap-global-set "M-b" 'emt-backward-word)
     (emt-ensure)))
+
+;; Open files with macOS default browser
+(with-eval-after-load 'org
+  (setcdr (assq t org-file-apps-gnu) 'browse-url-default-macosx-browser))
 
 (provide 'init-mac)
 ;;; init-mac.el ends here

@@ -67,21 +67,5 @@ See `advice-add' for more details."
   :repeatable t
   :signature '(FUNC ...))
 
-(setup-define :set-font
-  (lambda (font)
-    `(add-hook ',(setup-get 'hook)
-               (lambda ()
-                 (let ((face-name (intern (format "%s-font-face" ',(setup-get 'mode)))))
-                   (unless (facep face-name)
-                     (make-face face-name))
-                   (set-face-attribute face-name nil :font ,font)
-                   (setq buffer-face-mode-face face-name)
-                   (buffer-face-mode)))))
-  :documentation "Set the font for the current mode.
-This will create a unique face for the mode and set the buffer
-font to FONT using that face."
-  :debug '(form)
-  :repeatable t)
-
 (provide 'init-setup)
 ;;; init-setup.el ends here

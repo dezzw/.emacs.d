@@ -70,8 +70,6 @@
                            ("Operator" "operator")
                            ("TypeParameter" "type-parameter")
                            (_ (downcase kind-string))))))
-            ;; Debug: uncomment next line to see the conversion
-            (message "lsp-proxy kind: %S -> %S" kind-string result)
             result)))
       ;; Remove old advice if it exists, then add the new one
       (advice-remove 'lsp-proxy--candidate-kind #'lsp-proxy--candidate-kind-normalize)

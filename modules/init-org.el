@@ -7,8 +7,8 @@
   (keymap-global-set "C-c L" 'org-store-link)
   (keymap-global-set "C-c C-o" 'org-open-at-point)
   (keymap-global-set "C-M-<up>" 'org-up-element)
-           ;; 一般这个函数都是在 org 启动后调用，如果 org 没有启动则会报错。
-           ;; Wrong type argument: commandp, dired-copy-images-links
+  ;; 一般这个函数都是在 org 启动后调用，如果 org 没有启动则会报错。
+  ;; Wrong type argument: commandp, dired-copy-images-links
   (keymap-global-set "C-c n m" 'dired-copy-images-links)
   (:when-loaded
     (:also-load lib-org)
@@ -55,7 +55,6 @@
      ;; Allow refile to create parent tasks with confirmation
      org-refile-allow-creating-parent-nodes 'confirm
      ;; Targets start with the file name - allows creating level 1 tasks
-     ;; org-refile-use-outline-path (quote file))
      org-refile-use-outline-path 'file
      org-outline-path-complete-in-steps nil
      ;; archive

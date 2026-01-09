@@ -3,18 +3,18 @@
 ;;; Code:
 
 (setup telega
-  ;; @LawxenceX
-  ;; telega 中 telega-prefix-map 定义的是 defvar，
-  ;; 需要转成 defun，即 defalias。
-  ;; defun 宏展开其实也是 defalias 包裹了一个 lambda。
-  ;; (defalias 'telega-prefix-map telega-prefix-map)
-  ;; (keymap-global-set "C-c t" 'telega-prefix-map)
-  ;;
-  ;; @Eli
-  ;; :bind-into 里面用 :ensure 规定了 func`，直接传的话就会给你加 #'。
-  ;; 改成 (identity xxx-prefix-map) 即可
+  ;; Use (identity telega-prefix-map) since setup.el adds #' to functions
   (keymap-global-set "C-c t" (identity telega-prefix-map))
   (:when-loaded
+    (:also-load telega-url-shorten
+                telega-bridge-bot
+                telega-mnz
+                lib-telega
+                cl-lib
+                telega-notifications
+                language-detection)
+
+    ;;;; Keybindings
     (:with-map telega-prefix-map
       (:bind
        "p" telega-chatbuf-filter-search
@@ -22,23 +22,13 @@
        "m" telega-describe-chat-members
        "h" telega-notifications-history
        "x" telega-chatbuf-thread-cancel
-       ;; quickly opens a Telegram message link from the clipboard
        "o" (lambda () (interactive) (browse-url (current-kill 0)))))
     (:with-map telega-msg-button-map
       (:bind
        "C" +telega-save-file-to-clipboard
        "s" +telega-msg-save-to-cloud-copyleft))
-    (:also-load telega-url-shorten
-                telega-bridge-bot
-                telega-mnz
-                lib-telega
-                cl-lib
-                telega-notifications
-                ;; If language-detection is available,
-                ;; then laguage could be detected automatically
-                ;; for code blocks without language explicitly specified.
-                language-detection)
-    ;; palettes 根据使用主题的配色去置换
+
+    ;;;; Theme Palettes
     (setq telega-builtin-palettes-alist
           '((light
              ((:outline "#b4637a") (:foreground "#b4637a") (:background "#d1c7c7"))
@@ -56,6 +46,7 @@
              ((:outline "#81a2be") (:foreground "#81a2be") (:background "#234242"))
              ((:outline "#9ccfd8") (:foreground "#9ccfd8") (:background "#1e262e"))
              ((:outline "#ebbcba") (:foreground "#ebbcba") (:background "#470528")))))
+    ;;;; General Settings
     (setopt
      telega-autoplay-mode t
      telega-notifications-mode t
@@ -63,18 +54,14 @@
      telega-notifications-msg-temex '(and (not outgoing)
                                           (not (chat (or (type channel))))
                                           (contains "dape\\|jdtls\\|eglot\\|meow\\|[eE]macs\\|telega\\|@wpcdes"))
-     ;; telega-msg-heading-with-date-and-status t
-     ;; telega-debug t
-     ;; telega-server-verbosity 4
-     ;; adjust the size for sticker
      telega-open-file-function 'org-open-file
      telega-chat-fill-column 90
      telega-sticker-size '(6 . 24)
-     ;; 替代两行头像，防止头像因为字符高度不统一裂开。
-     telega-avatar-workaround-gaps-for (when (display-graphic-p) '(return t))
-     ;; 以下都是 telega-symbols-emojify 中的 telega-symbol
-     ;; telega-symbol
-     ;; remove iterm from `telega-symbols-emojify`
+     telega-avatar-workaround-gaps-for (when (display-graphic-p) '(return t)))
+
+    ;;;; Symbols & Icons
+    (setopt
+     ;; Remove items from telega-symbols-emojify to use custom symbols
      telega-symbols-emojify
      (cl-reduce (lambda (emojify key)
                   (assq-delete-all key emojify))
@@ -94,40 +81,29 @@
      telega-symbol-heavy-checkmark (nerd-icons-codicon "nf-cod-check_all")
      telega-translate-to-language-by-default "zh"
      telega-msg-save-dir "~/Downloads"
-     telega-chat-input-markups '("markdown2" "org")
+     telega-chat-input-markups '("markdown2" "org"))
+
+    ;;;; URL Shortening
+    (setopt
      telega-url-shorten-regexps
-     ;; telega-url-shorten
      (list `(too-long-link
              :regexp "^\\(https?://\\)\\(.\\{55\\}\\).*?$"
              :symbol ,(nerd-icons-faicon "nf-fa-link")
-             :replace " \\1\\2..."))
-     ;; telega-root
-     ;; telega-root-default-view-function 'telega-view-folders
+             :replace " \\1\\2...")))
+
+    ;;;; Root Buffer
+    (setopt
      telega-root-keep-cursor 'track
      telega-root-show-avatars nil
      telega-root-buffer-name "*Telega Root*"
-     ;; remove chat folder icons
-     telega-chat-folders-insexp (lambda () nil)
+     telega-chat-folders-insexp (lambda () nil) ; remove chat folder icons
      telega-filters-custom nil
-     telega-root-fill-column 70 ; fill-column
-     telega-filter-custom-show-folders nil
-     ;; telega-bridge-bot
-     ;; 获取永久性的 access token
-     ;; #+begin_src verb :wrap src ob-verb-response
-     ;; POST https://matrix-client.matrix.org/_matrix/client/r0/login
-     ;; Content-Type: application/json
+     telega-root-fill-column 70
+     telega-filter-custom-show-folders nil)
 
-     ;; {
-     ;;   "type": "m.login.password",
-     ;;   "identifier": {"type": "m.id.user","user": "<username>"},
-     ;;   "password": "<password>",
-     ;;   "refresh_token": false
-     ;; }
-     ;; #+end_src
+    ;;;; Bridge Bot (Matrix integration)
+    (setopt
      telega-bridge-bot-bridge-info-plist
-     ;; telega 中在 Telega Root 对应的群组上 i 键查看 -1001773572820 和 6332621450
-     ;; chat-id 由 Room Settings -> Advanced -> Internal room ID 得来
-     ;; access token 是在 Help & About 当中，每次新设备加入似乎会自动刷新，因此需要更新 .password。
      '(-1001773572820                ; @emacs_china
        (6332621450                   ; @yamatrix_bridge_bot
         (:chat-id "!RJop14SURbXkiNbXJVEcblueYoxsvL16NxF_LdnfIH8" :type :matrix))
@@ -149,11 +125,12 @@
        -1001179606678
        (5296957089                   ; @nichi_matrix_bot
         (:chat-id "!2KhbxzkrlqGS6zMD:nichi.co" :type :matrix))))
-    ;; ignore messages from blocked senders (users or chats)
+
+    ;;;; Message Filtering
     (:with-hook telega-msg-ignore-predicates
       (:hook (telega-match-gen-predicate 'msg '(sender is-blocked))))
 
-    ;; telega-notifications
+    ;;;; Tab Bar Integration
     (:with-hook telega-connection-state-hook (:hook +tab-bar-telega-icon-update))
     (:with-hook telega-kill-hook (:hook +tab-bar-telega-icon-update))
     (:advice telega--on-updateUnreadChatCount :after #'+tab-bar-telega-icon-update)
@@ -161,21 +138,18 @@
     (:advice telega--on-updateChatUnreadReactionCount :after #'+tab-bar-telega-icon-update)
     (:advice telega-msg-observable-p :after  #'+tab-bar-telega-icon-update)
 
+    ;;;; Mode Hooks
     (:with-mode telega-chat-mode
       (:require company)
       (:hook +telega-completion-setup)
       (:hook (lambda () (electric-pair-local-mode -1))))
     (:with-mode telega-image-mode (:hook image-transform-fit-to-window))
-    ;; telega-url-shorten
+
+    ;;;; Global Modes
     (global-telega-url-shorten-mode 1)
-    ;; telega-mnz
     (global-telega-mnz-mode 1)
 
-    ;; Opening files using external programs
-    (when *is-mac*
-        (progn
-          (setcdr (assq t org-file-apps-gnu) 'browse-url-default-macosx-browser)
-          (setcdr (assq t org-file-apps-gnu) 'browse-url-xdg-open)))))
+    ))
 
 
 (provide 'init-social)

@@ -85,6 +85,10 @@
       url = "github:nineluj/agent-review";
       flake = false;
     };
+    consult-ripfd = {
+      url = "github:jdtsmith/consult-ripfd";
+      flake = false;
+    };
     tree-sitter-clojure = {
       url = "github:sogaiu/tree-sitter-clojure?ref=unstable-20250526";
       flake = false;
@@ -242,6 +246,13 @@
             pname = "awesome-tray";
             version = timestampToDate inputs.awesome-tray.lastModified;
             src = inputs.awesome-tray;
+          };
+
+          consult-ripfd = epkgs.trivialBuild {
+            pname = "consult-ripfd";
+            version = timestampToDate inputs.consult-ripfd.lastModified;
+            src = inputs.consult-ripfd;
+            packageRequires = [ epkgs.consult ];
           };
 
           eglot-x = epkgs.trivialBuild {

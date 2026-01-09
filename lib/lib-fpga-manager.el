@@ -409,23 +409,26 @@ Converts \\='-i\\=' to \\='--local\\=' for bitstream tests."
           (if (listp args) args (list args))))
 
 (defun fpga-manager--build-command-parts (base-parts parsed-args)
-  "Build command parts list from BASE-PARTS and PARSED-ARGS alist."
+  "Build command parts list from BASE-PARTS and PARSED-ARGS alist.
+Test IDs must come before --browser to avoid argument parsing issues."
   (let* ((parts base-parts)
          (delay (alist-get 'delay parsed-args))
          (repeat (alist-get 'repeat parsed-args))
          (browser (alist-get 'browser parsed-args))
          (test-ids (alist-get 'test-ids parsed-args))
          (remaining (alist-get 'remaining parsed-args)))
+    ;; Add test IDs first (positional arguments must come before --browser)
+    (when test-ids
+      (setq parts (append parts (list test-ids))))
+    (when remaining
+      (setq parts (append parts remaining)))
+    ;; Now add optional flags
     (when delay
       (setq parts (append parts '("-d"))))
     (when repeat
       (setq parts (append parts (list "--repeat" repeat))))
     (when browser
       (setq parts (append parts (list "--browser" browser))))
-    (when remaining
-      (setq parts (append parts remaining)))
-    (when test-ids
-      (setq parts (append parts (list test-ids))))
     parts))
 
 ;;; Test Execution

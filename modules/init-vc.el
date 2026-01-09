@@ -57,13 +57,8 @@
 (setup magit-log
   (:load-after magit)
   (:when-loaded
-    ;; Set `magit-log-margin' value in :init as many other variables will be
-    ;; dynamically set based on its value when `magit-log' is loaded.
-    ;; (setq magit-log-margin '(t age magit-log-margin-width t 18)) ;Default value
-    ;; Show the commit ages with 1-char time units
-    ;;   minute->m, hour->h, day->d, week->w, month->M, year->Y
-    ;; Also reduce the author column width to 11 as the author name is being
-    ;; abbreviated below.
+    ;; Show commit ages with 1-char time units (m/h/d/w/M/Y)
+    ;; Reduce author column width to 11 as name is abbreviated
     (:option magit-log-margin '(t age-abbreviated magit-log-margin-width :author 11))
     (:advice magit-log-format-margin :filter-args #'+magit-log--abbreviate-author)))
 

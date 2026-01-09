@@ -6,7 +6,7 @@
   '(consult-line
     consult-outline
     consult-git-grep
-    consult-ripgrep))
+    consult-ripfd))
 
 (defvar mcfly-back-commands
   '(self-insert-command
@@ -40,9 +40,9 @@ to call `mcfly-back-to-present`."
     (let ((pre-insert-string (with-minibuffer-selected-window
                                (or (seq-some
                                     (lambda (thing) (thing-at-point thing t))
-				    '(region url symbol))
-				   ;; '(symbol url region sexp))
-			           "No thing at point"))))
+				                    '(region url symbol))
+				                   ;; '(symbol url region sexp))
+			                       "No thing at point"))))
       (save-excursion
         (insert (propertize pre-insert-string 'face 'shadow))))
     (add-hook 'pre-command-hook 'mcfly-back-to-present nil t)))
@@ -56,7 +56,7 @@ off the default preview behavior in Consult for those commands."
      (consult-customize ,@cmds :preview-key "M-P")))
 
 (+no-consult-preview
- consult-ripgrep
+ consult-ripfd
  consult-git-grep consult-grep
  consult-bookmark consult-recent-file
  consult--source-recent-file consult--source-project-recent-file consult--source-bookmark)

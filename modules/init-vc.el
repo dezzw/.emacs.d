@@ -79,11 +79,7 @@
     (:option diff-hl-update-async t)
     (:hooks prog-mode-hook diff-hl-mode
             conf-mode-hook diff-hl-mode
-            dired-mode-hook diff-hl-dired-mode)
-    (:with-map diff-hl-mode-map
-      (:bind "<left-fringe> <mouse-1>" diff-hl-diff-goto-hunk))))
-
-
+            dired-mode-hook diff-hl-dired-mode)))
 
 (setup blame-reveal
   (:defer (:require blame-reveal))

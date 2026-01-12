@@ -81,6 +81,10 @@
       url = "github:jadestrong/lsp-proxy";
       flake = false;
     };
+    symbol-overlay = {
+      url = "github:roife/symbol-overlay";
+      flake = false;
+    };
     agent-review = {
       url = "github:nineluj/agent-review";
       flake = false;
@@ -323,7 +327,14 @@
             ];
           };
 
+          symbol-overlay = epkgs.trivialBuild {
+            pname = "symbol-overlay";
+            version = timestampToDate inputs.symbol-overlay.lastModified;
+            src = inputs.symbol-overlay;
+          };
+
           blame-reveal = epkgs.trivialBuild {
+
             pname = "blame-reveal";
             version = timestampToDate inputs.blame-reveal.lastModified;
             src = inputs.blame-reveal;
@@ -373,128 +384,128 @@
         packageList =
           epkgs: customPkgs: with epkgs; [
             # Native compiled packages
-            vterm
             pdf-tools
             treesit-grammars-with-clojure-override
+            vterm
 
             # Custom GitHub packages
+            customPkgs.agent-review
             customPkgs.agent-shell-sidebar
             customPkgs.awesome-tray
+            customPkgs.blame-reveal
             customPkgs.eglot-x
             customPkgs.emt
             customPkgs.image-slicing
             customPkgs.leetcode-emacs
+            customPkgs.lsp-proxy
             customPkgs.org-modern-indent
             customPkgs.panel
             customPkgs.setup
-            customPkgs.lsp-proxy
-            customPkgs.blame-reveal
-            customPkgs.agent-review
+            customPkgs.symbol-overlay
+            customPkgs.consult-ripfd
             customPkgs.telega
 
             # MELPA packages - Core
-            eglot-booster
-            eat
-            meow
-            gptel
-            ultra-scroll
-            indent-bars
-            vertico-posframe
-            nov
-            sis
-            plz
-            avy
-            mpv
-            cape
-            nerd-icons
-            corfu
-            company
-            vundo
-            forge
-            verb
-            elfeed
-            popper
-            embark
-            vertico
-            diredfl
-            separedit
-            cdlatex
-            consult
-            mmm-mode
-            diff-hl
-            goggles
-            web-mode
-            move-dup
-            git-link
-            apheleia
-            ox-pandoc
-            macrostep
-            orderless
-            git-modes
             ace-pinyin
-            marginalia
-            rainbow-mode
-            language-detection
-            meow-tree-sitter
-            markdown-mode
-            mode-line-bell
-            embark-consult
-            speed-type
-            nerd-icons-dired
+            apheleia
+            avy
             browse-kill-ring
-            rainbow-delimiters
+            cape
+            cdlatex
+            company
+            consult
+            consult-dir
+            corfu
             default-text-scale
             denote
-            nerd-icons-corfu
-            nerd-icons-completion
-            whitespace-cleanup-mode
-            eshell-syntax-highlighting
-            consult-dir
+            diredfl
             dirvish
-            swift-mode
+            diff-hl
+            eat
+            eglot-booster
+            elfeed
+            embark
+            embark-consult
+            eshell-syntax-highlighting
+            forge
+            git-link
+            git-modes
+            goggles
+            gptel
             highlight-parentheses
+            indent-bars
+            language-detection
+            macrostep
+            marginalia
+            markdown-mode
+            meow
+            meow-tree-sitter
+            mmm-mode
+            mode-line-bell
+            move-dup
+            mpv
+            nerd-icons
+            nerd-icons-completion
+            nerd-icons-corfu
+            nerd-icons-dired
+            nov
+            orderless
+            ox-pandoc
+            plz
+            popper
+            rainbow-delimiters
+            rainbow-mode
+            separedit
+            sis
+            speed-type
+            swift-mode
+            ultra-scroll
+            verb
+            vertico
+            vertico-posframe
+            vundo
+            web-mode
+            whitespace-cleanup-mode
             yasnippet
 
             # MELPA packages - Org-mode
-            org-modern
+            denote-markdown
+            denote-org
+            ob-async
             org-appear
-            org-remark
-            org-tidy
             org-cliplink
             org-download
-            visual-fill-column
+            org-modern
+            org-remark
+            org-tidy
             valign
-            ob-async
-            denote-org
-            denote-markdown
+            visual-fill-column
 
             # MELPA packages - Language support
-            clojure-ts-mode
-            cider
-            babashka
-            neil
             auctex
+            babashka
+            cider
+            clojure-ts-mode
             fennel-mode
-            nix-ts-mode
             geiser-chez
+            neil
+            nix-ts-mode
 
             # MELPA packages - Utilities
-            zoom
             activities
+            agent-shell
             citre
-            jinx
+            consult-notes
+            eldoc-box
             envrc
             helpful
-            consult-notes
-            agent-shell
+            jinx
+            jira
+            keyfreq
             reformatter
-            eldoc-box
             undo-fu
             undo-fu-session
-
-            jira
-
-            keyfreq
+            zoom
           ];
 
         # ============================================================================

@@ -329,6 +329,7 @@
         "org-modern-indent": "org-modern-indent",
         "panel": "panel",
         "setup-el": "setup-el",
+        "symbol-overlay": "symbol-overlay",
         "tdlib": "tdlib",
         "telega": "telega",
         "tree-sitter-clojure": "tree-sitter-clojure"
@@ -348,6 +349,22 @@
       "original": {
         "type": "git",
         "url": "https://codeberg.org/pkal/setup.el.git"
+      }
+    },
+    "symbol-overlay": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1734330146,
+        "narHash": "sha256-sYfY+vExSOaEg/uUPwxK8TjodPqH6Bz39NFYsDM0twg=",
+        "owner": "roife",
+        "repo": "symbol-overlay",
+        "rev": "00203ddc4363d906976f7b2153dc8dd6ae78373b",
+        "type": "github"
+      },
+      "original": {
+        "owner": "roife",
+        "repo": "symbol-overlay",
+        "type": "github"
       }
     },
     "systems": {

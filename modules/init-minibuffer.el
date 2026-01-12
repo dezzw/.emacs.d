@@ -67,6 +67,7 @@
 
 (setup consult
   (:defer (:require consult))
+  (:also-load consult-ripfd)
   (:when-loaded
     (keymap-global-set "C-c f l" 'consult-line)
     (keymap-global-set "C-c f i" 'consult-imenu)

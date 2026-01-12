@@ -205,6 +205,27 @@
   (:hook-into text-mode)
   (:option goggles-pulse t))
 
+(setup symbol-overlay
+  (:autoload symbol-overlay-mode
+             symbol-overlay-put
+             symbol-overlay-switch-forward
+             symbol-overlay-switch-backward
+             symbol-overlay-remove-all)
+  (:hook-into prog-mode)
+  (:hook-into yaml-mode)
+  (:option symbol-overlay-temp-highlight-on-region t)
+  (keymap-global-set "C-c s i" #'symbol-overlay-put)
+  (keymap-global-set "C-c s n" #'symbol-overlay-switch-forward)
+  (keymap-global-set "C-c s p" #'symbol-overlay-switch-backward)
+  (keymap-global-set "C-c s c" #'symbol-overlay-remove-all)
+  (:when-loaded
+    (dolist (key '("h" "q" "i"))
+      (define-key symbol-overlay-map (kbd key) nil))
+    (define-key symbol-overlay-map (kbd "R") #'symbol-overlay-query-replace)
+    (define-key symbol-overlay-map (kbd "?") #'symbol-overlay-map-help)
+    (define-key symbol-overlay-map (kbd "c") #'symbol-overlay-put)
+    (define-key symbol-overlay-map (kbd "C") #'symbol-overlay-remove-all)))
+
 (setup speed-type (:defer (:require speed-type)))
 
 (setup ultra-scroll

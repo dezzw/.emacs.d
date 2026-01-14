@@ -42,15 +42,15 @@
 
 (setup (:require keyfreq)
   (setq keyfreq-excluded-commands
-      '(self-insert-command
-        forward-char
-        meow-next
-        meow-prev
-        execute-extended-command
-        vertico-next
-        backward-char
-        previous-line
-        next-line))
+        '(self-insert-command
+          forward-char
+          meow-next
+          meow-prev
+          execute-extended-command
+          vertico-next
+          backward-char
+          previous-line
+          next-line))
   (keyfreq-mode 1)
   (keyfreq-autosave-mode 1))
 

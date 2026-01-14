@@ -3,50 +3,64 @@
 ;;; Code:
 
 (defconst gptel-commit-prompt
-  "The user provides the result of running `git diff --cached`. You suggest a conventional commit message. Don't add anything else to the response. The following describes conventional commits.
+  "The user provides the result of running `git diff --cached`.
 
-# Conventional Commits 1.0.0
+Task:
+- Generate a commit subject line that is short, clear, and accurately summarizes the staged changes.
 
-## Summary
+Output constraints (MUST follow exactly):
+- Output EXACTLY ONE line.
+- No surrounding quotes.
+- No markdown/code fences.
+- No additional commentary, blank lines, body, footers, trailers, or lists.
 
-The Conventional Commits specification is a lightweight convention on top of commit messages.
-It provides an easy set of rules for creating an explicit commit history;
-which makes it easier to write automated tools on top of.
-This convention dovetails with [SemVer](http://semver.org),
-by describing the features, fixes, and breaking changes made in commit messages.
+Required format:
 
-The commit message should be structured as follows:
+<branch_name>: <[change_type]> <description>
 
----
-```
-<type>[optional scope]: <description>
-```
----
+Where:
+- <branch_name> is the current git branch name.
+- <change_type> is one of: fix, add, remove, feat, refactor (choose the best fit).
+- <description> is a concise, imperative summary describing what changed.
 
-<br />
-The commit contains the following structural elements, to communicate intent to the
-consumers of your library:
+Style guidelines:
+- Keep it brief (aim ~50 chars for the description).
+- Prefer specific nouns/verbs; avoid filler like \"update\", \"changes\", \"stuff\".
+- Mention the most important area impacted (file/feature/module) when helpful.
+- If multiple changes exist, summarize the primary one.
 
-1. **fix:** a commit of the _type_ `fix` patches a bug in your codebase (this correlates with [`PATCH`](http://semver.org/#summary) in Semantic Versioning).
-1. **feat:** a commit of the _type_ `feat` introduces a new feature to the codebase (this correlates with [`MINOR`](http://semver.org/#summary) in Semantic Versioning).
-1. **BREAKING CHANGE:** a commit that has a footer `BREAKING CHANGE:`, or appends a `!` after the type/scope, introduces a breaking API change (correlating with [`MAJOR`](http://semver.org/#summary) in Semantic Versioning).
-A BREAKING CHANGE can be part of commits of any _type_.
-1. _types_ other than `fix:` and `feat:` are allowed, for example [@commitlint/config-conventional](https://github.com/conventional-changelog/commitlint/tree/master/%40commitlint/config-conventional) (based on the [Angular convention](https://github.com/angular/angular/blob/22b96b9/CONTRIBUTING.md#-commit-message-guidelines)) recommends `build:`, `chore:`,
-  `ci:`, `docs:`, `style:`, `refactor:`, `perf:`, `test:`, and others.
-1. _footers_ other than `BREAKING CHANGE: <description>` may be provided and follow a convention similar to
-  [git trailer format](https://git-scm.com/docs/git-interpret-trailers).
+Examples:
+- feature/login [fix]: validate refresh token
+- demacs [add]: bump flake inputs
+- parser [refactor]: simplify tokenization
 
-Additional types are not mandated by the Conventional Commits specification, and have no implicit effect in Semantic Versioning (unless they include a BREAKING CHANGE).
-<br /><br />
-A scope may be provided to a commit's type, to provide additional contextual information and is contained within parenthesis, e.g., `feat(parser): add ability to parse arrays`.")
+Now produce the single-line commit message."
+  "Prompt for generating commit messages with gptel.")
 
 (defun gptel-commit ()
   "Generate commit message with gptel and insert it into the buffer."
   (interactive)
   (require 'gptel)
+  (when buffer-read-only
+    (read-only-mode -1))
   (let* ((lines (magit-git-lines "diff" "--cached"))
          (changes (string-join lines "\n")))
     (gptel-request changes :system gptel-commit-prompt)))
+
+(defun +magit-gptel-commit-when-ready ()
+  "Auto-run `gptel-commit' when entering a Magit commit buffer.
+
+This is intentionally deferred and guarded so it only runs when `gptel'
+(and our `gptel-commit' helper) are available, similar to how
+`copilot-chat-insert-commit-message-when-ready' defers work until the
+implementation is loaded and the commit buffer is ready."
+  (let ((commit-buffer (current-buffer)))
+    (run-at-time
+     0.3 nil
+     (lambda ()
+       (when (buffer-live-p commit-buffer)
+         (with-current-buffer commit-buffer
+           (gptel-commit)))))))
 
 (defun +magit-or-vc-log-file (&optional prompt)
   "Show the version control log for the current file.
@@ -75,7 +89,9 @@ the built-in VC log view instead."
    '("--no-walk" "--color" "--decorate" "--follow")'
    nil))
 
-(transient-append-suffix 'magit-log "s" '("d" "dangling" magit-log-dangling))
+(with-eval-after-load 'magit
+  (transient-append-suffix 'magit-log "s" '("d" "dangling" magit-log-dangling))
+  (add-hook 'git-commit-setup-hook #'+magit-gptel-commit-when-ready))
 
 (defun magit-fullscreen (orig-fun &rest args)
   (window-configuration-to-register :magit-fullscreen)
@@ -116,21 +132,28 @@ the built-in VC log view instead."
 
 (defun +magit-log--abbreviate-author (&rest args)
   "The first arg is AUTHOR, abbreviate it.
-  First Last  -> F Last
-  First.Last  -> F Last
-  Last, First -> F Last
-  First       -> First (no change).
 
-  It is assumed that the author has only one or two names."
+Convert these forms:
+- First Last  -> First L
+- First.Last  -> First L
+- Last, First -> First L
+- First       -> First (no change)
+
+It is assumed that the author has only one or two names."
   ;; ARGS               -> '((REV AUTHOR DATE))
   ;; (car ARGS)         -> '(REV AUTHOR DATE)
   ;; (nth 1 (car ARGS)) -> AUTHOR
   (let* ((author (nth 1 (car args)))
-         (author-abbr (if (string-match-p "," author)
-                          ;; Last, First -> F Last
-                          (replace-regexp-in-string "\\(.*?\\), *\\(.\\).*" "\\2 \\1" author)
-                        ;; First Last -> F Last
-                        (replace-regexp-in-string "\\(.\\).*?[. ]+\\(.*\\)" "\\1 \\2" author))))
+         (author-abbr
+          (cond
+           ;; Last, First -> First L
+           ((string-match-p "," author)
+            (replace-regexp-in-string "\\(.*?\\), *\\(.\\).*" "\\2 \\1" author))
+           ;; First.Last or First Last -> First L
+           ((string-match-p "[. ]" author)
+            (replace-regexp-in-string "\\`\\([^ .]+\\)\\(?:[. ]+\\)\\(.\\).*\\'" "\\1 \\2" author))
+           ;; Single name -> unchanged
+           (t author))))
     (setf (nth 1 (car args)) author-abbr))
   (car args))
 

@@ -85,10 +85,6 @@
       url = "github:roife/symbol-overlay";
       flake = false;
     };
-    agent-review = {
-      url = "github:nineluj/agent-review";
-      flake = false;
-    };
     consult-ripfd = {
       url = "github:jdtsmith/consult-ripfd";
       flake = false;
@@ -235,17 +231,6 @@
             packageRequires = [ epkgs.agent-shell ];
           };
 
-          agent-review = epkgs.trivialBuild {
-            pname = "agent-review";
-            version = timestampToDate inputs.agent-review.lastModified;
-            src = inputs.agent-review;
-            packageRequires = [
-              epkgs.acp
-              epkgs.agent-shell
-              epkgs.markdown-mode
-            ];
-          };
-
           awesome-tray = epkgs.trivialBuild {
             pname = "awesome-tray";
             version = timestampToDate inputs.awesome-tray.lastModified;
@@ -389,7 +374,6 @@
             vterm
 
             # Custom GitHub packages
-            customPkgs.agent-review
             customPkgs.agent-shell-sidebar
             customPkgs.awesome-tray
             customPkgs.blame-reveal
@@ -494,6 +478,8 @@
             # MELPA packages - Utilities
             activities
             agent-shell
+            ai-code
+            eca
             citre
             consult-notes
             eldoc-box

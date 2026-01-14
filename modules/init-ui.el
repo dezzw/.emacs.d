@@ -232,10 +232,12 @@
   (:when-loaded
     (:after consult
       ;; hide full buffer list (still available with "b" prefix)
-      (consult-customize consult--source-buffer
-                         ;; :hidden ,(lambda () (activities-current))
-                         :enabled (lambda () (not (activities-current)))
-                         :default t)
+      (when (boundp 'consult--source-buffer)
+        (setq consult--source-buffer
+              (plist-put
+               (plist-put consult--source-buffer
+                          :enabled (lambda () (not (activities-current))))
+               :default t)))
       (defvar consult--source-activities
         `(:name     "Activity Buffers"
                     :narrow   ?a

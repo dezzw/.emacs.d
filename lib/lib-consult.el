@@ -58,8 +58,15 @@ off the default preview behavior in Consult for those commands."
 (+no-consult-preview
  consult-ripfd
  consult-git-grep consult-grep
- consult-bookmark consult-recent-file
- consult--source-recent-file consult--source-project-recent-file consult--source-bookmark)
+ consult-bookmark consult-recent-file)
+
+;; Customize sources directly by modifying their plists
+(with-eval-after-load 'consult
+  (dolist (source '(consult--source-recent-file
+                     consult--source-project-recent-file
+                     consult--source-bookmark))
+    (when (boundp source)
+      (set source (plist-put (symbol-value source) :preview-key "M-P")))))
 
 ;;;; provide
 (provide 'lib-consult)

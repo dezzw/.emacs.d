@@ -2,7 +2,7 @@
 ;;; Commentary:
 ;;; Code:
 
-(defconst gptel-commit-prompt
+(defconst gptel-commit-prompt-base
   "The user provides the result of running `git diff --cached`.
 
 Task:
@@ -14,28 +14,34 @@ Output constraints (MUST follow exactly):
 - No markdown/code fences.
 - No additional commentary, blank lines, body, footers, trailers, or lists.
 
-Required format:
-
-<branch_name>: <[change_type]> <description>
-
-Where:
-- <branch_name> is the current git branch name.
-- <change_type> is one of: fix, add, remove, feat, refactor (choose the best fit).
-- <description> is a concise, imperative summary describing what changed.
-
 Style guidelines:
 - Keep it brief (aim ~50 chars for the description).
 - Prefer specific nouns/verbs; avoid filler like \"update\", \"changes\", \"stuff\".
 - Mention the most important area impacted (file/feature/module) when helpful.
 - If multiple changes exist, summarize the primary one.
 
-Examples:
-- feature/login [fix]: validate refresh token
-- demacs [add]: bump flake inputs
-- parser [refactor]: simplify tokenization
-
 Now produce the single-line commit message."
-  "Prompt for generating commit messages with gptel.")
+  "Base prompt shared by `gptel-commit-prompt`.")
+
+(defun gptel-commit-prompt ()
+  "Return the system prompt used by `gptel-commit`.
+
+If (and only if) the current git branch name starts with \=`BSTT\=, the
+model must prefix the commit subject with \=`<branch_name> :\=`.
+
+For all other branches, the commit subject should NOT be prefixed with the
+branch name."
+  (let* ((branch (or (ignore-errors (magit-get-current-branch)) ""))
+         (bstt-branch-p (string-prefix-p "BSTT" branch))
+         (format-block
+          (if bstt-branch-p
+              (format "Required format:\n\n%s : <[change_type]> <description>\n\nWhere:\n- <branch_name> is the current git branch name (%s).\n- <change_type> is one of: fix, add, remove, feat, refactor (choose the best fit).\n- <description> is a concise, imperative summary describing what changed.\n\nExample:\n- %s : [fix] validate refresh token\n"
+                      branch branch branch)
+            "Required format:\n\n<[change_type]> <description>\n\nWhere:\n- <change_type> is one of: fix, add, remove, feat, refactor (choose the best fit).\n- <description> is a concise, imperative summary describing what changed.\n\nExample:\n- [fix] validate refresh token\n")))
+    (string-join
+     (list gptel-commit-prompt-base
+           format-block)
+     "\n\n")))
 
 (defun gptel-commit ()
   "Generate commit message with gptel and insert it into the buffer."
@@ -45,7 +51,7 @@ Now produce the single-line commit message."
     (read-only-mode -1))
   (let* ((lines (magit-git-lines "diff" "--cached"))
          (changes (string-join lines "\n")))
-    (gptel-request changes :system gptel-commit-prompt)))
+    (gptel-request changes :system (gptel-commit-prompt))))
 
 (defun +magit-gptel-commit-when-ready ()
   "Auto-run `gptel-commit' when entering a Magit commit buffer.

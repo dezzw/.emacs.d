@@ -33,6 +33,7 @@
 (require 'tabulated-list)
 (require 'project)
 (require 'transient)
+(require 'subr-x)
 
 ;;; Customization
 
@@ -204,11 +205,38 @@ Returns a list with section headers and entries."
 
 ;;; Script Execution
 
+(defun fpga-manager--project-root ()
+  "Get the current project root or `default-directory'."
+  (if-let* ((proj (project-current)))
+      (project-root proj)
+    default-directory))
+
 (defun fpga-manager--project-fpga-dir ()
   "Get the fpga directory path for the current project."
-  (let* ((proj (project-current))
-         (proj-root (if proj (project-root proj) default-directory)))
-    (expand-file-name "fpga" proj-root)))
+  (expand-file-name "fpga" (fpga-manager--project-root)))
+
+(defun fpga-manager--command-parts (command)
+  "Split COMMAND into shell-ready parts."
+  (split-string-and-unquote command))
+
+(defun fpga-manager--build-command (parts)
+  "Build a shell command string from PARTS."
+  (mapconcat #'shell-quote-argument parts " "))
+
+(defun fpga-manager--compilation-buffer-name (project-root)
+  "Return a compilation buffer name for PROJECT-ROOT."
+  (format "*%s_compilation*"
+          (file-name-nondirectory (directory-file-name project-root))))
+
+(defun fpga-manager--confirm-and-compile (default-dir cmd)
+  "Confirm then compile CMD in DEFAULT-DIR."
+  (let* ((project-root (fpga-manager--project-root))
+         (compilation-buffer-name-function
+          (lambda (_mode)
+            (fpga-manager--compilation-buffer-name project-root))))
+    (when (yes-or-no-p (format "Run command in %s: %s ?" default-dir cmd))
+      (let ((default-directory default-dir))
+        (compile cmd)))))
 
 (defun fpga-manager--run-script-sync (args)
   "Run linuxPC_Lock.py with ARGS synchronously and return output."
@@ -659,5 +687,123 @@ Each project gets its own FPGA manager buffer, similar to `project-eshell'."
     (fpga-manager-refresh)
     (message "Press '?' for help")))
 
-(provide 'lib-fpga-manager)
+;;; BSTT Helper Commands
+
+;; BSTT Lock Command Helper Functions
+(defvar bstt/lock-port "cli455")
+(defvar bstt/lock-value "")
+
+(defun bstt/lock-set-port ()
+  (interactive)
+  (setq bstt/lock-port (read-string "Port (-p, blank to omit): " bstt/lock-port)))
+
+(defun bstt/lock-set-value ()
+  (interactive)
+  (setq bstt/lock-value (read-string "Lock (-l, blank to omit): " bstt/lock-value)))
+
+(defun bstt/lock-build-cmd ()
+  (let ((args nil))
+    (when (and bstt/lock-port (not (string-empty-p bstt/lock-port)))
+      (setq args (append args (list "-p" bstt/lock-port))))
+    (when (and bstt/lock-value (not (string-empty-p bstt/lock-value)))
+      (setq args (append args (list "-l" bstt/lock-value))))
+    (fpga-manager--build-command
+     (append (fpga-manager--command-parts fpga-manager-python-command)
+             (list "linuxPC_Lock.py")
+             args))))
+
+(defun bstt/lock-run ()
+  (interactive)
+  (let* ((cmd (bstt/lock-build-cmd))
+         (default-directory (fpga-manager--project-fpga-dir)))
+    (fpga-manager--confirm-and-compile default-directory cmd)))
+
+;; BSTT Webapp Compile Command Helper Functions
+(defvar bstt/webapp-cli-code "CLI109")
+(defvar bstt/webapp-batch-code "B000006")
+(defvar bstt/webapp-browser "chrome")
+(defvar bstt/webapp-repeat "1")
+
+(defun bstt/webapp-compile-set-cli-code ()
+  (interactive)
+  (setq bstt/webapp-cli-code (read-string "CLI Code: " bstt/webapp-cli-code)))
+
+(defun bstt/webapp-compile-set-batch-code ()
+  (interactive)
+  (setq bstt/webapp-batch-code (read-string "Batch Code: " bstt/webapp-batch-code)))
+
+(defun bstt/webapp-compile-set-browser ()
+  (interactive)
+  (setq bstt/webapp-browser (completing-read "Browser: "
+                                            '("chrome" "firefox" "safari" "edge")
+                                            nil t bstt/webapp-browser)))
+
+(defun bstt/webapp-compile-set-repeat ()
+  (interactive)
+  (setq bstt/webapp-repeat (read-string "Repeat count: " bstt/webapp-repeat)))
+
+(defun bstt/webapp-compile-build-cmd ()
+  (fpga-manager--build-command
+   (append (fpga-manager--command-parts fpga-manager-python-command)
+           (list "main.py" "http"
+                 bstt/webapp-cli-code bstt/webapp-batch-code
+                 "--browser" bstt/webapp-browser
+                 "--repeat" bstt/webapp-repeat))))
+
+(defun bstt/webapp-compile-run ()
+  (interactive)
+  (let* ((script-path (fpga-manager-find-webapp-script))
+         (default-directory (file-name-directory script-path))
+         (cmd (bstt/webapp-compile-build-cmd)))
+    (fpga-manager--confirm-and-compile default-directory cmd)))
+
+;; BSTT Toplevel Command Helper Functions
+(defvar bstt/toplevel-cli-code "CLI455")
+(defvar bstt/toplevel-local-code "B000006")
+(defvar bstt/toplevel-config "")
+(defvar bstt/toplevel-repeat "1")
+
+(defun bstt/toplevel-set-cli-code ()
+  (interactive)
+  (setq bstt/toplevel-cli-code (read-string "CLI Code (-p): " bstt/toplevel-cli-code)))
+
+(defun bstt/toplevel-set-local-code ()
+  (interactive)
+  (setq bstt/toplevel-local-code (read-string "Local Code (--local): " bstt/toplevel-local-code)))
+
+(defun bstt/toplevel-set-config ()
+  (interactive)
+  (setq bstt/toplevel-config (read-string "Config (-c, blank to omit): " bstt/toplevel-config)))
+
+(defun bstt/toplevel-set-repeat ()
+  (interactive)
+  (setq bstt/toplevel-repeat (read-string "Repeat (-r): " bstt/toplevel-repeat)))
+
+(defun bstt/toplevel-build-cmd ()
+  (let ((args (append (fpga-manager--command-parts fpga-manager-python-command)
+                      (list "toplevel.py" "-d" "-p" bstt/toplevel-cli-code
+                            "--local" bstt/toplevel-local-code
+                            "-r" bstt/toplevel-repeat))))
+    (when (and bstt/toplevel-config (not (string-empty-p bstt/toplevel-config)))
+      (setq args (append args (list "-c" bstt/toplevel-config))))
+    (fpga-manager--build-command args)))
+
+(defun bstt/toplevel-run ()
+  (interactive)
+  (let* ((script-path (fpga-manager-find-toplevel-script))
+         (default-directory (file-name-directory script-path))
+         (cmd (bstt/toplevel-build-cmd)))
+    (fpga-manager--confirm-and-compile default-directory cmd)))
+
+;; BSTT Code Submission Check Command Helper Functions
+(defun bstt/code-check-run ()
+  (interactive)
+  (let* ((script-path (fpga-manager-find-webapp-script))
+         (default-directory (file-name-directory script-path))
+         (cmd (fpga-manager--build-command
+               (append (fpga-manager--command-parts fpga-manager-python-command)
+                       (list "code_submission_check.py")))))
+    (fpga-manager--confirm-and-compile default-directory cmd)))
+
+(provide 'fpga-manager)
 ;;; lib-fpga-manager.el ends here

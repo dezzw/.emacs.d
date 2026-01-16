@@ -54,9 +54,6 @@
   (:option tab-width 4
            go-ts-mode-indent-offset 4))
 
-(setup json-ts-mode
-  (:option json-ts-mode-indent-offset 4))
-
 ;; Not support format in region
 (setup apheleia
   (:hook-into prog-mode)

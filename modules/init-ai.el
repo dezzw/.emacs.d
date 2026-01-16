@@ -17,12 +17,16 @@
             :endpoint "/chat/completions"
             :stream t
             :key (auth-source-pick-first-password :host "cursor.netint.ca" :user "netint")
-            :models '("openrouter/auto" "openai/gpt-5-chat" "anthropic/claude-sonnet-4" "anthropic/claude-3.7-sonnet")
+            :models '("openrouter/auto" "openai/gpt-5.2" "openai/gpt-5.2-pro" "anthropic/claude-sonnet-4.5" "anthropic/claude-opus-4.5")
             )))
   (:with-hook gptel-post-stream-hook
     (:hook (lambda ()(meow-insert-exit)))
     (:hook gptel-auto-scroll))
   (:hooks gptel-post-response-hook gptel-end-of-response))
+
+(setup gptel-agent
+  (:when-loaded
+    (gptel-agent-update)))
 
 (setup agent-shell
   ;; Make agent-shell bookmark-able

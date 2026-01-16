@@ -82,6 +82,7 @@
     (:option corfu-cycle t
              corfu-auto t
              corfu-auto-prefix 2
+             corfu-preselect 'prompt
              corfu-quit-no-match 'separator)
     (:with-mode prog-mode (:hook corfu-mode))
     (:with-mode corfu
@@ -95,7 +96,6 @@
       (corfu-mode))
     (:with-feature meow
       (add-hook 'meow-insert-mode-hook 'corfu-quit))))
-
 (setup cape
   (:load-after corfu)
   (:when-loaded

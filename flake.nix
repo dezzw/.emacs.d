@@ -416,6 +416,7 @@
             git-modes
             goggles
             gptel
+            gptel-agent
             highlight-parentheses
             indent-bars
             language-detection

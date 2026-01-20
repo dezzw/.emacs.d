@@ -10,7 +10,7 @@
 ;; A lightweight overlay-based tray for the echo area.
 ;;
 ;; Goals:
-;; - Use overlays (like awesome-tray) rather than resizing minibuffer buffers.
+;; - Use overlays rather than resizing minibuffer buffers.
 ;; - Fully support `mode-line-format' style specs via `format-mode-line'.
 ;; - Keep reasonable performance via caching and throttled updates.
 ;;
@@ -172,7 +172,7 @@ Dynamically calculates position to avoid wrapping."
 
 (defun miniline--set-text (text)
   "Set the text displayed by miniline to TEXT.
-Like awesome-tray: updates overlays and writes to *Minibuf-0*."
+Updates overlays and writes to *Minibuf-0*."
   ;; Don't update if minibuffer is active (user is typing)
   (unless (active-minibuffer-window)
     (setq miniline--text text)
@@ -187,7 +187,7 @@ Like awesome-tray: updates overlays and writes to *Minibuf-0*."
       (when (overlay-buffer o)
         (overlay-put o 'after-string text)))
     
-    ;; Also write to *Minibuf-0* to ensure persistence (like awesome-tray)
+    ;; Also write to *Minibuf-0* to ensure persistence
     (with-current-buffer " *Minibuf-0*"
       (delete-region (point-min) (point-max))
       (insert text))))
@@ -273,8 +273,7 @@ Removes spacer/alignment properties to prevent overflow."
         (concat (if miniline-second-line "\n" "") tray)))))
 
 (defun miniline-update ()
-  "Update miniline display. Called by timer.
-This is the main update function, like `awesome-tray-update'."
+  "Update miniline display. Called by timer."
   (interactive)
   (condition-case err
       (miniline--set-text (miniline--compose))
@@ -430,7 +429,7 @@ This can be called to re-apply after theme changes."
   ;; And when new frames are created
   (add-hook 'after-make-frame-functions (lambda (_) (miniline--apply-mode-line-faces)))
 
-  ;; Start the timer to automatically update (like awesome-tray)
+  ;; Start the timer to automatically update
   (when miniline-update-interval
     (setq miniline--update-timer
           (run-with-timer 0 miniline-update-interval #'miniline-update)))

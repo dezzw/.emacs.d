@@ -28,10 +28,6 @@
     };
 
     # Custom Emacs packages from GitHub
-    awesome-tray = {
-      url = "github:manateelazycat/awesome-tray";
-      flake = false;
-    };
     eglot-x = {
       url = "github:nemethf/eglot-x";
       flake = false;
@@ -231,12 +227,6 @@
             packageRequires = [ epkgs.agent-shell ];
           };
 
-          awesome-tray = epkgs.trivialBuild {
-            pname = "awesome-tray";
-            version = timestampToDate inputs.awesome-tray.lastModified;
-            src = inputs.awesome-tray;
-          };
-
           consult-ripfd = epkgs.trivialBuild {
             pname = "consult-ripfd";
             version = timestampToDate inputs.consult-ripfd.lastModified;
@@ -375,7 +365,6 @@
 
             # Custom GitHub packages
             customPkgs.agent-shell-sidebar
-            customPkgs.awesome-tray
             customPkgs.blame-reveal
             customPkgs.eglot-x
             customPkgs.emt

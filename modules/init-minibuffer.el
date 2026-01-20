@@ -31,54 +31,11 @@
            ;; 将阈值设置为 4 表示只有当需要补全的字符数大于 4 时才会执行循环补全
            completion-cycle-threshold 4))
 
-;; Miniline: lightweight echo-area modeline with mode-line-format support
 (setup miniline
-  (:require miniline)
+  (:require miniline miniline-segments)
   (:option
-   ;; Left side: meow state indicator (if using meow)
-   miniline-left-format
-   '(:eval (when (bound-and-true-p meow-mode)
-             (propertize (string-trim (or meow--indicator ""))
-                         'face 'font-lock-keyword-face)))
-
-   ;; Right side: file path, mode name, vc, flymake
-   miniline-right-format
-   '((:eval (propertize (or (buffer-file-name) (buffer-name)) 'face 'font-lock-constant-face))
-     " "
-     (:eval (propertize (format-mode-line mode-name) 'face 'font-lock-type-face))
-     " "
-     (:eval (when (and (buffer-file-name) (vc-backend (buffer-file-name)))
-              (propertize (substring-no-properties vc-mode) 'face 'font-lock-function-name-face)))
-     " "
-     (:eval (when (bound-and-true-p flymake-mode)
-              (let* ((known (hash-table-keys flymake--state))
-                     (running (flymake-running-backends))
-                     (disabled (flymake-disabled-backends))
-                     (reported (flymake-reporting-backends))
-                     (all-disabled (and disabled (null running)))
-                     (some-waiting (cl-set-difference running reported)))
-                (cond
-                 (some-waiting (propertize "⏳" 'face 'warning))
-                 ((null known) nil)
-                 (all-disabled (propertize "❕" 'face 'warning))
-                 (t (let ((err 0) (warn 0) (note 0))
-                      (maphash
-                       (lambda (_b state)
-                         (cl-loop
-                          for diag in (flymake--state-diags state) do
-                          (let ((severity (flymake--lookup-type-property
-                                           (flymake--diag-type diag) 'severity
-                                           (warning-numeric-level :error))))
-                            (cond ((> severity (warning-numeric-level :warning)) (cl-incf err))
-                                  ((> severity (warning-numeric-level :debug)) (cl-incf warn))
-                                  (t (cl-incf note))))))
-                       flymake--state)
-                      (string-join
-                       (cl-remove-if #'null
-                                     (list (when (> err 0) (propertize (format "✖%d" err) 'face 'error))
-                                           (when (> warn 0) (propertize (format "⚠%d" warn) 'face 'warning))
-                                           (when (> note 0) (propertize (format "●%d" note) 'face 'success))))
-                       " "))))))))
+   ;; Default format (buffer-local mode-line-format takes priority)
+   miniline-format miniline-format-default
 
    ;; Position: right-aligned
    miniline-position 'right
@@ -87,8 +44,7 @@
    miniline-hide-mode-line t
    miniline-display-gui-line t
 
-   ;; Update interval in seconds (like awesome-tray-update-interval)
-   ;; Timer fires every N seconds to refresh the display
+   ;; Update interval in seconds
    miniline-update-interval 0.5
 
    ;; Right padding to avoid text wrapping

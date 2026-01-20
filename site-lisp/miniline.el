@@ -30,13 +30,14 @@
   :group 'convenience
   :prefix "miniline-")
 
-(defcustom miniline-left-format nil
-  "Left part of tray, same format as `mode-line-format'."
-  :type 'sexp
-  :group 'miniline)
+(defcustom miniline-format nil
+  "Format for the miniline tray, same format as `mode-line-format'.
 
-(defcustom miniline-right-format nil
-  "Right part of tray, same format as `mode-line-format'."
+If nil, falls back to the current buffer's `mode-line-format',
+which respects whatever packages (doom-modeline, eca, etc.) have set.
+
+Buffer-local `mode-line-format' takes priority over this setting,
+allowing packages to define their own display."
   :type 'sexp
   :group 'miniline)
 
@@ -151,15 +152,22 @@ Only effective when `miniline-hide-mode-line' is non-nil."
       (format-mode-line spec))))
 
 (defun miniline--align (text)
-  "Return TEXT prefixed with an alignment display property." 
-  (let* ((wid (+ (string-width text) miniline-right-padding))
+  "Return TEXT prefixed with an alignment display property.
+Dynamically calculates position to avoid wrapping."
+  (let* ((text-width (string-width text))
+         (frame-width (miniline--get-frame-width))
+         ;; Add safety margin to prevent wrapping
+         (safety-margin (+ miniline-right-padding 2))
+         (wid (+ text-width safety-margin))
          (spc (pcase miniline-position
-                ('center (propertize "  " 'cursor 1 'display
-                                     `(space :align-to (- center ,(/ wid 2)))))
-                ('left (propertize "  " 'cursor 1 'display
-                                   `(space :align-to (- left-fringe ,wid))))
-                (_ (propertize "  " 'cursor 1 'display
-                               `(space :align-to (- right-fringe ,wid)))))))
+                ('center (propertize " " 'cursor 1 'display
+                                     `(space :align-to (- center ,(/ text-width 2)))))
+                ('left (propertize " " 'cursor 1 'display
+                                   '(space :align-to left)))
+                ;; Right: use exact column calculation for precision
+                (_ (let ((target-col (max 0 (- frame-width wid))))
+                     (propertize " " 'cursor 1 'display
+                                 `(space :align-to ,target-col)))))))
     (concat (if miniline-second-line "\n" "") spc text)))
 
 (defun miniline--set-text (text)
@@ -184,23 +192,85 @@ Like awesome-tray: updates overlays and writes to *Minibuf-0*."
       (delete-region (point-min) (point-max))
       (insert text))))
 
+(defun miniline--hidden-format-p (fmt)
+  "Return non-nil if FMT is a hidden/empty mode-line format."
+  (or (null fmt)
+      (equal fmt '(""))
+      (equal fmt "")))
+
+(defun miniline--get-buffer-local-format ()
+  "Get buffer-local mode-line-format if meaningful."
+  (and (local-variable-p 'mode-line-format)
+       (not (miniline--hidden-format-p mode-line-format))
+       mode-line-format))
+
+(defun miniline--get-default-format ()
+  "Get the default miniline format."
+  (or miniline-format
+      miniline--orig-mode-line-format
+      miniline--saved-mode-line-format
+      (and (boundp 'minimal-emacs--default-mode-line-format)
+           minimal-emacs--default-mode-line-format)))
+
+(defun miniline--remove-spacers (str)
+  "Remove space/alignment display properties from STR.
+Filters out `(space :align-to ...)' and similar constructs that cause overflow."
+  (when (and str (> (length str) 0))
+    (let ((result (copy-sequence str))
+          (i 0)
+          (len (length str)))
+      (while (< i len)
+        (let ((display (get-text-property i 'display str)))
+          (when (and display
+                     (or (and (consp display)
+                              (or (eq (car display) 'space)
+                                  (and (consp (car display))
+                                       (eq (caar display) 'space))))
+                         (and (listp display)
+                              (plist-get display :align-to))
+                         (and (listp display)
+                              (plist-get display :width))))
+            ;; Remove this display property
+            (remove-text-properties i (1+ i) '(display nil) result)))
+        (setq i (1+ i)))
+      ;; Also collapse multiple spaces into single space
+      (replace-regexp-in-string "  +" " " (string-trim result)))))
+
 (defun miniline--compose ()
-  "Compose tray string from left/right formats." 
-  (let* ((left (miniline--format miniline-left-format))
-         (right (miniline--format miniline-right-format))
-         (tray (string-join (cl-remove-if #'string-empty-p (list left right)) " "))
-         (echo-message (current-message))
-         (minibuf-info (if (stringp echo-message) (substring-no-properties echo-message) ""))
-         (minibuf-last-line (car (last (split-string minibuf-info "\n"))))
-         (blank-length (- (miniline--get-frame-width)
-                          (string-width tray)
-                          (string-width minibuf-last-line))))
-    ;; If the minibuffer line is too long, prefer to still show tray; but avoid forcing
-    ;; wrap by not adding alignment when there's no space.
-    (if (> blank-length 0)
-        (miniline--align tray)
-      ;; no alignment, just place it on a new line if configured
-      (concat (if miniline-second-line "\n" "") tray))))
+  "Compose tray string with smart merging.
+If buffer has a local mode-line-format, merge it with the default format.
+Removes spacer/alignment properties to prevent overflow."
+  ;; Run in context of selected window's buffer
+  (with-current-buffer (window-buffer (selected-window))
+    (let* ((buffer-fmt (miniline--get-buffer-local-format))
+           (default-fmt (miniline--get-default-format))
+           ;; Render and clean both formats (remove spacers)
+           (buffer-str (when buffer-fmt
+                         (miniline--remove-spacers (or (miniline--format buffer-fmt) ""))))
+           (default-str (miniline--remove-spacers (or (miniline--format default-fmt) "")))
+           ;; Smart merge: if buffer has custom format, show both with separator
+           (tray (cond
+                  ;; Both exist and non-empty: merge with separator
+                  ((and buffer-str (not (string-empty-p buffer-str))
+                        default-str (not (string-empty-p default-str)))
+                   (concat default-str "  │  " buffer-str))
+                  ;; Only buffer-local format
+                  ((and buffer-str (not (string-empty-p buffer-str)))
+                   buffer-str)
+                  ;; Only default format (may be empty too)
+                  ((and default-str (not (string-empty-p default-str)))
+                   default-str)
+                  (t "")))
+           (echo-message (current-message))
+           (minibuf-info (if (stringp echo-message) (substring-no-properties echo-message) ""))
+           (minibuf-last-line (car (last (split-string minibuf-info "\n"))))
+           (blank-length (- (miniline--get-frame-width)
+                            (string-width tray)
+                            (string-width minibuf-last-line))))
+      ;; Align if there's space
+      (if (> blank-length 0)
+          (miniline--align tray)
+        (concat (if miniline-second-line "\n" "") tray)))))
 
 (defun miniline-update ()
   "Update miniline display. Called by timer.
@@ -216,7 +286,11 @@ This is the main update function, like `awesome-tray-update'."
   "Hide the original mode-line, optionally showing a thin GUI line."
   (when miniline-hide-mode-line
     ;; Save default mode-line-format
-    (setq miniline--saved-mode-line-format (default-value 'mode-line-format))
+    ;; Check for early-init.el saved value first (minimal-emacs optimization)
+    (setq miniline--saved-mode-line-format
+          (or (and (boundp 'minimal-emacs--default-mode-line-format)
+                   minimal-emacs--default-mode-line-format)
+              (default-value 'mode-line-format)))
     ;; Save full face specs for proper restoration
     (setq miniline--saved-mode-line-face-spec (get 'mode-line 'face-defface-spec))
     (setq miniline--saved-mode-line-inactive-face-spec (get 'mode-line-inactive 'face-defface-spec))
@@ -252,49 +326,8 @@ This is the main update function, like `awesome-tray-update'."
                     '("")
                   nil)))))
 
-    ;; Make mode-line faces very thin in GUI, or completely invisible
-    ;; Use absolute height (integer = 1/10 pt units) to avoid relative multiplication issues
-    (if (and miniline-display-gui-line (display-graphic-p))
-        (let ((active-bg (face-background 'miniline-mode-line nil t))
-              (inactive-bg (face-background 'miniline-mode-line-inactive nil t)))
-          ;; Reset mode-line face completely
-          (face-spec-reset-face 'mode-line)
-          (face-spec-reset-face 'mode-line-inactive)
-          (set-face-attribute 'mode-line nil
-                              :foreground active-bg
-                              :background active-bg
-                              :height 10  ; 1 point absolute
-                              :box nil
-                              :underline nil
-                              :overline nil
-                              :inverse-video nil)
-          (set-face-attribute 'mode-line-inactive nil
-                              :foreground inactive-bg
-                              :background inactive-bg
-                              :height 10  ; 1 point absolute
-                              :box nil
-                              :underline nil
-                              :overline nil
-                              :inverse-video nil))
-      ;; No GUI line - make mode-line invisible
-      (face-spec-reset-face 'mode-line)
-      (face-spec-reset-face 'mode-line-inactive)
-      (set-face-attribute 'mode-line nil
-                          :foreground (face-background 'default)
-                          :background (face-background 'default)
-                          :height 10
-                          :box nil
-                          :underline nil
-                          :overline nil
-                          :inverse-video nil)
-      (set-face-attribute 'mode-line-inactive nil
-                          :foreground (face-background 'default)
-                          :background (face-background 'default)
-                          :height 10
-                          :box nil
-                          :underline nil
-                          :overline nil
-                          :inverse-video nil))))
+    ;; Apply mode-line face settings
+    (miniline--apply-mode-line-faces)))
 
 (defun miniline--restore-mode-line ()
   "Restore the original mode-line."
@@ -332,6 +365,54 @@ This is the main update function, like `awesome-tray-update'."
           miniline--saved-mode-line-face-spec nil
           miniline--saved-mode-line-inactive-face-spec nil)))
 
+(defun miniline--apply-mode-line-faces ()
+  "Apply the mode-line face settings to hide the mode-line.
+This can be called to re-apply after theme changes."
+  (when (and miniline-mode miniline-hide-mode-line)
+    (if (and miniline-display-gui-line (display-graphic-p))
+        (let ((active-bg (face-background 'miniline-mode-line nil t))
+              (inactive-bg (face-background 'miniline-mode-line-inactive nil t)))
+          (face-spec-reset-face 'mode-line)
+          (face-spec-reset-face 'mode-line-inactive)
+          (set-face-attribute 'mode-line nil
+                              :foreground active-bg
+                              :background active-bg
+                              :height 10
+                              :box nil
+                              :underline nil
+                              :overline nil
+                              :inverse-video nil)
+          (set-face-attribute 'mode-line-inactive nil
+                              :foreground inactive-bg
+                              :background inactive-bg
+                              :height 10
+                              :box nil
+                              :underline nil
+                              :overline nil
+                              :inverse-video nil))
+      (face-spec-reset-face 'mode-line)
+      (face-spec-reset-face 'mode-line-inactive)
+      (set-face-attribute 'mode-line nil
+                          :foreground (face-background 'default)
+                          :background (face-background 'default)
+                          :height 10
+                          :box nil
+                          :underline nil
+                          :overline nil
+                          :inverse-video nil)
+      (set-face-attribute 'mode-line-inactive nil
+                          :foreground (face-background 'default)
+                          :background (face-background 'default)
+                          :height 10
+                          :box nil
+                          :underline nil
+                          :overline nil
+                          :inverse-video nil))))
+
+(defun miniline--after-load-theme (&rest _)
+  "Re-apply mode-line hiding after a theme is loaded."
+  (miniline--apply-mode-line-faces))
+
 (defun miniline--enable ()
   "Enable miniline mode."
   (miniline--hide-mode-line)
@@ -340,6 +421,14 @@ This is the main update function, like `awesome-tray-update'."
   ;; Setup minibuffer hook
   (when miniline-minibuffer
     (add-hook 'minibuffer-setup-hook #'miniline--minibuffer-setup))
+
+  ;; Re-apply face settings after theme changes
+  (advice-add 'load-theme :after #'miniline--after-load-theme)
+  (advice-add 'enable-theme :after #'miniline--after-load-theme)
+  ;; Also handle after-init for themes loaded during init
+  (add-hook 'after-init-hook #'miniline--apply-mode-line-faces)
+  ;; And when new frames are created
+  (add-hook 'after-make-frame-functions (lambda (_) (miniline--apply-mode-line-faces)))
 
   ;; Start the timer to automatically update (like awesome-tray)
   (when miniline-update-interval
@@ -352,6 +441,10 @@ This is the main update function, like `awesome-tray-update'."
 (defun miniline--disable ()
   "Disable miniline mode."
   (remove-hook 'minibuffer-setup-hook #'miniline--minibuffer-setup)
+  (remove-hook 'after-init-hook #'miniline--apply-mode-line-faces)
+  (remove-hook 'after-make-frame-functions (lambda (_) (miniline--apply-mode-line-faces)))
+  (advice-remove 'load-theme #'miniline--after-load-theme)
+  (advice-remove 'enable-theme #'miniline--after-load-theme)
 
   ;; Cancel the update timer
   (cancel-function-timers #'miniline-update)

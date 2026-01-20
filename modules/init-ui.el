@@ -47,7 +47,7 @@
 
 (setup window-divider
   (:option window-divider-default-right-width 1
-           window-divider-default-bottom-width 1
+           window-divider-default-bottom-width 0
            window-divider-default-places t)
   (:hook-into window-setup-hook))
 
@@ -168,6 +168,8 @@
              "\\*.*-eshell\\*$"
              ;; Org mode
              "\\*Org Select\\*$"
+             ;; Verb/restclient HTTP responses
+             "\\*HTTP Response.*\\*$"
              ;; Telegram buffers
              "\\*Telega User\\*$"
              "\\*Telegram Chat Info\\*$"

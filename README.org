@@ -1,0 +1,775 @@
+#+TITLE: Demacs - Desmond's Emacs Configuration
+#+AUTHOR: Desmond Wang
+#+EMAIL: desmond.wang@netint.ca
+#+STARTUP: overview indent
+#+OPTIONS: toc:3 num:nil ^:nil
+
+* Introduction
+
+*Demacs* is a personal Emacs configuration built with a modular architecture, managed via Nix flakes, and optimized for performance. It features the latest Emacs with IGC (Improved Garbage Collection) support, custom patches for macOS, and a curated selection of packages for programming, writing, and daily workflows.
+
+** Key Features
+
+- 🚀 *Nix-managed* - Reproducible builds with Nix flakes
+- ⚡ *IGC Support* - Latest Emacs with Improved Garbage Collection
+- 🍎 *macOS Optimized* - Custom patches for rounded frames, system appearance, smooth cursor
+- 📦 *Modular Design* - Clean separation of concerns with =modules/=, =lib/=, and =site-lisp/=
+- 🎨 *Rosé Pine Theme* - Beautiful day/night themes with system appearance sync
+
+** Quick Start
+
+#+begin_src shell
+# Enter development shell
+nix develop
+
+# Run Emacs (default: IGC build)
+nix run .#demacs
+
+# Alternative builds
+nix run .#demacs-igc           # IGC without patches
+nix run .#demacs-igc-patched   # IGC with macOS patches
+nix run .#demacs-master        # Git master without patches
+nix run .#demacs-master-patched # Git master with patches
+#+end_src
+
+* Directory Structure
+
+#+begin_example
+~/.emacs.d/
+├── init.el              # Main entry point
+├── early-init.el        # Pre-initialization (GC, UI)
+├── flake.nix            # Nix flake configuration
+├── modules/             # Feature modules (init-*.el)
+├── lib/                 # Shared helper libraries (lib-*.el)
+├── site-lisp/           # Standalone packages
+├── themes/              # Custom themes (Rosé Pine)
+├── patches/             # Emacs patches for macOS
+├── snippets/            # YASnippet templates
+└── templates/           # Tempel templates
+#+end_example
+
+* Core Configuration
+
+** Early Initialization
+:PROPERTIES:
+:header-args:emacs-lisp: :tangle early-init.el :mkdirp yes
+:END:
+
+The =early-init.el= handles pre-initialization settings for optimal startup performance.
+
+*** Garbage Collection Optimization
+
+#+begin_src emacs-lisp :tangle no
+;; Maximize GC threshold during startup, restore after
+(setq gc-cons-threshold most-positive-fixnum
+      gc-cons-percentage 0.5)
+
+(add-hook 'emacs-startup-hook
+          (lambda ()
+            (setq gc-cons-threshold (* 20 1024 1024))))
+#+end_src
+
+*** Performance Settings
+
+#+begin_src emacs-lisp :tangle no
+;; Prefer newer compiled files
+(setq load-prefer-newer t)
+
+;; Increase process read chunk size
+(setq read-process-output-max (* 1024 1024))  ; 1mb
+
+;; Reduce rendering work
+(setq-default cursor-in-non-selected-windows nil)
+(setq highlight-nonselected-windows nil)
+
+;; Disable bidirectional text for performance
+(setq-default bidi-display-reordering 'left-to-right
+              bidi-paragraph-direction 'left-to-right)
+#+end_src
+
+*** UI Cleanup
+
+#+begin_src emacs-lisp :tangle no
+;; Disable GUI elements via frame parameters (faster than mode functions)
+(push '(menu-bar-lines . 0)   default-frame-alist)
+(push '(tool-bar-lines . 0)   default-frame-alist)
+(push '(vertical-scroll-bars) default-frame-alist)
+(push '(undecorated-round . t) default-frame-alist)  ; macOS rounded corners
+(push '(fullscreen . maximized) default-frame-alist)
+#+end_src
+
+** Main Initialization
+:PROPERTIES:
+:header-args:emacs-lisp: :tangle init.el :mkdirp yes
+:END:
+
+The =init.el= bootstraps the configuration and loads modules in order.
+
+*** User Settings
+
+#+begin_src emacs-lisp :tangle no
+;; Personal information
+(setq user-full-name "Desmond Wang")
+(setq user-mail-address "desmond.wang@netint.ca")
+
+;; Font configuration
+(defconst *default-font* "Maple Mono NF")
+(defconst *zh-default-font* "Maple Mono NF CN")
+(defconst *symbol-default-font* "Symbols Nerd Font Mono")
+
+;; Paths
+(defconst *org-path* "~/Documents/Org/")
+#+end_src
+
+*** Module Loading Order
+
+#+begin_src emacs-lisp :tangle no
+;; Load paths
+(dolist (dir '("modules" "lib" "site-lisp" "themes"))
+  (add-to-list 'load-path (expand-file-name dir user-emacs-directory)))
+
+;; Core setup
+(require 'setup)
+(require 'init-setup)
+
+;; Platform-specific
+(when *is-mac* (require 'init-mac))
+
+;; UI and editing
+(require 'init-ui)
+(require 'init-editing)
+(require 'init-vc)
+(require 'init-minibuffer)
+(require 'init-completion)
+
+;; Programming
+(require 'init-prog)
+(require 'init-util)
+(require 'init-transient)
+(require 'init-bitstream)
+
+;; Org and documents
+(require 'init-org)
+(require 'init-reader)
+(require 'init-social)
+
+;; Shell and AI
+(require 'init-shell)
+(require 'init-ai)
+
+;; Local customizations
+(require 'init-local)
+#+end_src
+
+* Modules
+
+** UI & Appearance (=init-ui.el=)
+
+Visual customization and window management.
+
+*** Theme System
+
+#+begin_src emacs-lisp :tangle no
+;; Rosé Pine theme with automatic light/dark switching
+(:option custom-enabled-themes '(rose-pine-night)
+         light-theme 'rose-pine-day
+         dark-theme 'rose-pine-night)
+
+;; Sync with macOS system appearance
+(when *is-mac*
+  (apply-theme-based-on-appearance)
+  (:with-hook ns-system-appearance-change-functions
+    (:hook apply-theme-based-on-appearance)))
+#+end_src
+
+*** Window Management
+
+- =zoom= - Golden ratio window sizing
+- =popper= - Popup window management (shells, help, compilation)
+- =activities= - Session/workspace management
+
+*** Tab Bar & Tab Line
+
+#+begin_src emacs-lisp :tangle no
+;; Custom tab bar configuration
+(:option tab-bar-separator ""
+         tab-bar-close-button-show nil
+         tab-bar-new-button-show nil
+         tab-bar-tab-hints t
+         tab-bar-select-tab-modifiers '(super))
+#+end_src
+
+*** Panel Dashboard
+
+Custom startup panel with weather, image, and quote display.
+
+** Editing (=init-editing.el=)
+
+Enhanced editing experience with modal editing and smart features.
+
+*** Meow Modal Editing
+
+#+begin_src emacs-lisp :tangle no
+;; Meow as the modal editing system
+(require 'meow)
+(meow-global-mode 1)
+(meow-setup)
+
+;; Use system clipboard
+(:option meow-use-clipboard t)
+
+;; Undo system
+(undo-fu-session-global-mode)
+(:option undo-limit 67108864
+         undo-strong-limit 100663296
+         undo-outer-limit 1006632960)
+#+end_src
+
+*** Input Method Switching (SIS)
+
+Automatic input source switching for CJK support.
+
+#+begin_src emacs-lisp :tangle no
+;; Switch to English on mode exit
+(:hooks meow-insert-exit-hook sis-set-english)
+
+;; Context-aware input switching for org-mode, telega
+(sis-global-cursor-color-mode t)
+(sis-global-respect-mode t)
+(sis-global-context-mode t)
+#+end_src
+
+*** Key Editing Features
+
+| Package               | Purpose                        |
+|-----------------------+--------------------------------|
+| =move-dup=            | Move/duplicate lines           |
+| =avy=                 | Jump to visible text           |
+| =rainbow-delimiters=  | Colorful parentheses           |
+| =symbol-overlay=      | Highlight symbols              |
+| =vundo=               | Visual undo tree               |
+| =goggles=             | Pulse modified regions         |
+| =ultra-scroll=        | Smooth scrolling               |
+
+** Version Control (=init-vc.el=)
+
+Git integration with Magit and related tools.
+
+*** Magit Configuration
+
+#+begin_src emacs-lisp :tangle no
+;; Full-screen magit status
+(:advice magit-status :around #'magit-fullscreen)
+
+;; Key bindings
+(keymap-global-set "C-x g" 'magit-status)
+(keymap-global-set "C-x M-g" 'magit-dispatch)
+
+;; Refined diff highlighting
+(:option magit-diff-refine-hunk t)
+#+end_src
+
+*** Forge (GitHub/GitLab)
+
+Support for GitHub and GitLab forges, including custom GitLab instance.
+
+*** Diff Highlights
+
+- =diff-hl= - Fringe indicators for changes
+- =blame-reveal= - Interactive git blame
+
+** Minibuffer (=init-minibuffer.el=)
+
+Modern completion framework with Vertico ecosystem.
+
+*** Vertico + Consult
+
+#+begin_src emacs-lisp :tangle no
+;; Vertico for vertical completion
+(vertico-mode)
+(:option vertico-cycle t)
+
+;; Vertico-posframe for floating completion
+(vertico-posframe-mode 1)
+
+;; Consult commands
+(keymap-global-set "C-c f l" 'consult-line)
+(keymap-global-set "C-c f i" 'consult-imenu)
+(keymap-global-set "C-c f f" 'consult-fd)
+(keymap-global-set "C-c f r" 'consult-ripfd)
+(keymap-global-set "C-c f b" 'consult-buffer)
+#+end_src
+
+*** Embark Actions
+
+Context-aware actions on completion candidates.
+
+#+begin_src emacs-lisp :tangle no
+(keymap-global-set "C-c ." 'embark-act)
+(keymap-global-set "M-n"   'embark-next-symbol)
+(keymap-global-set "M-p"   'embark-previous-symbol)
+#+end_src
+
+*** Marginalia
+
+Rich annotations in the minibuffer.
+
+*** Miniline
+
+Custom overlay-based mode-line in the echo area.
+
+** Completion (=init-completion.el=)
+
+In-buffer completion with Corfu ecosystem.
+
+*** Corfu
+
+#+begin_src emacs-lisp :tangle no
+(global-corfu-mode)
+(:option corfu-cycle t
+         corfu-auto t
+         corfu-auto-prefix 2
+         corfu-preselect 'prompt)
+#+end_src
+
+*** Cape
+
+Completion-at-point extensions.
+
+#+begin_src emacs-lisp :tangle no
+(add-to-list 'completion-at-point-functions #'cape-emoji)
+(add-to-list 'completion-at-point-functions #'cape-dabbrev)
+(add-to-list 'completion-at-point-functions #'cape-file)
+#+end_src
+
+*** Orderless
+
+Flexible matching styles with pinyin support.
+
+*** YASnippet
+
+Template expansion system.
+
+** Programming (=init-prog.el=)
+
+Language support and development tools.
+
+*** Tree-sitter Modes
+
+Automatic file associations for tree-sitter major modes:
+
+| Extension    | Mode                 |
+|--------------+----------------------|
+| =.py=        | =python-ts-mode=     |
+| =.js=        | =js-ts-mode=         |
+| =.ts=        | =typescript-ts-mode= |
+| =.tsx=       | =tsx-ts-mode=        |
+| =.json=      | =json-ts-mode=       |
+| =.yaml=      | =yaml-ts-mode=       |
+| =.nix=       | =nix-ts-mode=        |
+| =.rs=        | =rust-ts-mode=       |
+| =.go=        | =go-ts-mode=         |
+| =.java=      | =java-ts-mode=       |
+| =.vue=       | =vue-mode=           |
+| =.lpy=       | =basilisp-ts-mode=   |
+
+*** Eglot LSP
+
+#+begin_src emacs-lisp :tangle no
+;; Auto-start for specific modes
+(:with-mode (python-ts-mode js-ts-mode tsx-ts-mode vue-mode latex-mode)
+  (:hook eglot-ensure))
+
+;; Custom server configurations
+(add-to-list 'eglot-server-programs
+             '((python-mode python-ts-mode) . ("rass" "basedruff")))
+(add-to-list 'eglot-server-programs
+             `((vue-mode vue-ts-mode typescript-ts-mode)
+               . ("vue-language-server" "--stdio"
+                  :initializationOptions ,(vue-eglot-init-options))))
+#+end_src
+
+*** Apheleia Formatting
+
+Automatic code formatting on save.
+
+#+begin_src emacs-lisp :tangle no
+;; Format on save in prog-mode
+(:hook-into prog-mode)
+
+;; Custom formatters
+(setf (alist-get 'python-ts-mode apheleia-mode-alist) 'ruff)
+(setf (alist-get 'typescript-ts-mode apheleia-mode-alist) 'prettier)
+#+end_src
+
+*** Flymake Diagnostics
+
+#+begin_src emacs-lisp :tangle no
+;; Show diagnostics at end of line (Emacs 31+)
+(when (version<= "31" emacs-version)
+  (setopt flymake-show-diagnostics-at-end-of-line t))
+#+end_src
+
+*** Project Management
+
+#+begin_src emacs-lisp :tangle no
+;; Extra project markers
+(setopt project-vc-extra-root-markers
+        '("package.json" "deps.edn" "project.clj"
+          "Package.swift" ".envrc" ".tags" ".project"))
+#+end_src
+
+*** Envrc
+
+Directory-local environment with direnv integration.
+
+** Org Mode (=init-org.el=)
+
+Comprehensive org-mode configuration for GTD and writing.
+
+*** Basic Settings
+
+#+begin_src emacs-lisp :tangle no
+(:option org-directory *org-path*
+         org-log-done t
+         org-startup-indented t
+         org-hide-emphasis-markers t
+         org-image-actual-width nil)
+#+end_src
+
+*** GTD Workflow
+
+#+begin_src emacs-lisp :tangle no
+;; TODO keywords
+org-todo-keywords
+'((sequence "TODO(t)" "NEXT(n)" "|" "DONE(d!/!)")
+  (sequence "PROJECT(p)" "|" "DONE(d!/!)" "CANCELLED(c/!)")
+  (sequence "WAITING(w/!)" "DELEGATED(e!)" "HOLD(h)" "|" "CANCELLED(c/!)"))
+#+end_src
+
+*** Org Agenda
+
+Custom agenda views for GTD workflow:
+
+- *g* - Main GTD view (agenda, next actions, projects, waiting)
+- *v* - Orphaned tasks and inbox
+- *N* - Notes
+
+*** Visual Enhancements
+
+| Package              | Purpose                    |
+|----------------------+----------------------------|
+| =org-modern=         | Modern styling             |
+| =org-modern-indent=  | Indented blocks            |
+| =org-appear=         | Reveal markup on cursor    |
+| =org-tidy=           | Clean property display     |
+| =valign=             | Table alignment            |
+| =visual-fill-column= | Centered, wrapped text     |
+
+*** Denote
+
+Zettelkasten-style note-taking.
+
+#+begin_src emacs-lisp :tangle no
+(keymap-global-set "C-c n n" 'denote-open-or-create)
+(keymap-global-set "C-c n l" 'denote-link)
+(keymap-global-set "C-c n b" 'denote-backlinks)
+#+end_src
+
+*** Babel
+
+Code execution in org documents.
+
+#+begin_src emacs-lisp :tangle no
+(org-babel-do-load-languages
+ 'org-babel-load-languages '((python . t)
+                             (shell . t)
+                             (verb . t)
+                             (latex . t)))
+#+end_src
+
+** Shell (=init-shell.el=)
+
+Terminal emulation and shell integration.
+
+*** Vterm
+
+Full-featured terminal emulator.
+
+*** Eshell
+
+Emacs-native shell with custom prompt and eat integration.
+
+#+begin_src emacs-lisp :tangle no
+(keymap-global-set "<f8>" 'eshell)
+
+(:option eshell-prompt-function 'eshell-prompt-multiline
+         eshell-highlight-prompt nil
+         eshell-banner-message "")
+
+;; Eat for better terminal emulation in eshell
+(:with-hook eshell-load-hook
+  (:hook eat-eshell-mode)
+  (:hook eat-eshell-visual-command-mode))
+#+end_src
+
+** AI Integration (=init-ai.el=)
+
+LLM and AI-powered features.
+
+*** GPTel
+
+#+begin_src emacs-lisp :tangle no
+(:option gptel-default-mode 'org-mode
+         gptel-model "openrouter/auto")
+#+end_src
+
+*** Agent Shell
+
+Claude Code and other AI agent integration with sidebar support.
+
+#+begin_src emacs-lisp :tangle no
+(keymap-global-set "C-c a s" 'agent-shell-sidebar-toggle)
+(keymap-global-set "C-c a f" 'agent-shell-sidebar-toggle-focus)
+#+end_src
+
+*** AI Code
+
+Code generation and review with Magit integration.
+
+*** ECA
+
+Editor Code Assistant integration.
+
+** Social (=init-social.el=)
+
+Communication tools.
+
+*** Telega
+
+Telegram client with Matrix bridge support, custom theming, and tab bar integration.
+
+#+begin_src emacs-lisp :tangle no
+(keymap-global-set "C-c t" (identity telega-prefix-map))
+
+(:option telega-chat-fill-column 90
+         telega-notifications-mode t
+         telega-emoji-use-images nil)
+#+end_src
+
+** Reader (=init-reader.el=)
+
+Document reading and annotation.
+
+*** Nov.el
+
+EPUB reader with annotation support.
+
+*** PDF Tools
+
+PDF viewing with themed colors.
+
+*** Org Remark
+
+Marginalia-style annotations for documents.
+
+*** Elfeed
+
+RSS/Atom feed reader.
+
+** Utilities (=init-util.el=)
+
+File management and utility functions.
+
+*** Dired & Dirvish
+
+Enhanced file manager with icons, preview, and quick access.
+
+#+begin_src emacs-lisp :tangle no
+(:option dirvish-quick-access-entries
+         '(("h" "~/" "Home")
+           ("e" "~/.emacs.d/" "Emacs")
+           ("p" "~/Library/CloudStorage/BeeStation-MyBeeStation/Projects/" "Projects")))
+#+end_src
+
+*** Helpful
+
+Better help buffers.
+
+*** Jinx
+
+Fast spell checking with CJK support.
+
+*** Auto-save
+
+Intelligent auto-save with exclusions for sensitive operations.
+
+** Transient Menus (=init-transient.el=)
+
+Custom transient command menus.
+
+*** Emacs Access
+
+Quick access to common paths and files.
+
+#+begin_src emacs-lisp :tangle no
+(keymap-global-set "C-c e e" 'emacs-access-transient)
+#+end_src
+
+*** Programming Commands
+
+LSP actions, diagnostics, and navigation.
+
+#+begin_src emacs-lisp :tangle no
+(keymap-global-set "C-c e p" 'prog-commands)
+#+end_src
+
+** macOS Specific (=init-mac.el=)
+
+Platform-specific optimizations.
+
+*** EMT (Emacs MacOS Tokenizer)
+
+Better word movement for CJK text using macOS tokenizer.
+
+#+begin_src emacs-lisp :tangle no
+(keymap-global-set "M-f" 'emt-forward-word)
+(keymap-global-set "M-b" 'emt-backward-word)
+#+end_src
+
+*** Smooth Scrolling
+
+Optimized mouse wheel behavior for trackpad.
+
+*** Environment Loading
+
+Load shell environment variables in GUI Emacs.
+
+** Work-specific (=init-bitstream.el=)
+
+FPGA development tools and JIRA integration.
+
+* Library Modules (=lib/=)
+
+Shared helper functions used across modules:
+
+| Library           | Purpose                              |
+|-------------------+--------------------------------------|
+| =lib-appearance=  | Theme switching, opacity adjustment  |
+| =lib-consult=     | Consult extensions                   |
+| =lib-eglot=       | LSP server configurations            |
+| =lib-elfeed=      | RSS feed management                  |
+| =lib-env=         | Environment variable loading         |
+| =lib-eshell=      | Eshell prompt and aliases            |
+| =lib-face=        | Font setup                           |
+| =lib-gptel=       | GPTel backend configuration          |
+| =lib-hs=          | Hideshow cycling                     |
+| =lib-lisp=        | Elisp evaluation helpers             |
+| =lib-magit=       | Magit enhancements                   |
+| =lib-meow=        | Meow keybinding setup                |
+| =lib-org=         | Org-mode utilities                   |
+| =lib-org-agenda=  | Agenda customization                 |
+| =lib-tabbar=      | Tab bar formatting                   |
+| =lib-telega=      | Telegram helpers                     |
+| =lib-transient=   | Transient menu definitions           |
+| =lib-treesit=     | Tree-sitter grammar sources          |
+| =lib-vertico=     | Vertico extensions                   |
+| =lib-vterm=       | Vterm keybindings                    |
+| =lib-window=      | Window manipulation                  |
+
+* Site-lisp Packages
+
+Custom/local packages:
+
+| Package              | Description                           |
+|----------------------+---------------------------------------|
+| =miniline=           | Overlay-based mode-line in echo area  |
+| =miniline-segments=  | Segments for miniline                 |
+| =gptel-quick=        | Quick GPTel interactions              |
+| =fpga-manager=       | FPGA development tools                |
+
+* Themes
+
+** Rosé Pine
+
+A soothing color theme with day and night variants.
+
+- =rose-pine-night= - Dark variant (default)
+- =rose-pine-day= - Light variant
+
+Automatically switches based on macOS system appearance.
+
+* Nix Configuration
+
+** Available Packages
+
+| Package                    | Description                    |
+|----------------------------+--------------------------------|
+| =demacs= / =demacs-igc=    | Default IGC build              |
+| =demacs-igc-patched=       | IGC with macOS patches         |
+| =demacs-master=            | Git master build               |
+| =demacs-master-patched=    | Git master with macOS patches  |
+
+** Applied Patches (patched variants)
+
+- =round-undecorated-frame= - Rounded window corners
+- =system-appearance= - OS light/dark mode detection
+- =ns-alpha-background= - Transparent frame background
+- =smooth-cursor= - Smooth cursor animation
+
+** Custom Package Sources
+
+Packages fetched from GitHub:
+
+- =telega= - Telegram client (custom fork)
+- =setup-el= - Setup.el macro library
+- =eglot-x= - Eglot extensions
+- =org-modern-indent= - Org indentation
+- =lsp-proxy= - LSP multiplexer
+- =agent-shell-sidebar= - AI agent sidebar
+- And more...
+
+* Key Bindings Reference
+
+** Global
+
+| Key         | Command                  |
+|-------------+--------------------------|
+| =C-c g=     | Magit status             |
+| =C-c f l=   | Consult line             |
+| =C-c f b=   | Consult buffer           |
+| =C-c f f=   | Consult fd               |
+| =C-c .=     | Embark act               |
+| =C-;=       | Avy goto word            |
+| =C-c n n=   | Denote open/create       |
+| =C-c e e=   | Emacs access transient   |
+| =C-c a s=   | Agent shell sidebar      |
+| =C-c t=     | Telega prefix            |
+| =<f8>=      | Eshell                   |
+
+** Org Mode
+
+| Key         | Command                  |
+|-------------+--------------------------|
+| =C-c L=     | Store link               |
+| =C-c C-o=   | Open at point            |
+| =C-M-up=    | Up element               |
+
+** Programming
+
+| Key         | Command                  |
+|-------------+--------------------------|
+| =C-c e p=   | Prog commands transient  |
+| =C-c C-x C-f= | Format buffer          |
+
+* Contributing
+
+This is a personal configuration, but suggestions are welcome! Please open an issue or pull request on GitHub.
+
+* License
+
+This configuration is released under the GPL-3.0 license. See =LICENSE= for details.
+
+---
+
+/Generated for demacs - Desmond's Emacs Configuration/

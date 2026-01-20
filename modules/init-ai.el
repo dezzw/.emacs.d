@@ -3,24 +3,13 @@
 ;;; Code:
 
 (setup gptel
+  (:also-load lib-gptel)
   (:option gptel-default-mode 'org-mode
            gptel-model "openrouter/auto")
   (:when-loaded
-    (defun read-file-contents (file-path)
-      "Read the contents of FILE-PATH and return it as a string."
-      (with-temp-buffer
-        (insert-file-contents file-path)
-        (buffer-string)))
-    (setq gptel-backend
-          (gptel-make-openai "NETINT"
-            :host "cursor.netint.ca/openrouter/v1"
-            :endpoint "/chat/completions"
-            :stream t
-            :key (auth-source-pick-first-password :host "cursor.netint.ca" :user "netint")
-            :models '("openrouter/auto" "openai/gpt-5.2" "openai/gpt-5.2-pro" "anthropic/claude-sonnet-4.5" "anthropic/claude-opus-4.5")
-            )))
+    (setq gptel-backend (+gptel-make-netint-backend)))
   (:with-hook gptel-post-stream-hook
-    (:hook (lambda ()(meow-insert-exit)))
+    (:hook (lambda () (meow-insert-exit)))
     (:hook gptel-auto-scroll))
   (:hooks gptel-post-response-hook gptel-end-of-response))
 
@@ -47,11 +36,11 @@
 
     (setopt agent-shell-file-completion-enabled t)))
 
-;; (setup agent-shell-sidebar
-;;   (:defer (:require agent-shell-sidebar))
-;;   ;; (:load-after agent-shell)
-;;   (keymap-global-set "C-c a s" 'agent-shell-sidebar-toggle)
-;;   (keymap-global-set "C-c a f" 'agent-shell-sidebar-toggle-focus))
+(setup agent-shell-sidebar
+  (:defer (:require agent-shell-sidebar))
+  ;; (:load-after agent-shell)
+  (keymap-global-set "C-c a s" 'agent-shell-sidebar-toggle)
+  (keymap-global-set "C-c a f" 'agent-shell-sidebar-toggle-focus))
 
 ;; (setup agent-review
 ;;   (:load-after agent-shell))

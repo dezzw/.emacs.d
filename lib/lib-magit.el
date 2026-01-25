@@ -47,6 +47,7 @@ branch name."
   "Generate commit message with gptel and insert it into the buffer."
   (interactive)
   (require 'gptel)
+  (setq-local gptel-model "openai/gpt-5.2")
   (when buffer-read-only
     (read-only-mode -1))
   (let* ((lines (magit-git-lines "diff" "--cached"))

@@ -281,16 +281,16 @@
             src = inputs.setup-el;
           };
 
-          lsp-proxy = epkgs.trivialBuild {
+          lsp-proxy = epkgs.melpaBuild {
             pname = "lsp-proxy";
             version = timestampToDate inputs.lsp-proxy.lastModified;
             src = inputs.lsp-proxy;
             # Patch lsp-proxy-core.el to use the Nix-built binary
-            # Add the Nix binary path as the first candidate (highest priority)
             postPatch = ''
               substituteInPlace lsp-proxy-core.el \
-                --replace '(list (executable-find exe-name)' \
-                '(list "${emacs-lsp-proxy-binary}/bin/emacs-lsp-proxy" (executable-find exe-name)'
+                --replace-fail \
+                "(executable-find \"emacs-lsp-proxy\")" \
+                "\"${emacs-lsp-proxy-binary}/bin/emacs-lsp-proxy\""
             '';
             packageRequires = [
               epkgs.s
@@ -300,6 +300,11 @@
               epkgs.f
               epkgs.yasnippet
             ];
+            recipe = pkgs.writeText "lsp-proxy-recipe" ''
+              (lsp-proxy :repo "jadestrong/lsp-proxy"
+                         :fetcher github
+                         :files ("*.el"))
+            '';
           };
 
           symbol-overlay = epkgs.trivialBuild {

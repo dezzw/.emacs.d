@@ -221,11 +221,12 @@
 
 (setup eldoc-box
   (:load-after eldoc)
-  (:hooks eglot-managed-mode-hook eldoc-box-hover-mode))
+  (:hooks eglot-managed-mode-hook eldoc-box-hover-mode)
+  (:hooks lsp-proxy-mode-hook eldoc-box-hover-mode))
 
 (setup eglot
-  (:with-mode (python-ts-mode js-ts-mode tsx-ts-mode vue-mode latex-mode)
-    (:hook eglot-ensure))
+  ;; (:with-mode (python-ts-mode js-ts-mode tsx-ts-mode vue-mode latex-mode)
+  ;;   (:hook eglot-ensure))
   (:when-loaded
     (:also-load lib-eglot)
     (setopt eglot-code-action-indications '(eldoc-hint)
@@ -268,8 +269,10 @@
   (:load-after eglot)
   (:hooks eglot-managed-mode-hook eglot-x-setup))
 
-
-
+(setup lsp-proxy
+  (:with-mode (python-ts-mode go-ts-mode js-ts-mode tsx-ts-mode vue-mode)
+    (:hook lsp-proxy-mode))
+  (setopt lsp-proxy-diagnostics-provider :flymake))
 
 (setup compile
   (:option compilation-always-kill t       ; kill compilation process before starting another

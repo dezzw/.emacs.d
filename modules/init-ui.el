@@ -212,7 +212,6 @@
              tab-bar-format '(tab-bar-format-tabs
                               tab-bar-format-add-tab
                               tab-bar-format-align-right))))
-
 (setup tab-line
   (setopt tab-line-new-button-show nil)
   (setopt tab-line-close-button-show nil))

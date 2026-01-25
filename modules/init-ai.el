@@ -43,7 +43,7 @@
   (keymap-global-set "C-c a f" 'agent-shell-sidebar-toggle-focus))
 
 ;; (setup agent-review
-;;   (:load-after agent-shell))
+;;   (:load-after agent-shell)
 
 (setup ai-code
   ;; (keymap-global-set "C-c a" 'ai-code-menu)
@@ -54,7 +54,9 @@
     (with-eval-after-load 'magit
       (ai-code-magit-setup-transients))))
 
-(setup eca)
+(setup eca
+  (setopt eca-chat-custom-model "netint-open-router/anthropic/claude-opus-4.5")
+  )
 
 (provide 'init-ai)
 ;;; init-ai.el ends here

@@ -2,9 +2,6 @@
 ;;; Commentary:
 ;;; Code:
 
-(setup tool-bar (:when-loaded (tool-bar-mode -1)))
-(setup scroll-bar (:when-loaded (set-scroll-bar-mode nil)))
-(setup tooltip (:when-loaded (:option tooltip-delay 2.5)))
 ;; Change global font size easily
 (setup (:require default-text-scale)
   (:hook-into after-init))
@@ -217,6 +214,7 @@
   (setopt tab-line-close-button-show nil))
 
 (setup activities
+  (:also-load lib-activities)
   (:hooks after-init-hook activities-mode)
   (:hooks after-init-hook activities-tabs-mode)
   (:option edebug-inhibit-emacs-lisp-mode-bindings t
@@ -232,31 +230,7 @@
   (keymap-global-set "C-c w l" #'activities-list)
   (:when-loaded
     (:after consult
-      ;; hide full buffer list (still available with "b" prefix)
-      (when (boundp 'consult--source-buffer)
-        (setq consult--source-buffer
-              (plist-put
-               (plist-put consult--source-buffer
-                          :enabled (lambda () (not (activities-current))))
-               :default t)))
-      (defvar consult--source-activities
-        `(:name     "Activity Buffers"
-                    :narrow   ?a
-                    :category buffer
-                    :history  buffer-name-history
-                    :action   ,#'switch-to-buffer
-                    :enabled  ,(lambda () (activities-current))
-                    :items
-                    ,(lambda ()
-                       (consult--buffer-query
-                        :predicate (lambda (b)
-                                     (memq b (activities-tabs--tab-parameter
-                                              'activities-buffer-list
-                                              (activities-tabs--tab (activities-current)))))
-                        :sort 'visibility
-                        :as #'buffer-name)))
-        "Consult source for current activity's buffers.")
-      (add-to-list 'consult-buffer-sources 'consult--source-activities))))
+      (+activities-consult-setup))))
 
 (setup which-key
   (:hook-into after-init))

@@ -85,6 +85,10 @@
       url = "github:jdtsmith/consult-ripfd";
       flake = false;
     };
+    miniline = {
+      url = "github:dezzw/miniline.el";
+      flake = false;
+    };
     tree-sitter-clojure = {
       url = "github:sogaiu/tree-sitter-clojure?ref=unstable-20250526";
       flake = false;
@@ -313,6 +317,13 @@
             src = inputs.symbol-overlay;
           };
 
+          miniline = epkgs.trivialBuild {
+            pname = "miniline";
+            version = timestampToDate inputs.miniline.lastModified;
+            src = inputs.miniline;
+            packageRequires = [ epkgs.nerd-icons ];
+          };
+
           blame-reveal = epkgs.trivialBuild {
 
             pname = "blame-reveal";
@@ -376,6 +387,7 @@
             customPkgs.image-slicing
             customPkgs.leetcode-emacs
             customPkgs.lsp-proxy
+            customPkgs.miniline
             customPkgs.org-modern-indent
             customPkgs.panel
             customPkgs.setup

@@ -70,32 +70,16 @@
         "nixpkgs-stable": "nixpkgs-stable"
       },
       "locked": {
-        "lastModified": 1769531499,
-        "narHash": "sha256-80UqMHJemMtCjd66gazkWdaD0xdDORljNVnXWY4iDko=",
+        "lastModified": 1769567554,
+        "narHash": "sha256-7iaA8o/NOSr4I7JvY9lmPGtsYqejcwqPEVtvo5j1D+A=",
         "owner": "nix-community",
         "repo": "emacs-overlay",
-        "rev": "f3f27ef482b0065ea9f296ab435f6a7db8ad7750",
+        "rev": "fabdf8c36d54c05fd7fc0a75109a294cf5606934",
         "type": "github"
       },
       "original": {
         "owner": "nix-community",
         "repo": "emacs-overlay",
-        "type": "github"
-      }
-    },
-    "emacs-patches": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1769489057,
-        "narHash": "sha256-hetCFf6bRkdFKvxc8R1y84c3Smm1nUWxYQPDfN39qwU=",
-        "owner": "LuciusChen",
-        "repo": ".emacs.d",
-        "rev": "cf789f922f81cc9c0baca0f7eeac3a5b62ef80fd",
-        "type": "github"
-      },
-      "original": {
-        "owner": "LuciusChen",
-        "repo": ".emacs.d",
         "type": "github"
       }
     },
@@ -300,7 +284,6 @@
         "consult-ripfd": "consult-ripfd",
         "eglot-x": "eglot-x",
         "emacs-overlay": "emacs-overlay",
-        "emacs-patches": "emacs-patches",
         "emacs-plus-patches": "emacs-plus-patches",
         "emt": "emt",
         "flake-utils": "flake-utils",

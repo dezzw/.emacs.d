@@ -22,10 +22,6 @@
       url = "github:d12frosted/homebrew-emacs-plus";
       flake = false;
     };
-    emacs-patches = {
-      url = "github:LuciusChen/.emacs.d";
-      flake = false;
-    };
 
     # Custom Emacs packages from GitHub
     eglot-x = {
@@ -141,9 +137,9 @@
           "${inputs.emacs-plus-patches}/patches/emacs-31/round-undecorated-frame.patch"
           # Make Emacs aware of OS-level light/dark mode
           "${inputs.emacs-plus-patches}/patches/emacs-31/system-appearance.patch"
-          # Custom patches
-          "${inputs.emacs-patches}/patches/emacs-31/ns-alpha-background.patch"
-          "${inputs.emacs-patches}/patches/emacs-31/smooth-cursor.patch"
+          # Local patches for macOS NS build tweaks
+          ./patches/ns-alpha-background.patch
+          ./patches/ns-mac-input-source.patch
         ];
 
         # ============================================================================
@@ -533,8 +529,8 @@
 
         packages.demacs-igc = emacs-augmented-igc;
         packages.demacs-igc-patched = emacs-augmented-igc-patched;
-        packages.demacs-master = emacs-augmented-master;
-        packages.demacs-master-patched = emacs-augmented-master-patched;
+        packages.demacs-git = emacs-augmented-master;
+        packages.demacs-git-patched = emacs-augmented-master-patched;
 
         # Default is IGC for backward compatibility
         packages.demacs = emacs-augmented-igc;
@@ -554,8 +550,8 @@
 
         apps.demacs-igc = mkApp "igc" packages.demacs-igc;
         apps.demacs-igc-patched = mkApp "igc-patched" packages.demacs-igc-patched;
-        apps.demacs-master = mkApp "master" packages.demacs-master;
-        apps.demacs-master-patched = mkApp "master-patched" packages.demacs-master-patched;
+        apps.demacs-git = mkApp "git" packages.demacs-git;
+        apps.demacs-git-patched = mkApp "git-patched" packages.demacs-git-patched;
         apps.demacs = apps.demacs-igc;
         apps.default = apps.demacs;
       }

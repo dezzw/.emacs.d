@@ -66,7 +66,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest]
-        version: [igc, igc-patched, master, master-patched]
+        version: [igc, igc-patched, git, git-patched]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -132,7 +132,7 @@ jobs:
           # Push all versions that might have succeeded
           # Each individual build job already pushed its own result,
           # this is a fallback to ensure everything is cached
-          for version in igc igc-patched master master-patched; do
+          for version in igc igc-patched git git-patched; do
             echo "Attempting to push demacs-$version..."
             nix build .#demacs-$version --no-link --print-out-paths 2>/dev/null | \
               cachix push demacs || echo "demacs-$version not available, skipping"

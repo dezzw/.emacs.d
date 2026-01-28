@@ -28,8 +28,8 @@ nix run .#demacs
 # Alternative builds
 nix run .#demacs-igc           # IGC without patches
 nix run .#demacs-igc-patched   # IGC with macOS patches
-nix run .#demacs-master        # Git master without patches
-nix run .#demacs-master-patched # Git master with patches
+nix run .#demacs-git           # Git master without patches
+nix run .#demacs-git-patched   # Git master with patches
 #+end_src
 
 * Directory Structure
@@ -707,8 +707,8 @@ Automatically switches based on macOS system appearance.
 |----------------------------+--------------------------------|
 | =demacs= / =demacs-igc=    | Default IGC build              |
 | =demacs-igc-patched=       | IGC with macOS patches         |
-| =demacs-master=            | Git master build               |
-| =demacs-master-patched=    | Git master with macOS patches  |
+| =demacs-git=               | Git master build               |
+| =demacs-git-patched=       | Git master with macOS patches  |
 
 ** Applied Patches (patched variants)
 

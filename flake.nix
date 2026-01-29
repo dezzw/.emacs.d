@@ -101,9 +101,17 @@
     flake-utils.lib.eachDefaultSystem (
       system:
       let
+        enchantOverlay = final: prev: {
+          enchant = prev.enchant.override {
+            withAppleSpell = prev.stdenv.hostPlatform.isDarwin;
+          };
+        };
         pkgs = import nixpkgs {
           inherit system;
-          overlays = [ emacs-overlay.overlay ];
+          overlays = [
+            emacs-overlay.overlay
+            enchantOverlay
+          ];
         };
         lib = pkgs.lib;
       in

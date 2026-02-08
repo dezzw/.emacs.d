@@ -70,11 +70,11 @@
         "nixpkgs-stable": "nixpkgs-stable"
       },
       "locked": {
-        "lastModified": 1770399043,
-        "narHash": "sha256-JNNhg8+cBK/42+XEYjq2qlx7LfnABry92rNMQQRoBOk=",
+        "lastModified": 1770484657,
+        "narHash": "sha256-Hcu8lNAGI5joa5VBfBJ7rQZGI7U1hFbg9VRgZe0T+Gw=",
         "owner": "nix-community",
         "repo": "emacs-overlay",
-        "rev": "61cf2182e7c603944c19e896d62eb282af62b60b",
+        "rev": "a9e56e59aab55480b061e0867c680a124d866c0d",
         "type": "github"
       },
       "original": {
@@ -86,11 +86,11 @@
     "emacs-plus-patches": {
       "flake": false,
       "locked": {
-        "lastModified": 1770351494,
-        "narHash": "sha256-GvFRInGMG5gHbKj+5eDe91ewwHQmLqrQ4n7Zj1yIhD8=",
+        "lastModified": 1770438841,
+        "narHash": "sha256-mFUcP+IAA+5ibSIssYfFqsnj3cHaLy0vyN5gX79qCK0=",
         "owner": "d12frosted",
         "repo": "homebrew-emacs-plus",
-        "rev": "c32a196916b9b44f714e0a201a1bd6bd5a5c423e",
+        "rev": "b6d20d284489944a83b2dc7ad2e5f22f01626a95",
         "type": "github"
       },
       "original": {
@@ -168,11 +168,11 @@
     "lsp-proxy": {
       "flake": false,
       "locked": {
-        "lastModified": 1770286632,
-        "narHash": "sha256-R8yKVAEMzKX0ksxL5n3WzUB3Qh7fctdljC5NssVmerQ=",
+        "lastModified": 1770472434,
+        "narHash": "sha256-dV8A1DPZ3avqFjCTMGSbrPOJtFieAyzHdIxEYaGR6pc=",
         "owner": "jadestrong",
         "repo": "lsp-proxy",
-        "rev": "6a540ee2ffeb49208975d3af94560eaaf6a9ec0b",
+        "rev": "d4c8e29883ad9d8cea0c03b416e4470fc874995d",
         "type": "github"
       },
       "original": {
@@ -231,11 +231,11 @@
     },
     "nixpkgs_2": {
       "locked": {
-        "lastModified": 1770169770,
-        "narHash": "sha256-awR8qIwJxJJiOmcEGgP2KUqYmHG4v/z8XpL9z8FnT1A=",
+        "lastModified": 1770380644,
+        "narHash": "sha256-P7dWMHRUWG5m4G+06jDyThXO7kwSk46C1kgjEWcybkE=",
         "owner": "nixos",
         "repo": "nixpkgs",
-        "rev": "aa290c9891fa4ebe88f8889e59633d20cc06a5f2",
+        "rev": "ae67888ff7ef9dff69b3cf0cc0fbfbcd3a722abe",
         "type": "github"
       },
       "original": {
@@ -351,11 +351,11 @@
     "tdlib": {
       "flake": false,
       "locked": {
-        "lastModified": 1767873194,
-        "narHash": "sha256-y0Mhsa135jjM2Y0IgGfpekIjA3TUxr9AwydHLG4Ucyg=",
+        "lastModified": 1770453530,
+        "narHash": "sha256-H86YksawH2OJ3eJOYXFWB8Lp7O1yQOBwG0Z8cUp10aA=",
         "owner": "tdlib",
         "repo": "td",
-        "rev": "cb863c1600082404428f1a84e407b866b9d412a8",
+        "rev": "6d509061574d684117f74133056aa43df89022fc",
         "type": "github"
       },
       "original": {

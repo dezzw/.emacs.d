@@ -133,11 +133,11 @@
     "emacs-src-master": {
       "flake": false,
       "locked": {
-        "lastModified": 1770736196,
-        "narHash": "sha256-tJK0d6QQBQ+YnyOOl6iB58MItE3/0MbtRdHcIgkLNUE=",
+        "lastModified": 1770742609,
+        "narHash": "sha256-Wng3+yEdZu5h1HucNTgy85gofx09JEOfHtU48D3QD64=",
         "ref": "master",
-        "rev": "d91d8c98f825b1d51837bb44f632a075fec32e0d",
-        "revCount": 181111,
+        "rev": "d62370a0ec5bef48fcbe4dd14e8b9e129a0d0cae",
+        "revCount": 181112,
         "type": "git",
         "url": "https://git.savannah.gnu.org/git/emacs.git"
       },

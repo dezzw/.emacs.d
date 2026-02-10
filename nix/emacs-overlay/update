@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+# Update Emacs source inputs.
+# Usage:
+#   ./update              # Update both master and igc
+#   ./update master       # Update only emacs-src-master
+#   ./update igc          # Update only emacs-src-igc
+set -euo pipefail
+
+SCRIPTPATH="$( cd "$(dirname "$0")" ; pwd -P )"
+cd "$SCRIPTPATH"
+
+update_master() {
+  echo "==> Updating emacs-src-master..."
+  nix flake lock --update-input emacs-src-master
+}
+
+update_igc() {
+  echo "==> Updating emacs-src-igc..."
+  nix flake lock --update-input emacs-src-igc
+}
+
+if [ $# -eq 0 ]; then
+  update_master
+  update_igc
+else
+  case "$1" in
+    master)  update_master ;;
+    igc)     update_igc ;;
+    *)       echo "Unknown target: $1"; echo "Usage: $0 [master|igc]"; exit 1 ;;
+  esac
+fi

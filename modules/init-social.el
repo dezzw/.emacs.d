@@ -3,6 +3,7 @@
 ;;; Code:
 
 (setup telega
+  (:pkg (telega :url "https://github.com/LuciusChen/telega.el"))
   ;; Use (identity telega-prefix-map) since setup.el adds #' to functions
   (keymap-global-set "C-c t" (identity telega-prefix-map))
   (:when-loaded

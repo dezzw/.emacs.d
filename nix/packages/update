@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+# Update demacs package sources.
+# Usage:
+#   ./update              # Update everything (custom + MELPA + ELPA + Nongnu)
+#   ./update custom       # Update all custom package flake inputs
+#   ./update melpa        # Update MELPA package archive
+#   ./update elpa         # Update ELPA package archives
+#   ./update nongnu       # Update Nongnu ELPA package archives
+set -euo pipefail
+
+SCRIPTPATH="$( cd "$(dirname "$0")" ; pwd -P )"
+cd "$SCRIPTPATH"
+
+update_custom() {
+  echo "==> Updating custom package inputs..."
+  nix flake update
+}
+
+update_repo() {
+  local repo="$1"
+  echo "==> Updating $repo..."
+  "repos/$repo/update"
+}
+
+if [ $# -eq 0 ]; then
+  update_custom
+  update_repo melpa
+  update_repo elpa
+  update_repo nongnu
+else
+  case "$1" in
+    custom)  update_custom ;;
+    melpa)   update_repo melpa ;;
+    elpa)    update_repo elpa ;;
+    nongnu)  update_repo nongnu ;;
+    *)       echo "Unknown target: $1"; echo "Usage: $0 [custom|melpa|elpa|nongnu]"; exit 1 ;;
+  esac
+fi

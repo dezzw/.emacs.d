@@ -6,7 +6,7 @@
 # ============================================
 # Package Managers & Dependencies
 # ============================================
-elpa/
+/elpa/
 site-packages/EmacsMacOSModule/
 
 # Straight.el
@@ -69,6 +69,11 @@ result
 .aider*
 .env
 .ai.code.prompt.org
+
+# ============================================
+# Nix reference clone (optional: remove to track)
+# ============================================
+emacs-overlay-ref/
 
 # ============================================
 # Miscellaneous

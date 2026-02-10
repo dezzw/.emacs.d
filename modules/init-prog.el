@@ -48,8 +48,12 @@
 (setup verb (:option verb-babel-timeout 60.0))
 
 (setup python
+  (:also-load lib-python-overlay)
   (:option python-indent-guess-indent-offset t
-           python-indent-guess-indent-offset-verbose nil))
+           python-indent-guess-indent-offset-verbose nil)
+  (:with-map python-base-mode-map
+    ;; C-c C-x C-e: eval statement and show result in overlay (CIDER-style)
+    (:bind "C-c C-x C-e" +python-eval-statement-overlay)))
 (setup go
   (:option tab-width 4
            go-ts-mode-indent-offset 4))
@@ -266,10 +270,12 @@
   (:when-loaded (eglot-booster-mode)))
 
 (setup eglot-x
+  (:pkg (eglot-x :url "https://github.com/nemethf/eglot-x"))
   (:load-after eglot)
   (:hooks eglot-managed-mode-hook eglot-x-setup))
 
 (setup lsp-proxy
+  (:pkg (lsp-proxy :url "https://github.com/jadestrong/lsp-proxy"))
   (:with-mode (python-ts-mode go-ts-mode js-ts-mode tsx-ts-mode vue-mode)
     (:hook lsp-proxy-mode))
   (setopt lsp-proxy-diagnostics-provider :flymake))
@@ -277,7 +283,7 @@
 (setup compile
   (:option compilation-always-kill t       ; kill compilation process before starting another
            compilation-ask-about-save nil  ; save all buffers on `compile'
-           compilation-scroll-output 'first-error)
+           compilation-scroll-output t)
   (:when-loaded
     (autoload 'comint-truncate-buffer "comint" nil t)
     (require 'ansi-color)

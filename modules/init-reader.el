@@ -21,6 +21,7 @@
 ;; pdf-view-themed-minor
 ;; Synchronize color filter with the present Emacs theme.
 (setup pdf-view
+  (:pkg pdf-tools)
   (:defer (:require pdf-tools)
           (:match-file "\\.PDF\\'"))
   (:when-loaded

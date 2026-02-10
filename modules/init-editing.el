@@ -206,6 +206,7 @@
   (:option goggles-pulse t))
 
 (setup symbol-overlay
+  (:pkg (symbol-overlay :url "https://github.com/roife/symbol-overlay"))
   (:autoload symbol-overlay-mode
              symbol-overlay-put
              symbol-overlay-switch-forward

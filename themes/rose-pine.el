@@ -1916,6 +1916,9 @@ names to which it refers are bound."
 
       ;; breadcrumb
       (breadcrumb-imenu-leaf-face (:inherit bold :background ,love :foreground ,background :box (:line-width (2 . 2) :color ,love)))
+
+      ;; eca
+      (eca-chat-user-messages-face (:inherit italic :foreground ,leaf))
       ))))
 
 

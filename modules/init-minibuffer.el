@@ -32,6 +32,7 @@
            completion-cycle-threshold 4))
 
 (setup miniline
+  (:pkg (miniline :url "https://github.com/dezzw/miniline.el"))
   (:require miniline miniline-segments)
   (:option
    ;; Default format (buffer-local mode-line-format takes priority)

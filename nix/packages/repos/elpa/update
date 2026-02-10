@@ -1,0 +1,16 @@
+#!/usr/bin/env nix-shell
+#! nix-shell -i bash -p bash
+set -euxo pipefail
+
+SCRIPTPATH="$( cd "$(dirname "$0")" ; pwd -P )"
+cd $SCRIPTPATH
+
+rm -f elpa-generated.nix
+
+eval $(nix-instantiate --eval --expr 'let nixpath = builtins.toString (import <nixpkgs> {}).path; in "${nixpath}/pkgs/applications/editors/emacs/elisp-packages/update-elpa"')
+env NIXPKGS_ALLOW_BROKEN=1 nix-instantiate --show-trace ./test.nix -A elpaPackages
+
+rm -f elpa-devel-generated.nix
+
+eval $(nix-instantiate --eval --expr 'let nixpath = builtins.toString (import <nixpkgs> {}).path; in "${nixpath}/pkgs/applications/editors/emacs/elisp-packages/update-elpa-devel"')
+env NIXPKGS_ALLOW_BROKEN=1 nix-instantiate --show-trace ./test.nix -A elpaDevelPackages

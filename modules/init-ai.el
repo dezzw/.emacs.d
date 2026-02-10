@@ -36,11 +36,11 @@
 
     (setopt agent-shell-file-completion-enabled t)))
 
-(setup agent-shell-sidebar
-  (:defer (:require agent-shell-sidebar))
-  ;; (:load-after agent-shell)
-  (keymap-global-set "C-c a s" 'agent-shell-sidebar-toggle)
-  (keymap-global-set "C-c a f" 'agent-shell-sidebar-toggle-focus))
+;; (setup agent-shell-sidebar
+;;   (:defer (:require agent-shell-sidebar))
+;;   ;; (:load-after agent-shell)
+;;   (keymap-global-set "C-c a s" 'agent-shell-sidebar-toggle)
+;;   (keymap-global-set "C-c a f" 'agent-shell-sidebar-toggle-focus))
 
 ;; (setup agent-review
 ;;   (:load-after agent-shell)
@@ -55,8 +55,13 @@
       (ai-code-magit-setup-transients))))
 
 (setup eca
-  (setopt eca-chat-custom-model "netint-open-router/anthropic/claude-opus-4.5")
-  )
+  (:pkg (eca :url "https://github.com/editor-code-assistant/eca-emacs"))
+  (keymap-global-set "C-c a a" 'eca)
+  (:when-loaded
+    (keymap-global-set "C-c a s" 'eca-chat-add-context-to-user-prompt)
+    (keymap-global-set "C-c a f" 'eca-chat-add-filepath-to-user-prompt)
+    (keymap-global-set "C-c a m" 'eca-chat-select-model)
+    (keymap-global-set "C-c a b" 'eca-chat-cycle-behavior)))
 
 (provide 'init-ai)
 ;;; init-ai.el ends here

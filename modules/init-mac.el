@@ -20,6 +20,7 @@
   (+load-env-file))
 
 (setup emt
+  (:pkg (emt :url "https://github.com/roife/emt"))
   (:defer (:require emt))
   (:when-loaded
     (keymap-global-set "M-f" 'emt-forward-word)

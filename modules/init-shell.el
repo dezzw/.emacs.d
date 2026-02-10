@@ -14,6 +14,7 @@
              vterm-always-compile-module t)))
 
 (setup esh-mode
+  (:pkg eshell-syntax-highlighting)
   (keymap-global-set "<f8>" 'eshell)
   (:when-loaded
     (:require eshell)

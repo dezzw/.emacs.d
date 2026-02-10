@@ -83,6 +83,7 @@
   (keymap-global-set "<remap> <describe-key>" 'helpful-key))
 
 (setup leetcode
+  (:pkg (leetcode-emacs :url "https://github.com/ginqi7/leetcode-emacs"))
   (:autoload leetcode-list-all)
   (:option leetcode-language "swift"))
 

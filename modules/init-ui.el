@@ -214,7 +214,6 @@
   (setopt tab-line-close-button-show nil))
 
 (setup activities
-  (:also-load lib-activities)
   (:hooks after-init-hook activities-mode)
   (:hooks after-init-hook activities-tabs-mode)
   (:option edebug-inhibit-emacs-lisp-mode-bindings t
@@ -228,9 +227,25 @@
   (keymap-global-set "C-c w b" #'activities-switch-buffer)
   (keymap-global-set "C-c w g" #'activities-revert)
   (keymap-global-set "C-c w l" #'activities-list)
+  ;; Consult integration for activity-scoped buffers
   (:when-loaded
     (:after consult
-      (+activities-consult-setup))))
+      (:also-load lib-activities)
+      ;; Disable default buffer source when in an activity
+      (when (boundp 'consult--source-buffer)
+        (setq consult--source-buffer
+              (plist-put (plist-put consult--source-buffer
+                                    :enabled (lambda () (not (activities-current))))
+                         :default t)))
+      (add-to-list 'consult-buffer-sources '+consult--source-activities)
+      ;; Remap buffer commands to activity-aware versions
+      (keymap-global-set "<remap> <switch-to-buffer>" #'+consult-buffer-activities-aware)
+      (keymap-global-set "<remap> <kill-buffer>" #'+kill-buffer-activities-aware)
+      ;; Restrict other-buffer to activity buffers
+      (advice-add #'other-buffer :around #'+activities-other-buffer-a)
+      ;; Sanitize windows on activity switch/resume
+      (add-hook 'activities-after-resume-functions #'+activities-sanitize-windows-h)
+      (add-hook 'activities-after-switch-functions #'+activities-sanitize-windows-h))))
 
 (setup which-key
   (:hook-into after-init))

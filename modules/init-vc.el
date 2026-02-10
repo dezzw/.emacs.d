@@ -81,6 +81,7 @@
             dired-mode-hook diff-hl-dired-mode)))
 
 (setup blame-reveal
+  (:pkg (blame-reveal :url "https://github.com/LuciusChen/blame-reveal"))
   (:defer (:require blame-reveal))
   (:when-loaded
     (setq blame-reveal-recent-days-limit 'auto)        ; Adapt to commit frequency

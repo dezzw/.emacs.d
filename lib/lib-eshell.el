@@ -41,6 +41,19 @@
   "Open FILE."
   (find-file file))
 
+(defun eshell/probe (file &optional type)
+  (let* ((prefix (expand-file-name "~/workspace/bitstreams/"))
+         (full-path (expand-file-name file prefix))
+         (type (cond ((null type) "mediainfo")
+                     ((symbolp type) (symbol-name type))
+                     (t type)))
+         (program (if (string= type "ffprobe") "ffprobe" "mediainfo"))
+         (args (if (string= program "ffprobe")
+                   (list "-hide_banner" full-path)
+                 (list full-path))))
+    ;; Insert output into the current buffer (Eshell), return exit code
+    (apply #'process-file program nil t nil args)))
+
 (defvar +aliases
   '((ll . "ls -lah")
     (bupg . "brew upgrade")

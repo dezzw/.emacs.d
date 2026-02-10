@@ -67,5 +67,45 @@ See `advice-add' for more details."
   :repeatable t
   :signature '(FUNC ...))
 
+(setup-define :pkg
+  (lambda (&optional package)
+    (let* ((feature (setup-get 'feature))
+           ;; Normalize: infer name from feature when needed
+           (spec (cond
+                  ((null package) nil)                              ; (:pkg)
+                  ((symbolp package) package)                       ; (:pkg meow)
+                  ((and (consp package) (symbolp (car package)))
+                   package)                                         ; (:pkg (meow :url ...))
+                  ((and (consp package) (keywordp (car package)))
+                   (cons feature package))                          ; (:pkg (:url ...))
+                  (t (error "Invalid :pkg argument: %S" package))))
+           (is-vc (consp spec))
+           (name (if is-vc (car spec) (or spec feature)))
+           (vc-plist (and is-vc (cdr spec)))
+           (url (and vc-plist (plist-get vc-plist :url))))
+      (if url
+          `(unless (require ',feature nil t)
+             (package-vc-install ',(cons name vc-plist))
+             (require ',feature))
+        `(require ',(or name feature) nil t))))
+  :documentation "Declare package dependency.
+Tries `require' first (succeeds when installed via Nix).
+With no argument, infers package name from the setup form name.
+Falls back to `package-vc-install' when a VC spec is given.
+
+Usage:
+  (:pkg)                                    ; infer from (setup NAME ...)
+  (:pkg meow)                               ; require 'meow
+  (:pkg pdf-tools)                          ; feature != package
+  (:pkg (eglot-x :url \"https://...\"))    ; require or vc-install
+  (:pkg (:url \"https://...\"))            ; infer name + vc-install"
+  :shorthand (lambda (form)
+               (let ((arg (cadr form)))
+                 (cond
+                  ((null arg) nil)
+                  ((and (consp arg) (keywordp (car arg))) nil)
+                  ((consp arg) (car arg))
+                  (t arg)))))
+
 (provide 'init-setup)
 ;;; init-setup.el ends here

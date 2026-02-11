@@ -36,6 +36,12 @@
   (keymap-global-set "C-x 3" (lambda () (interactive)(select-window (split-window-horizontally))))
   (keymap-global-set "C-x 2" (lambda () (interactive)(select-window (split-window-vertically)))))
 
+(setup ace-window
+  (:pkg)
+  (keymap-global-set "C-x o" 'ace-window)
+  (:option aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l)
+           aw-scope 'frame))
+
 (setup frame
   (:when-loaded
     (let ((border '(internal-border-width . 12)))

@@ -3,11 +3,11 @@
     "agent-shell": {
       "flake": false,
       "locked": {
-        "lastModified": 1770736322,
-        "narHash": "sha256-dlig+HUsnNs0XoUufn6u7gdepFn+TuZd0SGOYg1voCE=",
+        "lastModified": 1770748170,
+        "narHash": "sha256-VbHP74lt7cIbnFaJ5hZ64NaIqR+ZMEyfCRkZE383gb8=",
         "owner": "xenodium",
         "repo": "agent-shell",
-        "rev": "84b6c03e1d0c8e1654e3cc3ab40e4122e43d46c5",
+        "rev": "2e586f7039610425a709706a4c857a88cb328b96",
         "type": "github"
       },
       "original": {
@@ -67,8 +67,8 @@
     "demacs-emacs-overlay": {
       "inputs": {
         "demacs-packages": "demacs-packages",
+        "emacs-src-git": "emacs-src-git",
         "emacs-src-igc": "emacs-src-igc",
-        "emacs-src-master": "emacs-src-master",
         "nixpkgs": [
           "nixpkgs"
         ]
@@ -168,38 +168,38 @@
         "type": "github"
       }
     },
+    "emacs-src-git": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1770742609,
+        "narHash": "sha256-Wng3+yEdZu5h1HucNTgy85gofx09JEOfHtU48D3QD64=",
+        "owner": "emacs-mirror",
+        "repo": "emacs",
+        "rev": "d62370a0ec5bef48fcbe4dd14e8b9e129a0d0cae",
+        "type": "github"
+      },
+      "original": {
+        "owner": "emacs-mirror",
+        "ref": "master",
+        "repo": "emacs",
+        "type": "github"
+      }
+    },
     "emacs-src-igc": {
       "flake": false,
       "locked": {
         "lastModified": 1770567400,
         "narHash": "sha256-+D6iF7Prpk8rouf9vta2QZERTjP+uR2QWLeyZ2oLyJs=",
-        "ref": "feature/igc",
+        "owner": "emacs-mirror",
+        "repo": "emacs",
         "rev": "dc94610043a27845007c0fe62228f865e2ecbb2e",
-        "revCount": 189888,
-        "type": "git",
-        "url": "https://git.savannah.gnu.org/git/emacs.git"
+        "type": "github"
       },
       "original": {
+        "owner": "emacs-mirror",
         "ref": "feature/igc",
-        "type": "git",
-        "url": "https://git.savannah.gnu.org/git/emacs.git"
-      }
-    },
-    "emacs-src-master": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1770736196,
-        "narHash": "sha256-tJK0d6QQBQ+YnyOOl6iB58MItE3/0MbtRdHcIgkLNUE=",
-        "ref": "master",
-        "rev": "d91d8c98f825b1d51837bb44f632a075fec32e0d",
-        "revCount": 181111,
-        "type": "git",
-        "url": "https://git.savannah.gnu.org/git/emacs.git"
-      },
-      "original": {
-        "ref": "master",
-        "type": "git",
-        "url": "https://git.savannah.gnu.org/git/emacs.git"
+        "repo": "emacs",
+        "type": "github"
       }
     },
     "emt": {
@@ -215,24 +215,6 @@
       "original": {
         "owner": "roife",
         "repo": "emt",
-        "type": "github"
-      }
-    },
-    "flake-utils": {
-      "inputs": {
-        "systems": "systems"
-      },
-      "locked": {
-        "lastModified": 1731533236,
-        "narHash": "sha256-l0KFg5HjrsfsO/JpG+r7fRrqm12kzFHyUHqHCVpMMbI=",
-        "owner": "numtide",
-        "repo": "flake-utils",
-        "rev": "11707dc2f618dd54ca8739b309ec4fc024de578b",
-        "type": "github"
-      },
-      "original": {
-        "owner": "numtide",
-        "repo": "flake-utils",
         "type": "github"
       }
     },
@@ -352,7 +334,6 @@
       "inputs": {
         "demacs-emacs-overlay": "demacs-emacs-overlay",
         "emacs-plus-patches": "emacs-plus-patches",
-        "flake-utils": "flake-utils",
         "nixpkgs": "nixpkgs"
       }
     },
@@ -385,21 +366,6 @@
       "original": {
         "owner": "roife",
         "repo": "symbol-overlay",
-        "type": "github"
-      }
-    },
-    "systems": {
-      "locked": {
-        "lastModified": 1681028828,
-        "narHash": "sha256-Vy1rq5AaRuLzOxct8nz4T6wlgyUR7zLU309k9mBC768=",
-        "owner": "nix-systems",
-        "repo": "default",
-        "rev": "da67096a3b9bf56a91d16901293e51ba5b49a27e",
-        "type": "github"
-      },
-      "original": {
-        "owner": "nix-systems",
-        "repo": "default",
         "type": "github"
       }
     },

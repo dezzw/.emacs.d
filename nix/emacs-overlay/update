@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
 # Update Emacs source inputs.
 # Usage:
-#   ./update              # Update both master and igc
-#   ./update master       # Update only emacs-src-master
+#   ./update              # Update both git and igc
+#   ./update git          # Update only emacs-src-git
 #   ./update igc          # Update only emacs-src-igc
 set -euo pipefail
 
 SCRIPTPATH="$( cd "$(dirname "$0")" ; pwd -P )"
 cd "$SCRIPTPATH"
 
-update_master() {
-  echo "==> Updating emacs-src-master..."
-  nix flake lock --update-input emacs-src-master
+update_git() {
+  echo "==> Updating emacs-src-git..."
+  nix flake lock --update-input emacs-src-git
 }
 
 update_igc() {
@@ -20,12 +20,12 @@ update_igc() {
 }
 
 if [ $# -eq 0 ]; then
-  update_master
+  update_git
   update_igc
 else
   case "$1" in
-    master)  update_master ;;
+    git)     update_git ;;
     igc)     update_igc ;;
-    *)       echo "Unknown target: $1"; echo "Usage: $0 [master|igc]"; exit 1 ;;
+    *)       echo "Unknown target: $1"; echo "Usage: $0 [git|igc]"; exit 1 ;;
   esac
 fi

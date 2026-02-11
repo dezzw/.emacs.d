@@ -113,38 +113,38 @@
         "type": "github"
       }
     },
+    "emacs-src-git": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1770742609,
+        "narHash": "sha256-Wng3+yEdZu5h1HucNTgy85gofx09JEOfHtU48D3QD64=",
+        "owner": "emacs-mirror",
+        "repo": "emacs",
+        "rev": "d62370a0ec5bef48fcbe4dd14e8b9e129a0d0cae",
+        "type": "github"
+      },
+      "original": {
+        "owner": "emacs-mirror",
+        "ref": "master",
+        "repo": "emacs",
+        "type": "github"
+      }
+    },
     "emacs-src-igc": {
       "flake": false,
       "locked": {
         "lastModified": 1770567400,
         "narHash": "sha256-+D6iF7Prpk8rouf9vta2QZERTjP+uR2QWLeyZ2oLyJs=",
-        "ref": "feature/igc",
+        "owner": "emacs-mirror",
+        "repo": "emacs",
         "rev": "dc94610043a27845007c0fe62228f865e2ecbb2e",
-        "revCount": 189888,
-        "type": "git",
-        "url": "https://git.savannah.gnu.org/git/emacs.git"
+        "type": "github"
       },
       "original": {
+        "owner": "emacs-mirror",
         "ref": "feature/igc",
-        "type": "git",
-        "url": "https://git.savannah.gnu.org/git/emacs.git"
-      }
-    },
-    "emacs-src-master": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1770742609,
-        "narHash": "sha256-Wng3+yEdZu5h1HucNTgy85gofx09JEOfHtU48D3QD64=",
-        "ref": "master",
-        "rev": "d62370a0ec5bef48fcbe4dd14e8b9e129a0d0cae",
-        "revCount": 181112,
-        "type": "git",
-        "url": "https://git.savannah.gnu.org/git/emacs.git"
-      },
-      "original": {
-        "ref": "master",
-        "type": "git",
-        "url": "https://git.savannah.gnu.org/git/emacs.git"
+        "repo": "emacs",
+        "type": "github"
       }
     },
     "emt": {
@@ -278,8 +278,8 @@
     "root": {
       "inputs": {
         "demacs-packages": "demacs-packages",
+        "emacs-src-git": "emacs-src-git",
         "emacs-src-igc": "emacs-src-igc",
-        "emacs-src-master": "emacs-src-master",
         "nixpkgs": "nixpkgs"
       }
     },

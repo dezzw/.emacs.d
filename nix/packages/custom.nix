@@ -70,7 +70,7 @@ in
   # ===========================================================================
   # Custom elisp packages
   # ===========================================================================
-  agent-shell = epkgs.trivialBuild {
+  agent-shell = epkgs.melpaBuild {
     pname = "agent-shell";
     version = versionOf inputs.agent-shell;
     src = inputs.agent-shell;
@@ -78,6 +78,11 @@ in
       epkgs.shell-maker
       epkgs.acp
     ];
+    recipe = pkgs.writeText "agent-shell-recipe" ''
+      (agent-shell :repo "xenodium/agent-shell"
+                   :fetcher github
+                   :files ("*.el"))
+    '';
   };
 
   agent-shell-sidebar = epkgs.trivialBuild {
@@ -191,6 +196,7 @@ in
     version = versionOf inputs.eca;
     src = inputs.eca;
     packageRequires = [
+      epkgs.compat
       epkgs.dash
       epkgs.f
       epkgs.markdown-mode

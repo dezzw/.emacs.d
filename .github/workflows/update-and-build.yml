@@ -26,13 +26,14 @@ jobs:
       - name: Install Nix
         uses: cachix/install-nix-action@v31
         with:
-          nix_path: nixpkgs=channel:nixos-unstable
+          extra_nix_config: |
+            accept-flake-config = true
 
       - name: Update Emacs source inputs
         id: update
         run: |
           cd nix/emacs-overlay
-          nix flake lock --update-input emacs-src-master --update-input emacs-src-igc
+          nix flake lock --update-input emacs-src-git --update-input emacs-src-igc
           cd ../..
           if git diff --quiet nix/emacs-overlay/flake.lock; then
             echo "has_changes=false" >> $GITHUB_OUTPUT
@@ -60,7 +61,8 @@ jobs:
       - name: Install Nix
         uses: cachix/install-nix-action@v31
         with:
-          nix_path: nixpkgs=channel:nixos-unstable
+          extra_nix_config: |
+            accept-flake-config = true
 
       - name: Update custom package inputs
         id: update
@@ -94,12 +96,13 @@ jobs:
       - name: Install Nix
         uses: cachix/install-nix-action@v31
         with:
-          nix_path: nixpkgs=channel:nixos-unstable
+          extra_nix_config: |
+            accept-flake-config = true
 
-      - name: Update nixpkgs and flake-utils
+      - name: Update nixpkgs
         id: update
         run: |
-          nix flake lock --update-input nixpkgs --update-input flake-utils
+          nix flake lock --update-input nixpkgs
           if git diff --quiet flake.lock; then
             echo "has_changes=false" >> $GITHUB_OUTPUT
           else
@@ -134,6 +137,12 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest]
         version: [igc, igc-patched, git, git-patched]
+        exclude:
+          # Patched variants use macOS-only patches; skip on Linux
+          - os: ubuntu-latest
+            version: igc-patched
+          - os: ubuntu-latest
+            version: git-patched
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -161,7 +170,8 @@ jobs:
       - name: Install Nix
         uses: cachix/install-nix-action@v31
         with:
-          nix_path: nixpkgs=channel:nixos-unstable
+          extra_nix_config: |
+            accept-flake-config = true
 
       - name: Setup Cachix
         uses: cachix/cachix-action@v16
@@ -172,7 +182,7 @@ jobs:
       - name: Build demacs-${{ matrix.version }}
         id: build
         run: |
-          nix build .#demacs-${{ matrix.version }} --print-build-logs
+          nix build .#demacs-${{ matrix.version }} --print-build-logs --keep-going
 
       - name: Push build to Cachix
         if: success()
@@ -181,7 +191,7 @@ jobs:
           cachix push demacs
 
   # ==========================================================================
-  # Commit Phase: push all updated lock files
+  # Commit Phase: push all updated lock files (only on successful build)
   # ==========================================================================
 
   push-changes:
@@ -193,7 +203,7 @@ jobs:
       (needs.update-emacs.outputs.has_changes == 'true' ||
        needs.update-packages.outputs.has_changes == 'true' ||
        needs.update-nixpkgs.outputs.has_changes == 'true') &&
-      (needs.build-and-cache.result == 'success' || needs.build-and-cache.result == 'failure')
+      needs.build-and-cache.result == 'success'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -238,7 +248,7 @@ jobs:
           MSG="[Chore] Update flake inputs"
           DETAILS=""
           if [ "${{ needs.update-emacs.outputs.has_changes }}" = "true" ]; then
-            DETAILS="${DETAILS}\n- Emacs sources (master + igc)"
+            DETAILS="${DETAILS}\n- Emacs sources (git + igc)"
           fi
           if [ "${{ needs.update-packages.outputs.has_changes }}" = "true" ]; then
             DETAILS="${DETAILS}\n- Custom packages"

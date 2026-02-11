@@ -5,12 +5,12 @@
     nixpkgs.url = "github:nixos/nixpkgs/master";
 
     # Emacs source branches (update independently)
-    emacs-src-master = {
-      url = "git+https://git.savannah.gnu.org/git/emacs.git?ref=master";
+    emacs-src-git = {
+      url = "github:emacs-mirror/emacs/master";
       flake = false;
     };
     emacs-src-igc = {
-      url = "git+https://git.savannah.gnu.org/git/emacs.git?ref=feature/igc";
+      url = "github:emacs-mirror/emacs/feature/igc";
       flake = false;
     };
 

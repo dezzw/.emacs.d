@@ -12,7 +12,7 @@ let
   # mkGitEmacs: build Emacs from a flake git source input
   # ===========================================================================
   mkGitEmacs =
-    namePrefix: srcInput:
+    namePrefix: srcInput: branch:
     { ... }@args:
     let
       version = "${versionOf srcInput}.0";
@@ -62,7 +62,7 @@ let
             + ''
               substituteInPlace lisp/loadup.el \
                 --replace-warn '(emacs-repository-get-version)' '"${rev}"' \
-                --replace-warn '(emacs-repository-get-branch)' '"master"'
+                --replace-warn '(emacs-repository-get-branch)' '"${branch}"'
             ''
             +
               # Native compilation: set libgccjit backend paths
@@ -124,7 +124,7 @@ let
 
   emacs-git =
     let
-      base = (mkGitEmacs "emacs-git" inputs.emacs-src-master) { };
+      base = (mkGitEmacs "emacs-git" inputs.emacs-src-git "master") { };
       emacs = emacs-git;
     in
     base.overrideAttrs (oa: {
@@ -136,7 +136,7 @@ let
   # IGC: no external MPS needed -- it's built into the feature/igc branch now
   emacs-igc =
     let
-      base = (mkGitEmacs "emacs-igc" inputs.emacs-src-igc) { };
+      base = (mkGitEmacs "emacs-igc" inputs.emacs-src-igc "feature/igc") { };
       emacs = emacs-igc;
     in
     base.overrideAttrs (oa: {

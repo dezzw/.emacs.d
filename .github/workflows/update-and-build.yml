@@ -11,14 +11,14 @@ on:
 
 jobs:
   # ==========================================================================
-  # Update Phase: each component updated independently
+  # Update Phase: sequential updates so root lock stays in sync with sub-flakes
   # ==========================================================================
 
-  update-emacs:
-    name: Update Emacs sources
+  update-inputs:
+    name: Update all inputs
     runs-on: ubuntu-latest
     outputs:
-      has_changes: ${{ steps.update.outputs.has_changes }}
+      has_changes: ${{ steps.check.outputs.has_changes }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -30,91 +30,37 @@ jobs:
             accept-flake-config = true
 
       - name: Update Emacs source inputs
-        id: update
         run: |
           cd nix/emacs-overlay
           nix flake lock --update-input emacs-src-git --update-input emacs-src-igc
-          cd ../..
-          if git diff --quiet nix/emacs-overlay/flake.lock; then
-            echo "has_changes=false" >> $GITHUB_OUTPUT
-          else
-            echo "has_changes=true" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Upload emacs-overlay lock
-        if: steps.update.outputs.has_changes == 'true'
-        uses: actions/upload-artifact@v4
-        with:
-          name: emacs-overlay-lock
-          path: nix/emacs-overlay/flake.lock
-          retention-days: 1
-
-  update-packages:
-    name: Update custom packages
-    runs-on: ubuntu-latest
-    outputs:
-      has_changes: ${{ steps.update.outputs.has_changes }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Install Nix
-        uses: cachix/install-nix-action@v31
-        with:
-          extra_nix_config: |
-            accept-flake-config = true
 
       - name: Update custom package inputs
-        id: update
         run: |
           cd nix/packages
           nix flake update
-          cd ../..
-          if git diff --quiet nix/packages/flake.lock; then
-            echo "has_changes=false" >> $GITHUB_OUTPUT
-          else
-            echo "has_changes=true" >> $GITHUB_OUTPUT
-          fi
 
-      - name: Upload packages lock
-        if: steps.update.outputs.has_changes == 'true'
-        uses: actions/upload-artifact@v4
-        with:
-          name: packages-lock
-          path: nix/packages/flake.lock
-          retention-days: 1
-
-  update-nixpkgs:
-    name: Update nixpkgs
-    runs-on: ubuntu-latest
-    outputs:
-      has_changes: ${{ steps.update.outputs.has_changes }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Install Nix
-        uses: cachix/install-nix-action@v31
-        with:
-          extra_nix_config: |
-            accept-flake-config = true
-
-      - name: Update nixpkgs
-        id: update
+      - name: Update root lock (nixpkgs + sync sub-flake changes)
         run: |
-          nix flake lock --update-input nixpkgs
-          if git diff --quiet flake.lock; then
+          nix flake update
+
+      - name: Check for changes
+        id: check
+        run: |
+          if git diff --quiet flake.lock nix/emacs-overlay/flake.lock nix/packages/flake.lock; then
             echo "has_changes=false" >> $GITHUB_OUTPUT
           else
             echo "has_changes=true" >> $GITHUB_OUTPUT
           fi
 
-      - name: Upload root flake lock
-        if: steps.update.outputs.has_changes == 'true'
+      - name: Upload all lock files
+        if: steps.check.outputs.has_changes == 'true'
         uses: actions/upload-artifact@v4
         with:
-          name: root-flake-lock
-          path: flake.lock
+          name: lock-files
+          path: |
+            flake.lock
+            nix/emacs-overlay/flake.lock
+            nix/packages/flake.lock
           retention-days: 1
 
   # ==========================================================================
@@ -123,13 +69,11 @@ jobs:
 
   build-and-cache:
     name: Build demacs (${{ matrix.os }} - ${{ matrix.version }})
-    needs: [update-emacs, update-packages, update-nixpkgs]
+    needs: [update-inputs]
     if: |
       always() &&
       !cancelled() &&
-      (needs.update-emacs.outputs.has_changes == 'true' ||
-       needs.update-packages.outputs.has_changes == 'true' ||
-       needs.update-nixpkgs.outputs.has_changes == 'true' ||
+      (needs.update-inputs.outputs.has_changes == 'true' ||
        github.event_name == 'push')
     runs-on: ${{ matrix.os }}
     strategy:
@@ -147,25 +91,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Download emacs-overlay lock (if updated)
-        if: needs.update-emacs.outputs.has_changes == 'true'
+      - name: Download updated lock files
+        if: needs.update-inputs.outputs.has_changes == 'true'
         uses: actions/download-artifact@v4
         with:
-          name: emacs-overlay-lock
-          path: nix/emacs-overlay/
-
-      - name: Download packages lock (if updated)
-        if: needs.update-packages.outputs.has_changes == 'true'
-        uses: actions/download-artifact@v4
-        with:
-          name: packages-lock
-          path: nix/packages/
-
-      - name: Download root flake lock (if updated)
-        if: needs.update-nixpkgs.outputs.has_changes == 'true'
-        uses: actions/download-artifact@v4
-        with:
-          name: root-flake-lock
+          name: lock-files
 
       - name: Install Nix
         uses: cachix/install-nix-action@v31
@@ -196,38 +126,21 @@ jobs:
 
   push-changes:
     name: Push updates to repository
-    needs: [update-emacs, update-packages, update-nixpkgs, build-and-cache]
+    needs: [update-inputs, build-and-cache]
     if: |
       always() &&
       !cancelled() &&
-      (needs.update-emacs.outputs.has_changes == 'true' ||
-       needs.update-packages.outputs.has_changes == 'true' ||
-       needs.update-nixpkgs.outputs.has_changes == 'true') &&
+      needs.update-inputs.outputs.has_changes == 'true' &&
       needs.build-and-cache.result == 'success'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Download emacs-overlay lock (if updated)
-        if: needs.update-emacs.outputs.has_changes == 'true'
+      - name: Download updated lock files
         uses: actions/download-artifact@v4
         with:
-          name: emacs-overlay-lock
-          path: nix/emacs-overlay/
-
-      - name: Download packages lock (if updated)
-        if: needs.update-packages.outputs.has_changes == 'true'
-        uses: actions/download-artifact@v4
-        with:
-          name: packages-lock
-          path: nix/packages/
-
-      - name: Download root flake lock (if updated)
-        if: needs.update-nixpkgs.outputs.has_changes == 'true'
-        uses: actions/download-artifact@v4
-        with:
-          name: root-flake-lock
+          name: lock-files
 
       - name: Configure Git
         run: |
@@ -244,19 +157,6 @@ jobs:
             exit 0
           fi
 
-          # Build commit message from what changed
-          MSG="[Chore] Update flake inputs"
-          DETAILS=""
-          if [ "${{ needs.update-emacs.outputs.has_changes }}" = "true" ]; then
-            DETAILS="${DETAILS}\n- Emacs sources (git + igc)"
-          fi
-          if [ "${{ needs.update-packages.outputs.has_changes }}" = "true" ]; then
-            DETAILS="${DETAILS}\n- Custom packages"
-          fi
-          if [ "${{ needs.update-nixpkgs.outputs.has_changes }}" = "true" ]; then
-            DETAILS="${DETAILS}\n- nixpkgs"
-          fi
-
-          git commit -m "$(printf '%s\n\nUpdated:%b' "$MSG" "$DETAILS")"
+          git commit -m "[Chore] Update flake inputs"
           git pull --rebase --autostash
           git push

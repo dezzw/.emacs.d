@@ -2,7 +2,7 @@
   description = "Demacs Emacs overlay: emacs-git and emacs-igc from source";
 
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/master";
+    nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
 
     # Emacs source branches (update independently)
     emacs-src-git = {

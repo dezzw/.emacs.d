@@ -2,7 +2,7 @@
   description = "Demacs package system: MELPA/ELPA/Nongnu + custom packages";
 
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/master";
+    nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
 
     # =========================================================================
     # Custom elisp packages

@@ -13,7 +13,7 @@
   };
 
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/master";
+    nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
 
     # Emacs patches (macOS-specific)
     emacs-plus-patches = {
@@ -91,13 +91,13 @@
           # Emacs Patched Versions
           # ================================================================
 
-          emacs-igc-patched = applyPatches (
-            emacs-igc-base.override { withImageMagick = true; }
-          ) customPatches;
+          emacs-igc-patched = applyPatches (emacs-igc-base.override {
+            withImageMagick = true;
+          }) customPatches;
 
-          emacs-git-patched = applyPatches (
-            emacs-git-base.override { withImageMagick = true; }
-          ) customPatches;
+          emacs-git-patched = applyPatches (emacs-git-base.override {
+            withImageMagick = true;
+          }) customPatches;
 
           # ================================================================
           # Package List
@@ -106,9 +106,7 @@
           # Packages NOT in any (setup ...) form: transitive deps, sub-features
           # loaded via :also-load, or packages with no dedicated setup form.
           extraPackages =
-            epkgs:
-            with epkgs;
-            [
+            epkgs: with epkgs; [
               # Build artifacts / grammars
               treesit-grammars-with-clojure-override
 
@@ -183,10 +181,7 @@
           # ================================================================
 
           buildEmacsAugmented =
-            emacs-base:
-            (pkgs.emacsPackagesFor emacs-base).emacsWithPackages (
-              epkgs: packageList epkgs
-            );
+            emacs-base: (pkgs.emacsPackagesFor emacs-base).emacsWithPackages (epkgs: packageList epkgs);
 
           # ================================================================
           # Build All Versions

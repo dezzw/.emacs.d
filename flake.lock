@@ -3,11 +3,11 @@
     "agent-shell": {
       "flake": false,
       "locked": {
-        "lastModified": 1770902916,
-        "narHash": "sha256-pjAID4Sllf6LinLbTBjcFko9wjKw7TNxtCJ3Qbm2lg8=",
+        "lastModified": 1770989160,
+        "narHash": "sha256-xz7eylgRlMe5KCl6uqzQb8dukzq6LUe0GNqED1D1fz4=",
         "owner": "xenodium",
         "repo": "agent-shell",
-        "rev": "9399bf2340bf0a4671ac34a4a11e94f4efe0bc66",
+        "rev": "da60db0c46beefcf3299bc6452589534b542c083",
         "type": "github"
       },
       "original": {
@@ -155,11 +155,11 @@
     "emacs-plus-patches": {
       "flake": false,
       "locked": {
-        "lastModified": 1770870430,
-        "narHash": "sha256-n7ndSE4PukPsEbysVmc8F8d77Ug4r/7G1Q2lHtP1w6Q=",
+        "lastModified": 1770957067,
+        "narHash": "sha256-gYltYSs6ojNUlokwLuytjy32dmwVROiVVZcEyxJc+lQ=",
         "owner": "d12frosted",
         "repo": "homebrew-emacs-plus",
-        "rev": "cf0234fac9c5e8e12a823f68ae6b6ce12ecd113d",
+        "rev": "b8f6b3173ea51c39798d9dd714bc971a5140d300",
         "type": "github"
       },
       "original": {
@@ -171,11 +171,11 @@
     "emacs-src-git": {
       "flake": false,
       "locked": {
-        "lastModified": 1770934122,
-        "narHash": "sha256-mn0PhqsIqDOY1CqtG7j4RKPwD20iu5FzYbgYU1lbEXU=",
+        "lastModified": 1771030372,
+        "narHash": "sha256-NJKq49VTIz4wb2sP6R9pzVRGQs+qtl2hOJNE8e7phxY=",
         "owner": "emacs-mirror",
         "repo": "emacs",
-        "rev": "1e6d4f827c9a5e18d78385585bd54cb43c19504f",
+        "rev": "a937396e7626a2a217e747aa1320d669f2323032",
         "type": "github"
       },
       "original": {
@@ -188,11 +188,11 @@
     "emacs-src-igc": {
       "flake": false,
       "locked": {
-        "lastModified": 1770889300,
-        "narHash": "sha256-3PRoNDO1B/ZFdgj5LBtIs2UYI0PFcu0U8znq0Ud442k=",
+        "lastModified": 1770970216,
+        "narHash": "sha256-Kx9MuoWmPJCYRcCce3guiMGyeiGmmT5J+xVaeexHM9I=",
         "owner": "emacs-mirror",
         "repo": "emacs",
-        "rev": "9a4a54af9192a6653164364c75721ee814ffb1e8",
+        "rev": "91c9e9883488d715a30877dfd7641ef4b3c62658",
         "type": "github"
       },
       "original": {
@@ -253,11 +253,11 @@
     "lsp-proxy": {
       "flake": false,
       "locked": {
-        "lastModified": 1770526727,
-        "narHash": "sha256-Hh38IpjBdcBsy1L2p9IiSYK60WxwCOUfKuKHlAw8Kcs=",
+        "lastModified": 1770969117,
+        "narHash": "sha256-Q82KmTJDBOeN9uYVlvtCIPsXcM+vX0/HheKwgH+Gqk0=",
         "owner": "jadestrong",
         "repo": "lsp-proxy",
-        "rev": "723ce73adae5808cc13cdc7ab91bfe502c55ee1d",
+        "rev": "08a6f7c01135db8a09f6a75cf8ffecb7d8010ba5",
         "type": "github"
       },
       "original": {

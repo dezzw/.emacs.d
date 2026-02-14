@@ -3,11 +3,11 @@
     "agent-shell": {
       "flake": false,
       "locked": {
-        "lastModified": 1770902916,
-        "narHash": "sha256-pjAID4Sllf6LinLbTBjcFko9wjKw7TNxtCJ3Qbm2lg8=",
+        "lastModified": 1770989160,
+        "narHash": "sha256-xz7eylgRlMe5KCl6uqzQb8dukzq6LUe0GNqED1D1fz4=",
         "owner": "xenodium",
         "repo": "agent-shell",
-        "rev": "9399bf2340bf0a4671ac34a4a11e94f4efe0bc66",
+        "rev": "da60db0c46beefcf3299bc6452589534b542c083",
         "type": "github"
       },
       "original": {
@@ -147,11 +147,11 @@
     "lsp-proxy": {
       "flake": false,
       "locked": {
-        "lastModified": 1770526727,
-        "narHash": "sha256-Hh38IpjBdcBsy1L2p9IiSYK60WxwCOUfKuKHlAw8Kcs=",
+        "lastModified": 1770969117,
+        "narHash": "sha256-Q82KmTJDBOeN9uYVlvtCIPsXcM+vX0/HheKwgH+Gqk0=",
         "owner": "jadestrong",
         "repo": "lsp-proxy",
-        "rev": "723ce73adae5808cc13cdc7ab91bfe502c55ee1d",
+        "rev": "08a6f7c01135db8a09f6a75cf8ffecb7d8010ba5",
         "type": "github"
       },
       "original": {

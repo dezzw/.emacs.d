@@ -3,11 +3,11 @@
     "agent-shell": {
       "flake": false,
       "locked": {
-        "lastModified": 1770989160,
-        "narHash": "sha256-xz7eylgRlMe5KCl6uqzQb8dukzq6LUe0GNqED1D1fz4=",
+        "lastModified": 1771100837,
+        "narHash": "sha256-XtSMRIkALHMRncsJAXZ87IC3nK31WgffFAjt//+eJho=",
         "owner": "xenodium",
         "repo": "agent-shell",
-        "rev": "da60db0c46beefcf3299bc6452589534b542c083",
+        "rev": "c617076cae65468de645abdef4c8d07d7cf26c49",
         "type": "github"
       },
       "original": {
@@ -67,11 +67,11 @@
     "eca": {
       "flake": false,
       "locked": {
-        "lastModified": 1770916710,
-        "narHash": "sha256-riZzHRCnkCRr+dkdrfcRMyljVL3g3O4VSp9YvEgff9I=",
+        "lastModified": 1771088660,
+        "narHash": "sha256-yYUahdFR5hXtrLIRbVcqopu02wcMhn0UbY8rigrcyBY=",
         "owner": "editor-code-assistant",
         "repo": "eca-emacs",
-        "rev": "4570fc5a2e71cdedf9b310ddb20154f32fd2f7a3",
+        "rev": "bac09f8f261dea3fa31abc799866069435a6d025",
         "type": "github"
       },
       "original": {
@@ -83,11 +83,11 @@
     "eglot-x": {
       "flake": false,
       "locked": {
-        "lastModified": 1768929390,
-        "narHash": "sha256-FknyiRwGt9nukFhYgMHeruOFEeK9mmV9ZO6Pe9n6vas=",
+        "lastModified": 1771073515,
+        "narHash": "sha256-B8IMo49f5+Dn3AWiKGt3u8m/4JM+ojhRaDYwCTb1EaA=",
         "owner": "nemethf",
         "repo": "eglot-x",
-        "rev": "60cf3dcc02f268c8f561dc47998f01e4884ab9a8",
+        "rev": "42e9a7c25e1fc80f05df0c04f815fbabc447674a",
         "type": "github"
       },
       "original": {

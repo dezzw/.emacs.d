@@ -393,6 +393,7 @@
 
             # MELPA packages - Core
             ace-pinyin
+            ace-window
             apheleia
             avy
             browse-kill-ring

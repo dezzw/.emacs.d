@@ -129,7 +129,10 @@
 
 (setup nerd-icons (:defer (:require nerd-icons)))
 
-
+(setup ace-window
+  (keymap-global-set "C-x o" 'ace-window)
+  (:option aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l)
+           aw-scope 'frame))
 
 (setup zoom
   (:require zoom)

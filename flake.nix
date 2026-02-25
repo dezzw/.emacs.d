@@ -336,6 +336,9 @@
               pname = "telega";
               inherit version;
               src = inputs.telega;
+              # Telega HEAD occasionally times out during native compilation.
+              # Keep build/install successful while still byte-compiling package files.
+              ignoreCompilationError = true;
               packageRequires = [ epkgs.visual-fill-column ];
               buildInputs = [
                 tdlib-head

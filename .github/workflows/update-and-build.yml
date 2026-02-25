@@ -4,10 +4,6 @@ on:
   schedule:
     # Run daily at midnight UTC
     - cron: '0 0 * * *'
-  workflow_dispatch:
-  push:
-    branches:
-      - main
 
 jobs:
   update-flake:
@@ -98,14 +94,62 @@ jobs:
           nix build .#demacs-${{ matrix.version }} --no-link --print-out-paths | \
           cachix push demacs
 
+      - name: Create success marker
+        if: success()
+        run: |
+          mkdir -p .build-success
+          echo "${{ matrix.os }}-${{ matrix.version }}" > .build-success/${{ matrix.os }}-${{ matrix.version }}.txt
 
-  push-to-cachix:
-    name: Push to Cachix (if any build succeeded)
+      - name: Upload success marker
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-success-${{ matrix.os }}-${{ matrix.version }}
+          path: .build-success/${{ matrix.os }}-${{ matrix.version }}.txt
+          retention-days: 1
+
+  check-matrix-success:
+    name: Check matrix success
     needs: [update-flake, build-and-cache]
     if: |
+      always() &&
       needs.update-flake.outputs.has_changes == 'true' &&
       !cancelled() &&
       (needs.build-and-cache.result == 'success' || needs.build-and-cache.result == 'failure')
+    runs-on: ubuntu-latest
+    outputs:
+      any_success: ${{ steps.check.outputs.any_success }}
+    steps:
+      - name: Download success markers
+        id: download
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          pattern: build-success-*
+          path: success-markers
+          merge-multiple: true
+
+      - name: Check for at least one successful matrix job
+        id: check
+        run: |
+          count=$(find success-markers -type f 2>/dev/null | wc -l | tr -d ' ')
+          if [ "$count" -gt 0 ]; then
+            echo "any_success=true" >> "$GITHUB_OUTPUT"
+            echo "Found $count successful matrix job(s)"
+          else
+            echo "any_success=false" >> "$GITHUB_OUTPUT"
+            echo "No successful matrix jobs found"
+          fi
+
+
+  push-to-cachix:
+    name: Push to Cachix (if any build succeeded)
+    needs: [update-flake, build-and-cache, check-matrix-success]
+    if: |
+      always() &&
+      needs.update-flake.outputs.has_changes == 'true' &&
+      needs.check-matrix-success.outputs.any_success == 'true' &&
+      !cancelled()
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -140,11 +184,12 @@ jobs:
 
   push-changes:
     name: Push flake.lock to repository
-    needs: [update-flake, build-and-cache]
+    needs: [update-flake, build-and-cache, check-matrix-success]
     if: |
+      always() &&
       needs.update-flake.outputs.has_changes == 'true' &&
-      !cancelled() &&
-      (needs.build-and-cache.result == 'success' || needs.build-and-cache.result == 'failure')
+      needs.check-matrix-success.outputs.any_success == 'true' &&
+      !cancelled()
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository

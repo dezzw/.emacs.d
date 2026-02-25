@@ -272,6 +272,7 @@
             packageRequires = [
               epkgs.async
               epkgs.nerd-icons
+              epkgs.plz
             ];
           };
 

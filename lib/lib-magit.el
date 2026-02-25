@@ -97,8 +97,8 @@ the built-in VC log view instead."
    nil))
 
 (with-eval-after-load 'magit
-  (transient-append-suffix 'magit-log "s" '("d" "dangling" magit-log-dangling))
-  (add-hook 'git-commit-setup-hook #'+magit-gptel-commit-when-ready))
+  (transient-append-suffix 'magit-log "s" '("d" "dangling" magit-log-dangling)))
+;; (add-hook 'git-commit-setup-hook #'+magit-gptel-commit-when-ready))
 
 (defun magit-fullscreen (orig-fun &rest args)
   (window-configuration-to-register :magit-fullscreen)

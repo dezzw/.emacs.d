@@ -1,6 +1,7 @@
 name: Update and Build Demacs
 
 on:
+  workflow_dispatch:
   schedule:
     # Run daily at midnight UTC
     - cron: '0 0 * * *'

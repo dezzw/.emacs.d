@@ -107,6 +107,16 @@ If nil, will auto-detect based on system username."
 (defvar fpga-manager-test-last-args nil
   "Last arguments used in test menu for persistence.")
 
+;; Shared command parameter store used across fpga-manager and bstt/* flows.
+(defvar fpga-manager--state
+  '(:port "cli455"
+          :lock-status ""
+          :test-case "B000006"
+          :webapp-browser "chrome"
+          :repeat "1"
+          :custom "")
+  "Plist holding defaults/last values for FPGA helper commands.")
+
 ;;; History Variables
 
 (defvar fpga-manager-test-repeat-history nil
@@ -588,7 +598,7 @@ Test IDs must come before --browser to avoid argument parsing issues."
        ;; Protocol is required because it is a positional argument.
        (unless protocol
          (error "Protocol is required for webapp tests"))
-      (let* ((base-parts (list fpga-manager-python-command
+       (let* ((base-parts (list fpga-manager-python-command
                                 (file-name-nondirectory script-path)
                                 protocol
                                 env))
@@ -603,8 +613,8 @@ Test IDs must come before --browser to avoid argument parsing issues."
                      (string-join cmd-parts " ")))
               (compilation-buffer-name-function
                (lambda (_mode) "*FPGA Test Output*")))
-        ;; Persist args into BSTT state so quick actions reuse them.
-        (fpga-manager--bstt-sync-from-webapp env args parsed)
+         ;; Persist args into BSTT state so quick actions reuse them.
+         (fpga-manager--bstt-sync-from-webapp env args parsed)
          ;; Headless mode drops the desktop variable to avoid GUI dependency.
          (message "Running webapp test%s: %s"
                   (if headless " (headless)" "")
@@ -786,50 +796,6 @@ Each project gets its own FPGA manager buffer, similar to `project-eshell'."
 
 ;;; BSTT Helper Commands
 
-;; Instead of a pile of ad-hoc globals, keep BSTT defaults in one place.
-;; This makes it easy to persist/extend, and lets us reuse the same history
-;; variables used elsewhere in this package.
-
-(defvar fpga-manager-bstt--state
-  '(:lock-port "cli455"
-    :lock-value ""
-    :webapp-cli-code "CLI109"
-    :webapp-batch-code "B000006"
-    :webapp-browser "chrome"
-    :webapp-repeat "1"
-    :toplevel-cli-code "CLI455"
-    :toplevel-local-code "B000006"
-    :toplevel-config ""
-    :toplevel-repeat "1")
-  "Plist holding defaults/last values for BSTT helper commands.")
-
-;; Back-compat variables (older config used direct `bstt/*` defvars).
-;; Keep these in sync with `fpga-manager-bstt--state` so existing workflows
-;; and external references continue to work.
-(defvar bstt/lock-port (plist-get fpga-manager-bstt--state :lock-port))
-(defvar bstt/lock-value (plist-get fpga-manager-bstt--state :lock-value))
-(defvar bstt/webapp-cli-code (plist-get fpga-manager-bstt--state :webapp-cli-code))
-(defvar bstt/webapp-batch-code (plist-get fpga-manager-bstt--state :webapp-batch-code))
-(defvar bstt/webapp-browser (plist-get fpga-manager-bstt--state :webapp-browser))
-(defvar bstt/webapp-repeat (plist-get fpga-manager-bstt--state :webapp-repeat))
-(defvar bstt/toplevel-cli-code (plist-get fpga-manager-bstt--state :toplevel-cli-code))
-(defvar bstt/toplevel-local-code (plist-get fpga-manager-bstt--state :toplevel-local-code))
-(defvar bstt/toplevel-config (plist-get fpga-manager-bstt--state :toplevel-config))
-(defvar bstt/toplevel-repeat (plist-get fpga-manager-bstt--state :toplevel-repeat))
-
-;; Mapping between plist keys and legacy variable symbols.
-(defconst fpga-manager-bstt--var-map
-  '((:lock-port . bstt/lock-port)
-    (:lock-value . bstt/lock-value)
-    (:webapp-cli-code . bstt/webapp-cli-code)
-    (:webapp-batch-code . bstt/webapp-batch-code)
-    (:webapp-browser . bstt/webapp-browser)
-    (:webapp-repeat . bstt/webapp-repeat)
-    (:toplevel-cli-code . bstt/toplevel-cli-code)
-    (:toplevel-local-code . bstt/toplevel-local-code)
-    (:toplevel-config . bstt/toplevel-config)
-    (:toplevel-repeat . bstt/toplevel-repeat)))
-
 ;; BSTT-specific histories (browser/repeat reuse fpga-manager histories).
 (defvar fpga-manager-bstt-lock-port-history nil)
 (defvar fpga-manager-bstt-lock-value-history nil)
@@ -839,66 +805,50 @@ Each project gets its own FPGA manager buffer, similar to `project-eshell'."
 (defvar fpga-manager-bstt-toplevel-local-code-history nil)
 (defvar fpga-manager-bstt-toplevel-config-history nil)
 
-(defun fpga-manager-bstt--get (key)
-  "Get KEY from `fpga-manager-bstt--state'."
-  (plist-get fpga-manager-bstt--state key))
+(defun fpga-manager--state-get (key)
+  "Get KEY from `fpga-manager--state'."
+  (plist-get fpga-manager--state key))
 
-(defun fpga-manager-bstt--sync-var (key value)
-  "Sync VALUE into legacy variable for KEY."
-  (when-let* ((var (cdr (assq key fpga-manager-bstt--var-map))))
-    (set var value)))
-
-(defun fpga-manager-bstt--sync-state-from-vars ()
-  "Pull legacy `bstt/*` variables into `fpga-manager-bstt--state'."
-  (dolist (pair fpga-manager-bstt--var-map)
-    (let* ((key (car pair))
-           (var (cdr pair)))
-      (when (boundp var)
-        (let ((val (symbol-value var)))
-          (when val
-            (setq fpga-manager-bstt--state
-                  (plist-put fpga-manager-bstt--state key val))))))))
-
-(defun fpga-manager-bstt--set (key value)
-  "Set KEY to VALUE in `fpga-manager-bstt--state'."
-  (setq fpga-manager-bstt--state
-        (plist-put fpga-manager-bstt--state key value))
-  (fpga-manager-bstt--sync-var key value)
+(defun fpga-manager--state-set (key value)
+  "Set KEY to VALUE in `fpga-manager--state'."
+  (setq fpga-manager--state
+        (plist-put fpga-manager--state key value))
   value)
+
+(defun fpga-manager-state-get (key)
+  "Get shared fpga-manager state value for KEY."
+  (fpga-manager--state-get key))
 
 (defun fpga-manager--bstt-build-bitstream-args ()
   "Build fpga-manager transient args from BSTT bitstream state."
-  (fpga-manager-bstt--sync-state-from-vars)
   (let ((args '("-d")))
-    (when-let* ((local (fpga-manager-bstt--get :toplevel-local-code)))
+    (when-let* ((local (fpga-manager--state-get :test-case)))
       (unless (string-empty-p local)
         (push (concat "-i " local) args)))
-    (when-let* ((repeat (fpga-manager-bstt--get :toplevel-repeat)))
+    (when-let* ((repeat (fpga-manager--state-get :repeat)))
       (unless (string-empty-p repeat)
         (push (concat "-r " repeat) args)))
-    (when-let* ((cfg (fpga-manager-bstt--get :toplevel-config)))
+    (when-let* ((cfg (fpga-manager--state-get :custom)))
       (unless (string-empty-p cfg)
         (push (concat "-c " cfg) args)))
     (nreverse args)))
 
 (defun fpga-manager--bstt-build-webapp-args ()
   "Build fpga-manager transient args from BSTT webapp state."
-  (fpga-manager-bstt--sync-state-from-vars)
   (let ((args '("--protocol=http")))
-    (when-let* ((batch (fpga-manager-bstt--get :webapp-batch-code)))
+    (when-let* ((batch (fpga-manager--state-get :test-case)))
       (unless (string-empty-p batch)
         (push (concat "-i " batch) args)))
-    (when-let* ((repeat (fpga-manager-bstt--get :webapp-repeat)))
+    (when-let* ((repeat (fpga-manager--state-get :repeat)))
       (unless (string-empty-p repeat)
         (push (concat "-r " repeat) args)))
-    (when-let* ((browser (fpga-manager-bstt--get :webapp-browser)))
+    (when-let* ((browser (fpga-manager--state-get :webapp-browser)))
       (unless (string-empty-p browser)
         (push (concat "--browser=" browser) args)))
     (nreverse args)))
 
 (defun fpga-manager--bstt-sync-test-menu (type)
   "Sync fpga-manager test menu defaults from BSTT state."
-  (fpga-manager-bstt--sync-state-from-vars)
   (setq fpga-manager-test-type type
         fpga-manager-test-last-args
         (if (eq type 'webapp)
@@ -907,61 +857,60 @@ Each project gets its own FPGA manager buffer, similar to `project-eshell'."
 
 (defun fpga-manager--bstt-sync-from-bitstream (env args)
   "Update BSTT bitstream defaults from fpga-manager ENV and ARGS."
-  (fpga-manager-bstt--set :toplevel-cli-code env)
+  (fpga-manager--state-set :port env)
   (dolist (arg (if (listp args) args (list args)))
     (cond
      ((string-prefix-p "-i " arg)
-      (fpga-manager-bstt--set :toplevel-local-code (substring arg 3)))
+      (fpga-manager--state-set :test-case (substring arg 3)))
      ((string-prefix-p "-r " arg)
-      (fpga-manager-bstt--set :toplevel-repeat (substring arg 3)))
+      (fpga-manager--state-set :repeat (substring arg 3)))
      ((string-prefix-p "-c " arg)
-      (fpga-manager-bstt--set :toplevel-config (substring arg 3)))))
+      (fpga-manager--state-set :custom (substring arg 3)))))
   (setq fpga-manager-test-type 'bitstream
         fpga-manager-test-last-args (if (listp args) args (list args))))
 
 (defun fpga-manager--bstt-sync-from-webapp (env args parsed-args)
   "Update BSTT webapp defaults from fpga-manager ENV, ARGS, and PARSED-ARGS."
-  (fpga-manager-bstt--set :webapp-cli-code env)
+  (fpga-manager--state-set :port env)
   (when-let* ((test-ids (alist-get 'test-ids parsed-args)))
-    (fpga-manager-bstt--set :webapp-batch-code test-ids))
+    (fpga-manager--state-set :test-case test-ids))
   (when-let* ((browser (alist-get 'browser parsed-args)))
-    (fpga-manager-bstt--set :webapp-browser browser))
+    (fpga-manager--state-set :webapp-browser browser))
   (when-let* ((repeat (alist-get 'repeat parsed-args)))
-    (fpga-manager-bstt--set :webapp-repeat repeat))
+    (fpga-manager--state-set :repeat repeat))
   (setq fpga-manager-test-type 'webapp
         fpga-manager-test-last-args (if (listp args) args (list args))))
 
-(defun fpga-manager-bstt--read-string-into (prompt key history)
+(defun fpga-manager--state-read-string-into (prompt key history)
   "Prompt with PROMPT, store into KEY, and record into HISTORY."
   ;; Use read-string to allow empty inputs (meaning "omit flag").
-  (fpga-manager-bstt--set
+  (fpga-manager--state-set
    key
-   (string-trim (read-string prompt (fpga-manager-bstt--get key) history))))
+   (string-trim (read-string prompt (fpga-manager--state-get key) history))))
 
-(defun fpga-manager-bstt--read-choice-into (prompt choices key history)
+(defun fpga-manager--state-read-choice-into (prompt choices key history)
   "Prompt with PROMPT over CHOICES, store into KEY, record into HISTORY."
   ;; completing-read enforces a finite choice set when desired.
-  (fpga-manager-bstt--set
+  (fpga-manager--state-set
    key
-   (completing-read prompt choices nil t (fpga-manager-bstt--get key) history)))
+   (completing-read prompt choices nil t (fpga-manager--state-get key) history)))
 
 ;; BSTT Lock Command Helper Functions
 
 (defun bstt/lock-set-port ()
   (interactive)
-  (fpga-manager-bstt--read-string-into
-   "Port (-p, blank to omit): " :lock-port 'fpga-manager-bstt-lock-port-history))
+  (fpga-manager--state-read-string-into
+   "Port (-p, blank to omit): " :port 'fpga-manager-bstt-lock-port-history))
 
 (defun bstt/lock-set-value ()
   (interactive)
-  (fpga-manager-bstt--read-string-into
-   "Lock (-l, blank to omit): " :lock-value 'fpga-manager-bstt-lock-value-history))
+  (fpga-manager--state-read-string-into
+   "Lock (-l, blank to omit): " :lock-status 'fpga-manager-bstt-lock-value-history))
 
 (defun bstt/lock-build-cmd ()
-  (fpga-manager-bstt--sync-state-from-vars)
   (let ((args nil)
-        (port (fpga-manager-bstt--get :lock-port))
-        (lock (fpga-manager-bstt--get :lock-value)))
+        (port (fpga-manager--state-get :port))
+        (lock (fpga-manager--state-get :lock-status)))
     ;; Only add flags if the user actually provided a value.
     (when (and port (not (string-empty-p port)))
       (setq args (append args (list "-p" port))))
@@ -982,20 +931,20 @@ Each project gets its own FPGA manager buffer, similar to `project-eshell'."
 
 (defun bstt/webapp-compile-set-cli-code ()
   (interactive)
-  (fpga-manager-bstt--read-string-into
-   "CLI Code: " :webapp-cli-code 'fpga-manager-bstt-webapp-cli-code-history)
+  (fpga-manager--state-read-string-into
+   "CLI Code: " :port 'fpga-manager-bstt-webapp-cli-code-history)
   (fpga-manager--bstt-sync-test-menu 'webapp))
 
 (defun bstt/webapp-compile-set-batch-code ()
   (interactive)
-  (fpga-manager-bstt--read-string-into
-   "Batch Code: " :webapp-batch-code 'fpga-manager-bstt-webapp-batch-code-history)
+  (fpga-manager--state-read-string-into
+   "Batch Code: " :test-case 'fpga-manager-bstt-webapp-batch-code-history)
   (fpga-manager--bstt-sync-test-menu 'webapp))
 
 (defun bstt/webapp-compile-set-browser ()
   (interactive)
   ;; Reuse the same browser history used by fpga-manager transient.
-  (fpga-manager-bstt--read-choice-into
+  (fpga-manager--state-read-choice-into
    "Browser: "
    '("chrome" "firefox" "safari" "edge")
    :webapp-browser
@@ -1005,19 +954,18 @@ Each project gets its own FPGA manager buffer, similar to `project-eshell'."
 (defun bstt/webapp-compile-set-repeat ()
   (interactive)
   ;; Reuse repeat history from test menu.
-  (fpga-manager-bstt--read-string-into
-   "Repeat count: " :webapp-repeat 'fpga-manager-test-repeat-history)
+  (fpga-manager--state-read-string-into
+   "Repeat count: " :repeat 'fpga-manager-test-repeat-history)
   (fpga-manager--bstt-sync-test-menu 'webapp))
 
 (defun bstt/webapp-compile-build-cmd ()
-  (fpga-manager-bstt--sync-state-from-vars)
   (fpga-manager--build-command
    (append (fpga-manager--command-parts fpga-manager-python-command)
            (list "main.py" "http"
-                 (fpga-manager-bstt--get :webapp-cli-code)
-                 (fpga-manager-bstt--get :webapp-batch-code)
-                 "--browser" (fpga-manager-bstt--get :webapp-browser)
-                 "--repeat" (fpga-manager-bstt--get :webapp-repeat)))))
+                 (fpga-manager--state-get :port)
+                 (fpga-manager--state-get :test-case)
+                 "--browser" (fpga-manager--state-get :webapp-browser)
+                 "--repeat" (fpga-manager--state-get :repeat)))))
 
 (defun bstt/webapp-compile-run ()
   (interactive)
@@ -1031,37 +979,36 @@ Each project gets its own FPGA manager buffer, similar to `project-eshell'."
 
 (defun bstt/toplevel-set-cli-code ()
   (interactive)
-  (fpga-manager-bstt--read-string-into
-   "CLI Code (-p): " :toplevel-cli-code 'fpga-manager-bstt-toplevel-cli-code-history)
+  (fpga-manager--state-read-string-into
+   "CLI Code (-p): " :port 'fpga-manager-bstt-toplevel-cli-code-history)
   (fpga-manager--bstt-sync-test-menu 'bitstream))
 
 (defun bstt/toplevel-set-local-code ()
   (interactive)
-  (fpga-manager-bstt--read-string-into
-   "Local Code (--local): " :toplevel-local-code 'fpga-manager-bstt-toplevel-local-code-history)
+  (fpga-manager--state-read-string-into
+   "Local Code (--local): " :test-case 'fpga-manager-bstt-toplevel-local-code-history)
   (fpga-manager--bstt-sync-test-menu 'bitstream))
 
 (defun bstt/toplevel-set-config ()
   (interactive)
-  (fpga-manager-bstt--read-string-into
-   "Config (-c, blank to omit): " :toplevel-config 'fpga-manager-bstt-toplevel-config-history)
+  (fpga-manager--state-read-string-into
+   "Config (-c, blank to omit): " :custom 'fpga-manager-bstt-toplevel-config-history)
   (fpga-manager--bstt-sync-test-menu 'bitstream))
 
 (defun bstt/toplevel-set-repeat ()
   (interactive)
   ;; Reuse repeat history from test menu.
-  (fpga-manager-bstt--read-string-into
-   "Repeat (-r): " :toplevel-repeat 'fpga-manager-test-repeat-history)
+  (fpga-manager--state-read-string-into
+   "Repeat (-r): " :repeat 'fpga-manager-test-repeat-history)
   (fpga-manager--bstt-sync-test-menu 'bitstream))
 
 (defun bstt/toplevel-build-cmd ()
-  (fpga-manager-bstt--sync-state-from-vars)
   (let ((args (append (fpga-manager--command-parts fpga-manager-python-command)
-                      (list "toplevel.py" "-d" "-p" (fpga-manager-bstt--get :toplevel-cli-code)
-                            "--local" (fpga-manager-bstt--get :toplevel-local-code)
-                            "-r" (fpga-manager-bstt--get :toplevel-repeat)))))
+                      (list "toplevel.py" "-d" "-p" (fpga-manager--state-get :port)
+                            "--local" (fpga-manager--state-get :test-case)
+                            "-r" (fpga-manager--state-get :repeat)))))
     ;; Optional -c flag only if config was provided.
-    (when-let* ((cfg (fpga-manager-bstt--get :toplevel-config)))
+    (when-let* ((cfg (fpga-manager--state-get :custom)))
       (unless (string-empty-p cfg)
         (setq args (append args (list "-c" cfg)))))
     (fpga-manager--build-command args)))

@@ -38,7 +38,6 @@
 
 (setup agent-shell-sidebar
   (:defer (:require agent-shell-sidebar))
-  ;; (:load-after agent-shell)
   (keymap-global-set "C-c a s" 'agent-shell-sidebar-toggle)
   (keymap-global-set "C-c a f" 'agent-shell-sidebar-toggle-focus))
 

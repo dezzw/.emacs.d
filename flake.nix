@@ -24,6 +24,10 @@
     };
 
     # Custom Emacs packages from GitHub
+    eat = {
+      url = "git+https://codeberg.org/Stebalien/emacs-eat.git";
+      flake = false;
+    };
     eglot-x = {
       url = "github:nemethf/eglot-x";
       flake = false;
@@ -146,26 +150,28 @@
         # Emacs Base Versions
         # ============================================================================
 
-        # IGC base: Remove MPS (now built into emacs repo)
-        emacs-igc-base = pkgs.emacs-igc.overrideAttrs (old: {
-          buildInputs = builtins.filter (p: !(p ? pname && p.pname == "mps")) (old.buildInputs or [ ]);
-        });
+        # IGC base: Use PGTK on Linux, otherwise regular IGC. Remove MPS (now built into emacs repo)
+        emacs-igc-base =
+          (if pkgs.stdenv.isLinux then pkgs.emacs-igc-pgtk else pkgs.emacs-igc).overrideAttrs
+            (old: {
+              buildInputs = builtins.filter (p: !(p ? pname && p.pname == "mps")) (old.buildInputs or [ ]);
+            });
 
-        # Master base: Use emacsGit from emacs-overlay (has vc-run-delayed-success)
-        emacs-master-base = pkgs.emacs-git;
+        # GIT base: Use PGTK on Linux, otherwise regular emacs-git from emacs-overlay
+        emacs-git-base = if pkgs.stdenv.isLinux then pkgs.emacs-git-pgtk else pkgs.emacs-git;
 
         # ============================================================================
         # Emacs Patched Versions
         # ============================================================================
 
-        # IGC patched: Add ImageMagick and custom patches
+        # IGC patched: Add ImageMagick where supported plus custom patches
         emacs-igc-patched = applyPatches (emacs-igc-base.override {
-          withImageMagick = true;
+          withImageMagick = !pkgs.stdenv.isLinux;
         }) customPatches;
 
-        # Master patched: Add ImageMagick and custom patches
-        emacs-master-patched = applyPatches (emacs-master-base.override {
-          withImageMagick = true;
+        # GIT patched: Add ImageMagick where supported plus custom patches
+        emacs-git-patched = applyPatches (emacs-git-base.override {
+          withImageMagick = !pkgs.stdenv.isLinux;
         }) customPatches;
 
         # ============================================================================
@@ -232,6 +238,12 @@
             version = timestampToDate inputs.consult-ripfd.lastModified;
             src = inputs.consult-ripfd;
             packageRequires = [ epkgs.consult ];
+          };
+
+          eat = epkgs.trivialBuild {
+            pname = "eat";
+            version = timestampToDate inputs.eat.lastModified;
+            src = inputs.eat;
           };
 
           eglot-x = epkgs.trivialBuild {
@@ -412,7 +424,6 @@
             diredfl
             dirvish
             diff-hl
-            eat
             eglot-booster
             elfeed
             embark
@@ -525,8 +536,8 @@
         # Build all four versions
         emacs-augmented-igc = buildEmacsAugmented emacs-igc-base;
         emacs-augmented-igc-patched = buildEmacsAugmented emacs-igc-patched;
-        emacs-augmented-master = buildEmacsAugmented emacs-master-base;
-        emacs-augmented-master-patched = buildEmacsAugmented emacs-master-patched;
+        emacs-augmented-git = buildEmacsAugmented emacs-git-base;
+        emacs-augmented-git-patched = buildEmacsAugmented emacs-git-patched;
 
         # ============================================================================
         # Package Outputs
@@ -534,8 +545,8 @@
 
         packages.demacs-igc = emacs-augmented-igc;
         packages.demacs-igc-patched = emacs-augmented-igc-patched;
-        packages.demacs-git = emacs-augmented-master;
-        packages.demacs-git-patched = emacs-augmented-master-patched;
+        packages.demacs-git = emacs-augmented-git;
+        packages.demacs-git-patched = emacs-augmented-git-patched;
 
         # Default is IGC for backward compatibility
         packages.demacs = emacs-augmented-igc;

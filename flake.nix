@@ -157,8 +157,8 @@
               buildInputs = builtins.filter (p: !(p ? pname && p.pname == "mps")) (old.buildInputs or [ ]);
             });
 
-        # GIT base: Use PGTK on Linux, otherwise regular emacs-git from emacs-overlay
-        emacs-git-base = if pkgs.stdenv.isLinux then pkgs.emacs-git-pgtk else pkgs.emacs-git;
+        # GIT base: Always use regular emacs-git from emacs-overlay
+        emacs-git-base = pkgs.emacs-git;
 
         # ============================================================================
         # Emacs Patched Versions
@@ -265,8 +265,8 @@
         packages.demacs-git = emacs-augmented-git;
         packages.demacs-git-patched = emacs-augmented-git-patched;
 
-        # Default is IGC for backward compatibility
-        packages.demacs = emacs-augmented-igc;
+        # Default is git
+        packages.demacs = emacs-augmented-git;
         packages.default = packages.demacs;
 
         # ============================================================================
@@ -285,7 +285,7 @@
         apps.demacs-igc-patched = mkApp "igc-patched" packages.demacs-igc-patched;
         apps.demacs-git = mkApp "git" packages.demacs-git;
         apps.demacs-git-patched = mkApp "git-patched" packages.demacs-git-patched;
-        apps.demacs = apps.demacs-igc;
+        apps.demacs = apps.demacs-git;
         apps.default = apps.demacs;
       }
     );

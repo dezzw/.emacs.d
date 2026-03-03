@@ -33,9 +33,45 @@
 
 (setq vc-follow-symlinks t)
 
-;; load module settings
-(dolist (dir '("modules" "lib" "site-lisp" "themes"))
-  (add-to-list 'load-path (expand-file-name dir user-emacs-directory)))
+(defconst my/load-path-root-dirs
+  '("site-lisp" "lib" "modules" "themes")
+  "Directories under `user-emacs-directory' to scan recursively.")
+
+(defconst my/load-path-skip-dirs
+  '("." ".." "dist" "node_modules" "__pycache__" "RCS" "CVS" "rcs" "cvs" ".git" ".github")
+  "Directory names ignored while scanning for loadable paths.")
+
+(defconst my/load-path-file-extensions
+  '("el" "so" "dll")
+  "File extensions considered loadable when scanning subdirectories.")
+
+(defun my/load-path--contains-loadable-files-p (dir)
+  "Return non-nil if DIR has at least one loadable file."
+  (catch 'found
+    (dolist (entry (directory-files dir t nil t))
+      (when (and (file-regular-p entry)
+                 (member (file-name-extension entry) my/load-path-file-extensions))
+        (throw 'found t)))
+    nil))
+
+(defun my/add-subdirs-to-load-path (search-dir)
+  "Recursively add loadable subdirectories under SEARCH-DIR to `load-path'."
+  (let ((dir (file-name-as-directory (expand-file-name search-dir))))
+    (when (file-directory-p dir)
+      (dolist (subdir (directory-files dir nil nil t))
+        (let ((subdir-path (expand-file-name subdir dir)))
+          (when (and (file-directory-p subdir-path)
+                     (not (file-symlink-p subdir-path))
+                     (not (member subdir my/load-path-skip-dirs)))
+            (when (my/load-path--contains-loadable-files-p subdir-path)
+              (add-to-list 'load-path (file-name-as-directory subdir-path) t))
+            (my/add-subdirs-to-load-path subdir-path)))))))
+
+(dolist (dir my/load-path-root-dirs)
+  (let ((root (expand-file-name dir user-emacs-directory)))
+    (when (file-directory-p root)
+      (add-to-list 'load-path (file-name-as-directory root))
+      (my/add-subdirs-to-load-path root))))
 
 (require 'setup)
 (require 'init-setup)

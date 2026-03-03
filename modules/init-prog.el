@@ -221,20 +221,19 @@
 
 (setup eldoc-box
   (:load-after eldoc)
-  (:hooks eglot-managed-mode-hook eldoc-box-hover-mode)
-  (:hooks lsp-proxy-mode-hook eldoc-box-hover-mode))
+  (:hooks eglot-managed-mode-hook eldoc-box-hover-mode))
 
 (setup eglot
-  ;; (:with-mode (python-ts-mode js-ts-mode tsx-ts-mode vue-mode latex-mode)
-  ;;   (:hook eglot-ensure))
+  (:with-mode (python-ts-mode js-ts-mode tsx-ts-mode vue-mode latex-mode)
+    (:hook eglot-ensure))
   (:when-loaded
     (:also-load lib-eglot)
     (setopt eglot-code-action-indications '(eldoc-hint)
-            eglot-events-buffer-config '(:size 0 :format full) ;; 取消 eglot log
+            eglot-max-file-watches 30000
+            ;; eglot-events-buffer-config '(:size 0 :format full) ;; 取消 eglot log
             ;; ignore lsp formatting provider, format with apheleia.
             eglot-ignored-server-capabilities '(:documentFormattingProvider
                                                 :documentRangeFormattingProvider))
-    (add-to-list 'eglot-server-programs '((python-mode python-ts-mode) . ("rass" "basedruff")))
     (add-to-list 'eglot-server-programs '(my-html-mode . ("vscode-html-language-server" "--stdio")))
     (add-to-list 'eglot-server-programs `((vue-mode vue-ts-mode typescript-ts-mode) . ("vue-language-server" "--stdio" :initializationOptions ,(vue-eglot-init-options))))
     (add-to-list 'eglot-server-programs '(js-mode . ("typescript-language-server" "--stdio")))
@@ -242,14 +241,38 @@
     (setq-default
      eglot-workspace-configuration
      '(:basedpyright.analysis (
-                               :typeCheckingMode "off"
-                               :diagnosticSeverityOverrides (
-                                                             :reportUnusedCallResult "none"
-                                                             )
+                               :lint t
                                :inlayHints (
-                                            :callArgumentNames :json-false
+                                            :enable t
                                             )
-                               )))
+                               :autoSearchPaths t
+                               :diagnosticMode "workspace"
+                               :useLibraryCodeForTypes t
+                               :logLevel "Error"
+                               :typeCheckingMode "basic"
+                               :autoImportCompletion t
+                               :reportOptionalSubscript :json-false
+                               :reportOptionalMemberAccess :json-false
+                               )
+                              :gopls (
+                                      :hints (
+                                              :assignVariableTypes t
+                                              :compositeLiteralFields t
+                                              :constantValues t
+                                              :functionTypeParameters t
+                                              :parameterNames t
+                                              :rangeVariableTypes t
+                                              )
+                                      )
+                              :golangci-lint-lsp (
+                                                  :command [
+                                                            "golangci-lint"
+                                                            "run"
+                                                            "--output.json.path=stdout"
+                                                            "--show-stats=false"
+                                                            "--issues-exit-code=1"
+                                                            ]
+                                                  )))
     ;; https://github.com/joaotavora/eglot/discussions/898
     (:with-hook eglot-managed-mode-hook
       (:hook (lambda ()
@@ -269,10 +292,61 @@
   (:load-after eglot)
   (:hooks eglot-managed-mode-hook eglot-x-setup))
 
-(setup lsp-proxy
-  (:with-mode (python-ts-mode go-ts-mode js-ts-mode tsx-ts-mode vue-mode)
-    (:hook lsp-proxy-mode))
-  (setopt lsp-proxy-diagnostics-provider :flymake))
+;; (setup lsp-proxy
+;;   (:with-mode (python-ts-mode go-ts-mode js-ts-mode tsx-ts-mode vue-mode)
+;;     (:hook lsp-proxy-mode))
+;;   (setopt lsp-proxy-diagnostics-provider :flymake))
+(setup lsp-mux
+  (:load-after eglot)
+  (:when-loaded
+    (require 'lsp-mux)
+    (defconst my/lsp-mux-python-backends
+      '(("ty" "ty" "server")
+        ("ruff" "ruff" "server")))
+    (defconst my/lsp-mux-python-method-backends
+      '(("textDocument/hover" . ("ty"))
+        ("textDocument/signatureHelp" . ("ty"))
+        ("textDocument/documentHighlight" . ("ty"))
+        ("textDocument/codeAction" . ("ruff" "ty"))))
+    (defconst my/lsp-mux-go-backends
+      '(("gopls" "gopls")
+        ("golangci-lint-lsp" "golangci-lint-langserver")))
+    (defconst my/lsp-mux-go-method-backends
+      '(("textDocument/hover" . ("gopls"))
+        ("textDocument/signatureHelp" . ("gopls"))
+        ("textDocument/documentHighlight" . ("gopls"))
+        ("textDocument/codeAction" . ("golangci-lint-lsp" "gopls"))))
+    (defvar my/lsp-mux-current-profile nil)
+    (defun my/lsp-mux--ensure-profile (profile)
+      "Ensure lsp-mux is running with PROFILE."
+      (let* ((backends (if (eq profile 'python)
+                           my/lsp-mux-python-backends
+                         my/lsp-mux-go-backends))
+             (method-backends (if (eq profile 'python)
+                                  my/lsp-mux-python-method-backends
+                                my/lsp-mux-go-method-backends))
+             (same-profile (eq my/lsp-mux-current-profile profile)))
+        (unless (and same-profile
+                     (ignore-errors (lsp-mux-eglot-contact)))
+          (setq my/lsp-mux-current-profile profile)
+          (lsp-mux-configure
+           :backends backends
+           :method-backends method-backends
+           :start t))))
+    (defun my/lsp-mux-python-eglot-contact (&optional _interactive _project)
+      "Use lsp-mux Python profile as the Eglot contact function."
+      (my/lsp-mux--ensure-profile 'python)
+      (lsp-mux-eglot-contact))
+    (defun my/lsp-mux-go-eglot-contact (&optional _interactive _project)
+      "Use lsp-mux Go profile as the Eglot contact function."
+      (my/lsp-mux--ensure-profile 'go)
+      (lsp-mux-eglot-contact))
+    (add-to-list 'eglot-server-programs
+                 '((python-mode python-ts-mode)
+                   . my/lsp-mux-python-eglot-contact))
+    (add-to-list 'eglot-server-programs
+                 '((go-mode go-ts-mode)
+                   . my/lsp-mux-go-eglot-contact))))
 
 (setup compile
   (:option compilation-always-kill t       ; kill compilation process before starting another
@@ -284,6 +358,10 @@
     (add-hook 'compilation-filter-hook #'comint-truncate-buffer)
     (add-hook 'compilation-filter-hook 'ansi-color-compilation-filter)))
 
+(setup head-context-sticky
+  (:defer (:require head-context-sticky))
+  (:when-loaded
+    (:hook-into python-ts-mode go-ts-mode)))
 
 (setup citre
   (:defer (:require citre))

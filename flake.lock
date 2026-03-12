@@ -1,21 +1,5 @@
 {
   "nodes": {
-    "agent-shell-sidebar": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1762354342,
-        "narHash": "sha256-Yp+iDtOdDTtcsLn/VxRx6Mh4VOYGAZUXL7XcLHFkACk=",
-        "owner": "cmacrae",
-        "repo": "agent-shell-sidebar",
-        "rev": "10fee0b1463cdf210b0908c23e940a44c8d4a8e2",
-        "type": "github"
-      },
-      "original": {
-        "owner": "cmacrae",
-        "repo": "agent-shell-sidebar",
-        "type": "github"
-      }
-    },
     "blame-reveal": {
       "flake": false,
       "locked": {
@@ -86,11 +70,11 @@
         "nixpkgs-stable": "nixpkgs-stable"
       },
       "locked": {
-        "lastModified": 1773248028,
-        "narHash": "sha256-0L0YGe7CiMUQg+g+TWhdXvWubaKlefE0BRnbLHLh4YU=",
+        "lastModified": 1773281054,
+        "narHash": "sha256-BcL7qrh2xokyqQaQl3AVmqXun5jo1TRIr2+1cSvu57Y=",
         "owner": "nix-community",
         "repo": "emacs-overlay",
-        "rev": "f551d446feb44ad60b46afe3bc901c2cbeb25f2d",
+        "rev": "419fe196067af8368fb470f91cbcb5b33ecfdaa1",
         "type": "github"
       },
       "original": {
@@ -295,7 +279,6 @@
     },
     "root": {
       "inputs": {
-        "agent-shell-sidebar": "agent-shell-sidebar",
         "blame-reveal": "blame-reveal",
         "consult-ripfd": "consult-ripfd",
         "eat": "eat",

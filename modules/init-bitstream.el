@@ -1,6 +1,12 @@
 ;;; init-bitstream.el --- Bitstream-related configurations -*- lexical-binding: t -*-
 ;;; Commentary:
 ;;; Code:
+(setup jenkins
+  (:defer (:require jenkins))
+  (setq jenkins-api-token (auth-source-pick-first-password :host "jenkins.netint.ca" :user "desmond.wang" :port 8443))
+  (setq jenkins-url "https://jenkins.netint.ca:8443/")
+  (setq jenkins-username "desmond.wang"))
+
 (setup transient
   (:defer (require 'transient))
   (:when-loaded

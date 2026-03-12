@@ -80,3 +80,4 @@ devdocs/
 undo-fu-session/
 .helix/
 forge-database.sqlite
+/.agent-shell/

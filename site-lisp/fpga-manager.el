@@ -112,30 +112,12 @@ If nil, will auto-detect based on system username."
   '(:port "cli455"
           :lock-status ""
           :test-case "B000006"
+          :protocol "http"
           :webapp-browser "chrome"
+          :log-level ""
           :repeat "1"
           :custom "")
   "Plist holding defaults/last values for FPGA helper commands.")
-
-;;; History Variables
-
-(defvar fpga-manager-test-repeat-history nil
-  "History for repeat count argument.")
-
-(defvar fpga-manager-test-log-level-history nil
-  "History for log level argument.")
-
-(defvar fpga-manager-test-custom-args-history nil
-  "History for custom arguments.")
-
-(defvar fpga-manager-test-id-history nil
-  "History for test ID argument.")
-
-(defvar fpga-manager-webapp-protocol-history '("http")
-  "History for webapp protocol argument.")
-
-(defvar fpga-manager-webapp-browser-history '("chrome")
-  "History for webapp browser argument.")
 
 ;;; Faces
 
@@ -629,7 +611,9 @@ Test IDs must come before --browser to avoid argument parsing issues."
   "Transient menu for running FPGA tests."
   :value (lambda ()
            (or fpga-manager-test-last-args
-               '("-d" "--protocol=http")))
+               (if (eq fpga-manager-test-type 'webapp)
+                   (fpga-manager--bstt-build-webapp-args)
+                 (fpga-manager--bstt-build-bitstream-args))))
   [:description
    (lambda ()
      (let ((env (fpga-manager--get-env-at-point)))
@@ -650,17 +634,13 @@ Test IDs must come before --browser to avoid argument parsing issues."
      :class transient-option
      :prompt "Repeat: "
      :reader (lambda (prompt _initial-input _history)
-               (read-string prompt
-                            (car fpga-manager-test-repeat-history)
-                            'fpga-manager-test-repeat-history)))
+               (fpga-manager--state-read-string-into prompt :repeat)))
     ("-I" "Test ID" "-i "
      :class transient-option
      :prompt "Test ID: "
      :always-read t
      :reader (lambda (prompt _initial-input _history)
-               (read-string prompt
-                            (car fpga-manager-test-id-history)
-                            'fpga-manager-test-id-history)))]
+               (fpga-manager--state-read-string-into prompt :test-case)))]
    ["Bitstream Options"
     :if (lambda () (eq fpga-manager-test-type 'bitstream))
     ("-d" "Debug/Delay mode" "-d")
@@ -670,16 +650,14 @@ Test IDs must come before --browser to avoid argument parsing issues."
      :prompt "Level: "
      :choices ("20" "50")
      :reader (lambda (prompt _initial-input _history)
-               (completing-read prompt '("20" "50") nil nil
-                                (car fpga-manager-test-log-level-history)
-                                'fpga-manager-test-log-level-history)))
+               (fpga-manager--state-read-choice-into prompt
+                                                     '("20" "50")
+                                                     :log-level)))
     ("-c" "Custom args" "-c "
      :class transient-option
      :prompt "Custom (key:value): "
      :reader (lambda (prompt _initial-input _history)
-               (read-string prompt
-                            (car fpga-manager-test-custom-args-history)
-                            'fpga-manager-test-custom-args-history)))]
+               (fpga-manager--state-read-string-into prompt :custom)))]
    ["Webapp Options"
     :if (lambda () (eq fpga-manager-test-type 'webapp))
     ("-h" "Headless mode" "--headless")
@@ -688,17 +666,17 @@ Test IDs must come before --browser to avoid argument parsing issues."
      :prompt "Protocol (http/https): "
      :choices ("http" "https")
      :reader (lambda (prompt _initial-input _history)
-               (completing-read prompt '("http" "https") nil nil
-                                (car fpga-manager-webapp-protocol-history)
-                                'fpga-manager-webapp-protocol-history)))
+               (fpga-manager--state-read-choice-into prompt
+                                                     '("http" "https")
+                                                     :protocol)))
     ("-b" "Browser" "--browser="
      :class transient-option
      :prompt "Browser: "
      :choices ("chrome" "firefox" "safari" "edge")
      :reader (lambda (prompt _initial-input _history)
-               (completing-read prompt '("chrome" "firefox" "safari" "edge") nil nil
-                                (car fpga-manager-webapp-browser-history)
-                                'fpga-manager-webapp-browser-history)))]]
+               (fpga-manager--state-read-choice-into prompt
+                                                     '("chrome" "firefox" "safari" "edge")
+                                                     :webapp-browser)))]]
   [["Actions"
     ("RET" "Run test" fpga-manager-run-test)
     ("q" "Quit" transient-quit-one)]])
@@ -796,15 +774,6 @@ Each project gets its own FPGA manager buffer, similar to `project-eshell'."
 
 ;;; BSTT Helper Commands
 
-;; BSTT-specific histories (browser/repeat reuse fpga-manager histories).
-(defvar fpga-manager-bstt-lock-port-history nil)
-(defvar fpga-manager-bstt-lock-value-history nil)
-(defvar fpga-manager-bstt-webapp-cli-code-history nil)
-(defvar fpga-manager-bstt-webapp-batch-code-history nil)
-(defvar fpga-manager-bstt-toplevel-cli-code-history nil)
-(defvar fpga-manager-bstt-toplevel-local-code-history nil)
-(defvar fpga-manager-bstt-toplevel-config-history nil)
-
 (defun fpga-manager--state-get (key)
   "Get KEY from `fpga-manager--state'."
   (plist-get fpga-manager--state key))
@@ -825,6 +794,9 @@ Each project gets its own FPGA manager buffer, similar to `project-eshell'."
     (when-let* ((local (fpga-manager--state-get :test-case)))
       (unless (string-empty-p local)
         (push (concat "-i " local) args)))
+    (when-let* ((level (fpga-manager--state-get :log-level)))
+      (unless (string-empty-p level)
+        (push (concat "-l " level) args)))
     (when-let* ((repeat (fpga-manager--state-get :repeat)))
       (unless (string-empty-p repeat)
         (push (concat "-r " repeat) args)))
@@ -835,7 +807,8 @@ Each project gets its own FPGA manager buffer, similar to `project-eshell'."
 
 (defun fpga-manager--bstt-build-webapp-args ()
   "Build fpga-manager transient args from BSTT webapp state."
-  (let ((args '("--protocol=http")))
+  (let ((args nil))
+    (push (concat "--protocol=" (or (fpga-manager--state-get :protocol) "http")) args)
     (when-let* ((batch (fpga-manager--state-get :test-case)))
       (unless (string-empty-p batch)
         (push (concat "-i " batch) args)))
@@ -864,6 +837,8 @@ Each project gets its own FPGA manager buffer, similar to `project-eshell'."
       (fpga-manager--state-set :test-case (substring arg 3)))
      ((string-prefix-p "-r " arg)
       (fpga-manager--state-set :repeat (substring arg 3)))
+     ((string-prefix-p "-l " arg)
+      (fpga-manager--state-set :log-level (substring arg 3)))
      ((string-prefix-p "-c " arg)
       (fpga-manager--state-set :custom (substring arg 3)))))
   (setq fpga-manager-test-type 'bitstream
@@ -872,6 +847,8 @@ Each project gets its own FPGA manager buffer, similar to `project-eshell'."
 (defun fpga-manager--bstt-sync-from-webapp (env args parsed-args)
   "Update BSTT webapp defaults from fpga-manager ENV, ARGS, and PARSED-ARGS."
   (fpga-manager--state-set :port env)
+  (when-let* ((protocol (alist-get 'protocol parsed-args)))
+    (fpga-manager--state-set :protocol protocol))
   (when-let* ((test-ids (alist-get 'test-ids parsed-args)))
     (fpga-manager--state-set :test-case test-ids))
   (when-let* ((browser (alist-get 'browser parsed-args)))
@@ -881,31 +858,31 @@ Each project gets its own FPGA manager buffer, similar to `project-eshell'."
   (setq fpga-manager-test-type 'webapp
         fpga-manager-test-last-args (if (listp args) args (list args))))
 
-(defun fpga-manager--state-read-string-into (prompt key history)
-  "Prompt with PROMPT, store into KEY, and record into HISTORY."
+(defun fpga-manager--state-read-string-into (prompt key)
+  "Prompt with PROMPT and store the entered value into KEY."
   ;; Use read-string to allow empty inputs (meaning "omit flag").
   (fpga-manager--state-set
    key
-   (string-trim (read-string prompt (fpga-manager--state-get key) history))))
+   (string-trim (read-string prompt (fpga-manager--state-get key)))))
 
-(defun fpga-manager--state-read-choice-into (prompt choices key history)
-  "Prompt with PROMPT over CHOICES, store into KEY, record into HISTORY."
+(defun fpga-manager--state-read-choice-into (prompt choices key)
+  "Prompt with PROMPT over CHOICES and store the selected value into KEY."
   ;; completing-read enforces a finite choice set when desired.
   (fpga-manager--state-set
    key
-   (completing-read prompt choices nil t (fpga-manager--state-get key) history)))
+   (completing-read prompt choices nil t (fpga-manager--state-get key))))
 
 ;; BSTT Lock Command Helper Functions
 
 (defun bstt/lock-set-port ()
   (interactive)
   (fpga-manager--state-read-string-into
-   "Port (-p, blank to omit): " :port 'fpga-manager-bstt-lock-port-history))
+   "Port (-p, blank to omit): " :port))
 
 (defun bstt/lock-set-value ()
   (interactive)
   (fpga-manager--state-read-string-into
-   "Lock (-l, blank to omit): " :lock-status 'fpga-manager-bstt-lock-value-history))
+   "Lock (-l, blank to omit): " :lock-status))
 
 (defun bstt/lock-build-cmd ()
   (let ((args nil)
@@ -932,36 +909,33 @@ Each project gets its own FPGA manager buffer, similar to `project-eshell'."
 (defun bstt/webapp-compile-set-cli-code ()
   (interactive)
   (fpga-manager--state-read-string-into
-   "CLI Code: " :port 'fpga-manager-bstt-webapp-cli-code-history)
+   "CLI Code: " :port)
   (fpga-manager--bstt-sync-test-menu 'webapp))
 
 (defun bstt/webapp-compile-set-batch-code ()
   (interactive)
   (fpga-manager--state-read-string-into
-   "Batch Code: " :test-case 'fpga-manager-bstt-webapp-batch-code-history)
+   "Batch Code: " :test-case)
   (fpga-manager--bstt-sync-test-menu 'webapp))
 
 (defun bstt/webapp-compile-set-browser ()
   (interactive)
-  ;; Reuse the same browser history used by fpga-manager transient.
   (fpga-manager--state-read-choice-into
    "Browser: "
    '("chrome" "firefox" "safari" "edge")
-   :webapp-browser
-   'fpga-manager-webapp-browser-history)
+   :webapp-browser)
   (fpga-manager--bstt-sync-test-menu 'webapp))
 
 (defun bstt/webapp-compile-set-repeat ()
   (interactive)
-  ;; Reuse repeat history from test menu.
   (fpga-manager--state-read-string-into
-   "Repeat count: " :repeat 'fpga-manager-test-repeat-history)
+   "Repeat count: " :repeat)
   (fpga-manager--bstt-sync-test-menu 'webapp))
 
 (defun bstt/webapp-compile-build-cmd ()
   (fpga-manager--build-command
    (append (fpga-manager--command-parts fpga-manager-python-command)
-           (list "main.py" "http"
+           (list "main.py" (or (fpga-manager--state-get :protocol) "http")
                  (fpga-manager--state-get :port)
                  (fpga-manager--state-get :test-case)
                  "--browser" (fpga-manager--state-get :webapp-browser)
@@ -980,26 +954,25 @@ Each project gets its own FPGA manager buffer, similar to `project-eshell'."
 (defun bstt/toplevel-set-cli-code ()
   (interactive)
   (fpga-manager--state-read-string-into
-   "CLI Code (-p): " :port 'fpga-manager-bstt-toplevel-cli-code-history)
+   "CLI Code (-p): " :port)
   (fpga-manager--bstt-sync-test-menu 'bitstream))
 
 (defun bstt/toplevel-set-local-code ()
   (interactive)
   (fpga-manager--state-read-string-into
-   "Local Code (--local): " :test-case 'fpga-manager-bstt-toplevel-local-code-history)
+   "Local Code (--local): " :test-case)
   (fpga-manager--bstt-sync-test-menu 'bitstream))
 
 (defun bstt/toplevel-set-config ()
   (interactive)
   (fpga-manager--state-read-string-into
-   "Config (-c, blank to omit): " :custom 'fpga-manager-bstt-toplevel-config-history)
+   "Config (-c, blank to omit): " :custom)
   (fpga-manager--bstt-sync-test-menu 'bitstream))
 
 (defun bstt/toplevel-set-repeat ()
   (interactive)
-  ;; Reuse repeat history from test menu.
   (fpga-manager--state-read-string-into
-   "Repeat (-r): " :repeat 'fpga-manager-test-repeat-history)
+   "Repeat (-r): " :repeat)
   (fpga-manager--bstt-sync-test-menu 'bitstream))
 
 (defun bstt/toplevel-build-cmd ()

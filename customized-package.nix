@@ -14,10 +14,6 @@ let
   # Most custom packages are trivialBuild packages.
   # Add/remove simple packages here.
   simpleCustomSpecs = {
-    agent-shell-sidebar = {
-      input = "agent-shell-sidebar";
-      packageRequires = [ "agent-shell" ];
-    };
     blame-reveal = {
       input = "blame-reveal";
     };
@@ -74,7 +70,12 @@ let
           version = versionOf spec.input;
           src = srcOf spec.input;
         }
-        // (if spec ? packageRequires then { packageRequires = epkgsFromNames epkgs spec.packageRequires; } else { })
+        // (
+          if spec ? packageRequires then
+            { packageRequires = epkgsFromNames epkgs spec.packageRequires; }
+          else
+            { }
+        )
       )
     ) simpleCustomSpecs;
 
@@ -152,18 +153,14 @@ let
   mkCustomPackages = epkgs: (mkSimpleCustomPackages epkgs) // (mkSpecialCustomPackages epkgs);
 
   nativePackages =
-    epkgs:
-    with epkgs;
-    [
+    epkgs: with epkgs; [
       pdf-tools
       treesit-grammars-with-clojure-override
       vterm
     ];
 
   melpaCorePackages =
-    epkgs:
-    with epkgs;
-    [
+    epkgs: with epkgs; [
       ace-pinyin
       ace-window
       apheleia
@@ -180,6 +177,7 @@ let
       diredfl
       dirvish
       diff-hl
+      doom-modeline
       eglot-booster
       elfeed
       embark
@@ -229,9 +227,7 @@ let
     ];
 
   melpaOrgPackages =
-    epkgs:
-    with epkgs;
-    [
+    epkgs: with epkgs; [
       denote-markdown
       denote-org
       ob-async
@@ -246,9 +242,7 @@ let
     ];
 
   melpaLangPackages =
-    epkgs:
-    with epkgs;
-    [
+    epkgs: with epkgs; [
       auctex
       babashka
       cider
@@ -260,9 +254,7 @@ let
     ];
 
   melpaUtilityPackages =
-    epkgs:
-    with epkgs;
-    [
+    epkgs: with epkgs; [
       activities
       agent-shell
       ai-code
@@ -272,10 +264,12 @@ let
       eldoc-box
       envrc
       helpful
+      jenkins
       jinx
       jira
       keyfreq
       reformatter
+      topsy
       undo-fu
       undo-fu-session
       zoom

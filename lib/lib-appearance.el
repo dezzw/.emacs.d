@@ -59,16 +59,16 @@
 (defun apply-theme-based-on-appearance (&rest _)
   "Apply a theme based on the current macOS system appearance."
   (if (eq ns-system-appearance 'light)
-      (apply-theme light-theme 100)
-    (apply-theme dark-theme 75)))
+      (apply-theme light-theme 90)
+    (apply-theme dark-theme 90)))
 
-(defun opacity-dark-theme (&rest frame)
-  "Set the opacity of the FRAME to 60% if the background mode is dark.
+(defun opacity-dark-theme (&rest _frame)
+  "Set the opacity of the current frame to 90% if the background mode is dark.
 This function only works in a graphical interface.  The FRAME argument is
 optional and is used to specify which frame's opacity to change."
   (if (display-graphic-p)
       (if (eq (frame-parameter nil 'background-mode) 'dark)
-          (set-opacity 75))
+          (set-opacity 90))
     (message "Non-graphical interface")))
 
 (provide 'lib-appearance)

@@ -53,10 +53,6 @@
       url = "github:LuciusChen/panel";
       flake = false;
     };
-    agent-shell-sidebar = {
-      url = "github:cmacrae/agent-shell-sidebar";
-      flake = false;
-    };
     setup-el = {
       url = "git+https://codeberg.org/pkal/setup.el.git";
       flake = false;
@@ -242,9 +238,7 @@
         # Function to build emacs-augmented with a given emacs-base
         buildEmacsAugmented =
           emacs-base:
-          ((pkgs.emacsPackagesFor emacs-base).emacsWithPackages (
-            epkgs: packageModule.mkPackageList epkgs
-          ));
+          ((pkgs.emacsPackagesFor emacs-base).emacsWithPackages (epkgs: packageModule.mkPackageList epkgs));
 
         # ============================================================================
         # Build All Versions

@@ -31,27 +31,42 @@
            ;; 将阈值设置为 4 表示只有当需要补全的字符数大于 4 时才会执行循环补全
            completion-cycle-threshold 4))
 
-(setup miniline
-  (:require miniline miniline-segments)
-  (:option
-   ;; Default format (buffer-local mode-line-format takes priority)
-   miniline-format miniline-format-default
+;; (setup miniline
+;;   (:require miniline miniline-segments)
+;;   (:option
+;;    ;; Default format (buffer-local mode-line-format takes priority)
+;;    miniline-format miniline-format-default
 
-   ;; Position: right-aligned
-   miniline-position 'right
+;;    ;; Position: right-aligned
+;;    miniline-position 'right
 
-   ;; Hide the original mode-line, show thin separator in GUI
-   miniline-hide-mode-line t
-   miniline-display-gui-line t
+;;    ;; Hide the original mode-line, show thin separator in GUI
+;;    miniline-hide-mode-line t
+;;    miniline-display-gui-line t
 
-   ;; Update interval in seconds
-   miniline-update-interval 0.5
+;;    ;; Update interval in seconds
+;;    miniline-update-interval 0.5
 
-   ;; Right padding to avoid text wrapping
-   miniline-right-padding 1)
+;;    ;; Right padding to avoid text wrapping
+;;    miniline-right-padding 1)
 
+;;   (:when-loaded
+;;     (miniline-mode 1)))
+
+(setup doom-modeline
+  (:defer (:require doom-modeline))
   (:when-loaded
-    (miniline-mode 1)))
+    (setopt doom-modeline-height 18
+            doom-modeline-buffer-file-name-style 'auto
+            doom-modeline-buffer-modification-icon t
+            doom-modeline-bar-width 4
+            doom-modeline-hud t
+            doom-modeline-hud-min-height 1)
+    (:with-feature telega
+      (:when-loaded
+        (add-to-list 'global-mode-string '("" (:eval (+mode-line-telega-icon))) t)))
+
+    (doom-modeline-mode)))
 
 (setup vertico
   (:defer (:require vertico))

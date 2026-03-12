@@ -5,28 +5,29 @@
 (define-derived-mode vue-mode web-mode "Vue")
 (define-derived-mode my-html-mode web-mode "Web")
 (define-derived-mode jsp-mode web-mode "Web")
-(define-derived-mode wxss-mode css-mode "CSS")
-(define-derived-mode wxml-mode html-mode "HTML")
 (define-derived-mode basilisp-ts-mode clojure-ts-mode "Basilisp")
 
 (setup (:with-mode vue-mode (:match-file "*.vue"))
   (:with-mode jsp-mode (:match-file "*.jsp"))
   (:with-mode emacs-lisp-mode (:match-file "*.el"))
-  (:with-mode wxss-mode (:match-file "*.wxss"))
-  (:with-mode my-html-mode (:match-file "*.wxml")
-              (:match-file "*.html"))
+  (:with-mode my-html-mode (:match-file "*.html"))
   (:with-mode java-ts-mode (:match-file "*.java"))
   (:with-mode python-ts-mode (:match-file "*.py"))
-  (:with-mode yaml-ts-mode (:match-file "*.yaml") (:match-file "*.yml"))
+  (:with-mode yaml-ts-mode
+    (:match-file "*.yaml")
+    (:match-file "*.yml"))
   (:with-mode lua-ts-mode (:match-file "*.lua"))
-  (:with-mode tsx-ts-mode (:match-file "*.tsx")
-              (:match-file "*.jsx"))
-  (:with-mode js-ts-mode (:match-file "*.js")
-              (:match-file "*.es6"))
-  (:with-mode typescript-ts-mode (:match-file "*.mjs")
-              (:match-file "*.mts")
-              (:match-file "*.cjs")
-              (:match-file "*.ts"))
+  (:with-mode tsx-ts-mode
+    (:match-file "*.tsx")
+    (:match-file "*.jsx"))
+  (:with-mode js-ts-mode
+    (:match-file "*.js")
+    (:match-file "*.es6"))
+  (:with-mode typescript-ts-mode
+    (:match-file "*.mjs")
+    (:match-file "*.mts")
+    (:match-file "*.cjs")
+    (:match-file "*.ts"))
   (:with-mode json-ts-mode (:match-file "*.json"))
   (:with-mode nix-ts-mode (:match-file "*.nix"))
   (:with-mode lua-ts-mode (:match-file "*.lua"))
@@ -45,7 +46,7 @@
            web-mode-code-indent-offset 2
            web-mode-enable-current-column-highlight t))
 
-(setup verb (:option verb-babel-timeout 60.0))
+(setup verb (:option verb-babel-timeout 30.0))
 
 (setup python
   (:option python-indent-guess-indent-offset t
@@ -59,20 +60,9 @@
   (:hook-into prog-mode)
   (:when-loaded
     (keymap-global-set "C-c C-x C-f" 'apheleia-format-buffer)
-    ;; $ brew install isort black google-java-format stylua libxml2
-    ;; $ npm install -g prettier
-    (setf (alist-get 'google-java-format apheleia-formatters)
-          '("google-java-format" "--aosp" filepath))
-    (setf (alist-get 'stylua apheleia-formatters)
-          '("stylua" "--indent-type" "Spaces" filepath))
-    (setf (alist-get 'xmllint apheleia-formatters)
-          '("xmllint" "--encode" "utf-8" "--format" "-"))
-
     (setf (alist-get 'python-ts-mode     apheleia-mode-alist) 'ruff)
     (setf (alist-get 'my-html-mode       apheleia-mode-alist) 'prettier-html)
     (setf (alist-get 'sql-mode           apheleia-mode-alist) 'pgformatter)
-    (setf (alist-get 'xml-mode           apheleia-mode-alist) 'xmllint)
-    (setf (alist-get 'nxml-mode          apheleia-mode-alist) 'xmllint)
     (setf (alist-get 'css-mode           apheleia-mode-alist) 'prettier)
     (setf (alist-get 'typescript-ts-mode apheleia-mode-alist) 'prettier)
     (setf (alist-get 'js-ts-mode         apheleia-mode-alist) 'prettier)))
@@ -141,19 +131,6 @@
     (+major-mode-lighter 'js-ts-mode "JS")))
 
 (setup xref
-  ;; 用 Popper 替代了 +xref-show-xrefs 以及 :option 配置
-  ;;
-  ;;   (defun +xref-show-xrefs (fetcher display-action)
-  ;;     "Display some Xref values produced by FETCHER using DISPLAY-ACTION.
-  ;; Do not jump to the first xref, just move the focus to the xref window."
-  ;;     (let ((buf (xref--show-xref-buffer fetcher
-  ;;                                        `((window . ,(selected-window))
-  ;;                                          (display-action . ,display-action)
-  ;;                                          (auto-jump . nil)))))
-  ;;       (let ((window (get-buffer-window buf)))
-  ;;         (when window
-  ;;           (select-window window)))))
-
   (defun +xref-quit-window ()
     "Quit the xref window."
     (let ((xref-window (get-buffer-window "*xref*")))
@@ -161,14 +138,12 @@
         (quit-window nil xref-window))))
 
   (:option xref-auto-jump-to-first-xref 'move)
-  ;; (setq xref-show-xrefs-function #'+xref-show-xrefs)
   (:hooks xref-after-jump-hook +xref-quit-window))
 
 (setup treesit
   (:also-load lib-treesit)
   (:when-loaded
     (:option treesit-language-source-alist +treesit-language-source-alist)))
-
 
 (setup indent-bars
   (:with-mode (java-ts-mode python-ts-mode vue-mode typescript-ts-mode js-ts-mode)
@@ -230,49 +205,15 @@
     (:also-load lib-eglot)
     (setopt eglot-code-action-indications '(eldoc-hint)
             eglot-max-file-watches 30000
-            ;; eglot-events-buffer-config '(:size 0 :format full) ;; 取消 eglot log
+            eglot-events-buffer-config '(:size 0 :format full) ;; 取消 eglot log
             ;; ignore lsp formatting provider, format with apheleia.
             eglot-ignored-server-capabilities '(:documentFormattingProvider
                                                 :documentRangeFormattingProvider))
+    (add-to-list 'eglot-server-programs '(python-ts-mode . ("rass" "python")))
+    (add-to-list 'eglot-server-programs `((vue-mode vue-ts-mode typescript-ts-mode) . ("rass" "vuetail")))
     (add-to-list 'eglot-server-programs '(my-html-mode . ("vscode-html-language-server" "--stdio")))
-    (add-to-list 'eglot-server-programs `((vue-mode vue-ts-mode typescript-ts-mode) . ("vue-language-server" "--stdio" :initializationOptions ,(vue-eglot-init-options))))
     (add-to-list 'eglot-server-programs '(js-mode . ("typescript-language-server" "--stdio")))
     (advice-add 'eglot-completion-at-point :around #'cape-wrap-buster)
-    (setq-default
-     eglot-workspace-configuration
-     '(:basedpyright.analysis (
-                               :lint t
-                               :inlayHints (
-                                            :enable t
-                                            )
-                               :autoSearchPaths t
-                               :diagnosticMode "workspace"
-                               :useLibraryCodeForTypes t
-                               :logLevel "Error"
-                               :typeCheckingMode "basic"
-                               :autoImportCompletion t
-                               :reportOptionalSubscript :json-false
-                               :reportOptionalMemberAccess :json-false
-                               )
-                              :gopls (
-                                      :hints (
-                                              :assignVariableTypes t
-                                              :compositeLiteralFields t
-                                              :constantValues t
-                                              :functionTypeParameters t
-                                              :parameterNames t
-                                              :rangeVariableTypes t
-                                              )
-                                      )
-                              :golangci-lint-lsp (
-                                                  :command [
-                                                            "golangci-lint"
-                                                            "run"
-                                                            "--output.json.path=stdout"
-                                                            "--show-stats=false"
-                                                            "--issues-exit-code=1"
-                                                            ]
-                                                  )))
     ;; https://github.com/joaotavora/eglot/discussions/898
     (:with-hook eglot-managed-mode-hook
       (:hook (lambda ()
@@ -292,62 +233,6 @@
   (:load-after eglot)
   (:hooks eglot-managed-mode-hook eglot-x-setup))
 
-;; (setup lsp-proxy
-;;   (:with-mode (python-ts-mode go-ts-mode js-ts-mode tsx-ts-mode vue-mode)
-;;     (:hook lsp-proxy-mode))
-;;   (setopt lsp-proxy-diagnostics-provider :flymake))
-(setup lsp-mux
-  (:load-after eglot)
-  (:when-loaded
-    (require 'lsp-mux)
-    (defconst my/lsp-mux-python-backends
-      '(("ty" "ty" "server")
-        ("ruff" "ruff" "server")))
-    (defconst my/lsp-mux-python-method-backends
-      '(("textDocument/hover" . ("ty"))
-        ("textDocument/signatureHelp" . ("ty"))
-        ("textDocument/documentHighlight" . ("ty"))
-        ("textDocument/codeAction" . ("ruff" "ty"))))
-    (defconst my/lsp-mux-go-backends
-      '(("gopls" "gopls")
-        ("golangci-lint-lsp" "golangci-lint-langserver")))
-    (defconst my/lsp-mux-go-method-backends
-      '(("textDocument/hover" . ("gopls"))
-        ("textDocument/signatureHelp" . ("gopls"))
-        ("textDocument/documentHighlight" . ("gopls"))
-        ("textDocument/codeAction" . ("golangci-lint-lsp" "gopls"))))
-    (defvar my/lsp-mux-current-profile nil)
-    (defun my/lsp-mux--ensure-profile (profile)
-      "Ensure lsp-mux is running with PROFILE."
-      (let* ((backends (if (eq profile 'python)
-                           my/lsp-mux-python-backends
-                         my/lsp-mux-go-backends))
-             (method-backends (if (eq profile 'python)
-                                  my/lsp-mux-python-method-backends
-                                my/lsp-mux-go-method-backends))
-             (same-profile (eq my/lsp-mux-current-profile profile)))
-        (unless (and same-profile
-                     (ignore-errors (lsp-mux-eglot-contact)))
-          (setq my/lsp-mux-current-profile profile)
-          (lsp-mux-configure
-           :backends backends
-           :method-backends method-backends
-           :start t))))
-    (defun my/lsp-mux-python-eglot-contact (&optional _interactive _project)
-      "Use lsp-mux Python profile as the Eglot contact function."
-      (my/lsp-mux--ensure-profile 'python)
-      (lsp-mux-eglot-contact))
-    (defun my/lsp-mux-go-eglot-contact (&optional _interactive _project)
-      "Use lsp-mux Go profile as the Eglot contact function."
-      (my/lsp-mux--ensure-profile 'go)
-      (lsp-mux-eglot-contact))
-    (add-to-list 'eglot-server-programs
-                 '((python-mode python-ts-mode)
-                   . my/lsp-mux-python-eglot-contact))
-    (add-to-list 'eglot-server-programs
-                 '((go-mode go-ts-mode)
-                   . my/lsp-mux-go-eglot-contact))))
-
 (setup compile
   (:option compilation-always-kill t       ; kill compilation process before starting another
            compilation-ask-about-save nil  ; save all buffers on `compile'
@@ -358,14 +243,20 @@
     (add-hook 'compilation-filter-hook #'comint-truncate-buffer)
     (add-hook 'compilation-filter-hook 'ansi-color-compilation-filter)))
 
-(setup head-context-sticky
-  (:defer (:require head-context-sticky))
-  (:when-loaded
-    (:hook-into python-ts-mode go-ts-mode)))
-
 (setup citre
   (:defer (:require citre))
-  (:also-load citre-config))
+  (:also-load citre-config)
+  (global-set-key (kbd "C-c c j") 'citre-jump)
+  (global-set-key (kbd "C-c c J") 'citre-jump-back)
+  (global-set-key (kbd "C-c c p") 'citre-ace-peek)
+  (global-set-key (kbd "C-c c u") 'citre-update-this-tags-file)
+  (:when-loaded
+    (setopt citre-auto-enable-citre-mode-backends '(eglot tags global))
+    (setopt citre-completion-backends '(eglot tags global))))
+
+(setup topsy
+  (:defer (:require topsy))
+  (:hook-into prog-mode))
 
 (provide 'init-prog)
 ;;; init-prog.el ends here

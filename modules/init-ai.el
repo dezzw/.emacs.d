@@ -18,23 +18,24 @@
     (gptel-agent-update)))
 
 (setup agent-shell
-  (:also-load lib-agent-shell)
-  (keymap-global-set "C-c a s" 'lib-agent-shell-toggle)
-  (keymap-global-set "C-c a f" 'lib-agent-shell-toggle-focus)
+  ;; (:also-load lib-agent-shell)
+  ;; (keymap-global-set "C-c a s" 'lib-agent-shell-toggle)
+  ;; (keymap-global-set "C-c a f" 'lib-agent-shell-toggle-focus)
   (keymap-global-set "C-c a d" 'agent-shell-send-dwim)
-  (keymap-global-set "C-c a n" 'lib-agent-shell-new)
+  ;; (keymap-global-set "C-c a n" 'lib-agent-shell-new)
 
   ;; Make agent-shell bookmark-able
-  (defun my/agent-shell-bookmark (_bookmark)
-    (agent-shell))
-  (add-hook 'agent-shell-mode-hook
-            (lambda ()
-              (setq-local bookmark-make-record-function
-                          (lambda ()
-                            `((handler . my/agent-shell-bookmark))))))
+  ;; (defun my/agent-shell-bookmark (_bookmark)
+  ;;   (agent-shell))
+  ;; (add-hook 'agent-shell-mode-hook
+  ;;           (lambda ()
+  ;;             (setq-local bookmark-make-record-function
+  ;;                         (lambda ()
+  ;;                           `((handler . my/agent-shell-bookmark))))))
   (:when-loaded
     (setopt agent-shell-show-usage-at-turn-end t)
     (setopt agent-shell-prefer-viewport-interaction t)
+    (setopt agent-shell-session-strategy 'prompt)
     (setopt agent-shell-anthropic-claude-environment
             (agent-shell-make-environment-variables :inherit-env t))
     (setopt agent-shell-openai-codex-environment

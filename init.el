@@ -112,6 +112,8 @@
 
 (require 'init-local)
 
+(server-start)
+
 (provide 'init)
 ;; Local Variables:
 ;; coding: utf-8

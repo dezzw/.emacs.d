@@ -147,11 +147,9 @@
         # ============================================================================
 
         # IGC base: Use PGTK on Linux, otherwise regular IGC. Remove MPS (now built into emacs repo)
-        emacs-igc-base =
-          (if pkgs.stdenv.isLinux then pkgs.emacs-igc-pgtk else pkgs.emacs-igc).overrideAttrs
-            (old: {
-              buildInputs = builtins.filter (p: !(p ? pname && p.pname == "mps")) (old.buildInputs or [ ]);
-            });
+        emacs-igc-base = pkgs.emacs-igc.overrideAttrs (old: {
+          buildInputs = builtins.filter (p: !(p ? pname && p.pname == "mps")) (old.buildInputs or [ ]);
+        });
 
         # GIT base: Always use regular emacs-git from emacs-overlay
         emacs-git-base = pkgs.emacs-git;

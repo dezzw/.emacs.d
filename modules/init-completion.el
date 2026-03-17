@@ -61,7 +61,6 @@
 (setup cape
   (:load-after corfu)
   (:when-loaded
-    (add-to-list 'completion-at-point-functions #'cape-emoji)
     (add-to-list 'completion-at-point-functions #'cape-dabbrev)
     (add-to-list 'completion-at-point-functions #'cape-file)))
 

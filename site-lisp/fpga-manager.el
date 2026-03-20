@@ -73,14 +73,6 @@
   :group 'tools
   :prefix "fpga-manager-")
 
-;; The Python entry point is invoked via shell.
-;; Keep this a string instead of a list so users can include wrappers (e.g. "uv run",
-;; "poetry run", or "python3 -m uv run"). We split/quote later when needed.
-(defcustom fpga-manager-python-command "uv run"
-  "Python command to use for running the script."
-  :type 'string
-  :group 'fpga-manager)
-
 ;; Username used for filtering "My FPGAs". We avoid forcing a default here so that
 ;; first-time usage can auto-detect via $USER or `user-login-name`.
 (defcustom fpga-manager-current-user nil
@@ -262,15 +254,60 @@ Returns a list with section headers and entries."
   "Get the fpga directory path for the current project."
   (expand-file-name "fpga" (fpga-manager--project-root)))
 
-;; Split wrapper commands ("uv run") into a list of arguments.
-(defun fpga-manager--command-parts (command)
-  "Split COMMAND into shell-ready parts."
-  (split-string-and-unquote command))
+(defun fpga-manager--lock-script-path ()
+  "Return the absolute path to linuxPC_Lock.py in the current project."
+  (expand-file-name "linuxPC_Lock.py" (fpga-manager--project-fpga-dir)))
 
 ;; Quote each part and re-join into a shell command string.
 (defun fpga-manager--build-command (parts)
   "Build a shell command string from PARTS."
   (mapconcat #'shell-quote-argument parts " "))
+
+(defun fpga-manager--flatten-command-args (args)
+  "Expand ARGS into shell-ready parts.
+Each entry may already be a single argument or a short command fragment."
+  (apply #'append
+         (mapcar #'split-string-and-unquote
+                 (let (parts)
+                   (dolist (arg (if (listp args) args (list args)) (nreverse parts))
+                     (unless (string-empty-p arg)
+                       (push arg parts)))))))
+
+(defun fpga-manager--build-uv-run-command (parts &optional env-parts)
+  "Build a `uv run` shell command from PARTS.
+When ENV-PARTS is non-nil, run the full command under that environment."
+  (let ((command (fpga-manager--build-command
+                  (append '("uv" "run") parts))))
+    (if env-parts
+        (fpga-manager--build-command
+         (append env-parts
+                 (list (or shell-file-name "/bin/sh")
+                       (or shell-command-switch "-c")
+                       command)))
+      command)))
+
+(defun fpga-manager--join-shell-commands (&rest commands)
+  "Join COMMANDS with `&&`, skipping any empty entries."
+  (mapconcat #'identity
+             (delq nil
+                   (mapcar (lambda (command)
+                             (unless (string-empty-p command)
+                               command))
+                           commands))
+             " && "))
+
+(defun fpga-manager--with-uv-sync (&rest commands)
+  "Prefix COMMANDS with `uv sync` and join them with `&&`."
+  (apply #'fpga-manager--join-shell-commands
+         (fpga-manager--build-command '("uv" "sync"))
+         commands))
+
+(defun fpga-manager--build-webapp-lock-command (env)
+  "Build the lock command that reserves ENV before a webapp run."
+  (fpga-manager--build-uv-run-command
+   (list (fpga-manager--lock-script-path)
+         "-p" env
+         "-l" "1")))
 
 ;; Buffer name includes project to avoid cross-project reuse.
 (defun fpga-manager--compilation-buffer-name (project-root)
@@ -291,18 +328,23 @@ Returns a list with section headers and entries."
 
 (defun fpga-manager--run-script-sync (args)
   "Run linuxPC_Lock.py with ARGS synchronously and return output."
-  (let ((default-directory (fpga-manager--project-fpga-dir)))
+  (let* ((default-directory (fpga-manager--project-fpga-dir))
+         (parts (append (list "linuxPC_Lock.py")
+                        (fpga-manager--flatten-command-args args))))
     ;; Synchronous call is used only for status fetch (fast, small output).
     (shell-command-to-string
-     (format "%s linuxPC_Lock.py %s" fpga-manager-python-command args))))
+     (fpga-manager--with-uv-sync
+      (fpga-manager--build-uv-run-command parts)))))
 
 ;; Asynchronous compile-based execution gives us clickable errors and output.
 (defun fpga-manager--run-script-compile (args &optional on-success)
   "Run linuxPC_Lock.py with ARGS in compilation mode.
 If ON-SUCCESS is provided, it will be called after successful compilation."
-  (let ((default-directory (fpga-manager--project-fpga-dir))
-        (compilation-buffer-name-function
-         (lambda (_mode) "*FPGA Manager Output*")))
+  (let* ((default-directory (fpga-manager--project-fpga-dir))
+         (parts (append (list "linuxPC_Lock.py")
+                        (fpga-manager--flatten-command-args args)))
+         (compilation-buffer-name-function
+          (lambda (_mode) "*FPGA Manager Output*")))
     (when on-success
       ;; Use a temporary completion hook to refresh the status buffer when the
       ;; command finishes successfully.
@@ -313,7 +355,8 @@ If ON-SUCCESS is provided, it will be called after successful compilation."
                     (when (string-match "^finished" result)
                       (funcall on-success))))))
         (add-hook 'compilation-finish-functions hook-fn)))
-    (compile (format "%s linuxPC_Lock.py %s" fpga-manager-python-command args))))
+    (compile (fpga-manager--with-uv-sync
+              (fpga-manager--build-uv-run-command parts)))))
 
 ;;; Interactive Commands - Lock/Unlock
 
@@ -548,12 +591,11 @@ Test IDs must come before --browser to avoid argument parsing issues."
             (script-path (fpga-manager-find-toplevel-script))
             (default-directory (file-name-directory script-path))
             (converted-args (fpga-manager--convert-bitstream-args args))
-            (args-string (string-join converted-args " "))
-            (cmd (format "%s %s -p %s %s"
-                         fpga-manager-python-command
-                         (file-name-nondirectory script-path)
-                         env
-                         args-string))
+            (cmd (fpga-manager--with-uv-sync
+                  (fpga-manager--build-uv-run-command
+                   (append (list (file-name-nondirectory script-path)
+                                 "-p" env)
+                           (fpga-manager--flatten-command-args converted-args)))))
             (compilation-buffer-name-function
              (lambda (_mode) "*FPGA Test Output*")))
        ;; Persist args into BSTT state so quick actions reuse them.
@@ -580,8 +622,7 @@ Test IDs must come before --browser to avoid argument parsing issues."
        ;; Protocol is required because it is a positional argument.
        (unless protocol
          (error "Protocol is required for webapp tests"))
-       (let* ((base-parts (list fpga-manager-python-command
-                                (file-name-nondirectory script-path)
+       (let* ((base-parts (list (file-name-nondirectory script-path)
                                 protocol
                                 env))
               (cmd-parts (fpga-manager--build-command-parts
@@ -589,10 +630,13 @@ Test IDs must come before --browser to avoid argument parsing issues."
                           (cons (cons 'test-ids
                                       (or (alist-get 'test-ids parsed) "webapp"))
                                 parsed)))
-              (cmd (if headless
-                       (concat "env -u XDG_CURRENT_DESKTOP "
-                               (string-join cmd-parts " "))
-                     (string-join cmd-parts " ")))
+              (cmd (fpga-manager--build-uv-run-command
+                    cmd-parts
+                    (when headless
+                      '("env" "-u" "XDG_CURRENT_DESKTOP"))))
+              (full-cmd (fpga-manager--with-uv-sync
+                         (fpga-manager--build-webapp-lock-command env)
+                         cmd))
               (compilation-buffer-name-function
                (lambda (_mode) "*FPGA Test Output*")))
          ;; Persist args into BSTT state so quick actions reuse them.
@@ -600,8 +644,8 @@ Test IDs must come before --browser to avoid argument parsing issues."
          ;; Headless mode drops the desktop variable to avoid GUI dependency.
          (message "Running webapp test%s: %s"
                   (if headless " (headless)" "")
-                  cmd)
-         (compile cmd))))))
+                  full-cmd)
+         (compile full-cmd))))))
 
 ;;; Transient Test Menu
 
@@ -893,10 +937,9 @@ Each project gets its own FPGA manager buffer, similar to `project-eshell'."
       (setq args (append args (list "-p" port))))
     (when (and lock (not (string-empty-p lock)))
       (setq args (append args (list "-l" lock))))
-    (fpga-manager--build-command
-     (append (fpga-manager--command-parts fpga-manager-python-command)
-             (list "linuxPC_Lock.py")
-             args))))
+    (fpga-manager--with-uv-sync
+     (fpga-manager--build-uv-run-command
+      (append (list "linuxPC_Lock.py") args)))))
 
 (defun bstt/lock-run ()
   (interactive)
@@ -933,13 +976,17 @@ Each project gets its own FPGA manager buffer, similar to `project-eshell'."
   (fpga-manager--bstt-sync-test-menu 'webapp))
 
 (defun bstt/webapp-compile-build-cmd ()
-  (fpga-manager--build-command
-   (append (fpga-manager--command-parts fpga-manager-python-command)
+  (let* ((env (fpga-manager--state-get :port))
+         (main-cmd
+          (fpga-manager--build-uv-run-command
            (list "main.py" (or (fpga-manager--state-get :protocol) "http")
-                 (fpga-manager--state-get :port)
+                 env
                  (fpga-manager--state-get :test-case)
                  "--browser" (fpga-manager--state-get :webapp-browser)
                  "--repeat" (fpga-manager--state-get :repeat)))))
+    (fpga-manager--with-uv-sync
+     (fpga-manager--build-webapp-lock-command env)
+     main-cmd)))
 
 (defun bstt/webapp-compile-run ()
   (interactive)
@@ -976,15 +1023,15 @@ Each project gets its own FPGA manager buffer, similar to `project-eshell'."
   (fpga-manager--bstt-sync-test-menu 'bitstream))
 
 (defun bstt/toplevel-build-cmd ()
-  (let ((args (append (fpga-manager--command-parts fpga-manager-python-command)
-                      (list "toplevel.py" "-d" "-p" (fpga-manager--state-get :port)
-                            "--local" (fpga-manager--state-get :test-case)
-                            "-r" (fpga-manager--state-get :repeat)))))
+  (let ((args (list "toplevel.py" "-d" "-p" (fpga-manager--state-get :port)
+                    "--local" (fpga-manager--state-get :test-case)
+                    "-r" (fpga-manager--state-get :repeat))))
     ;; Optional -c flag only if config was provided.
     (when-let* ((cfg (fpga-manager--state-get :custom)))
       (unless (string-empty-p cfg)
         (setq args (append args (list "-c" cfg)))))
-    (fpga-manager--build-command args)))
+    (fpga-manager--with-uv-sync
+     (fpga-manager--build-uv-run-command args))))
 
 (defun bstt/toplevel-run ()
   (interactive)
@@ -999,9 +1046,9 @@ Each project gets its own FPGA manager buffer, similar to `project-eshell'."
   (interactive)
   (let* ((script-path (fpga-manager-find-webapp-script))
          (default-directory (file-name-directory script-path))
-         (cmd (fpga-manager--build-command
-               (append (fpga-manager--command-parts fpga-manager-python-command)
-                       (list "code_submission_check.py")))))
+         (cmd (fpga-manager--with-uv-sync
+               (fpga-manager--build-uv-run-command
+                (list "code_submission_check.py")))))
     (fpga-manager--confirm-and-compile default-directory cmd)))
 
 (provide 'fpga-manager)

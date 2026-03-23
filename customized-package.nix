@@ -27,6 +27,9 @@ let
     eglot-x = {
       input = "eglot-x";
     };
+    embr = {
+      input = "embr";
+    };
     emt = {
       input = "emt";
     };

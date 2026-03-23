@@ -337,7 +337,6 @@ In-buffer completion with Corfu ecosystem.
 Completion-at-point extensions.
 
 #+begin_src emacs-lisp :tangle no
-(add-to-list 'completion-at-point-functions #'cape-emoji)
 (add-to-list 'completion-at-point-functions #'cape-dabbrev)
 (add-to-list 'completion-at-point-functions #'cape-file)
 #+end_src

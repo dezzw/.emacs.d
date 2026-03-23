@@ -22,6 +22,10 @@
       url = "github:d12frosted/homebrew-emacs-plus";
       flake = false;
     };
+    emacs-canvas-patch = {
+      url = "github:minad/emacs-canvas-patch";
+      flake = false;
+    };
 
     # Custom Emacs packages from GitHub
     eat = {
@@ -30,6 +34,10 @@
     };
     eglot-x = {
       url = "github:nemethf/eglot-x";
+      flake = false;
+    };
+    embr = {
+      url = "github:emacs-os/embr.el";
       flake = false;
     };
     emt = {
@@ -137,6 +145,8 @@
           "${inputs.emacs-plus-patches}/patches/emacs-31/round-undecorated-frame.patch"
           # Make Emacs aware of OS-level light/dark mode
           "${inputs.emacs-plus-patches}/patches/emacs-31/system-appearance.patch"
+          # Add canvas image support
+          "${inputs.emacs-canvas-patch}/canvas.diff"
           # Local patches for macOS NS build tweaks
           ./patches/ns-alpha-background.patch
           ./patches/ns-mac-input-source.patch

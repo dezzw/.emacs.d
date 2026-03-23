@@ -140,17 +140,20 @@
           });
 
         # Custom patches list (can be enabled/disabled as needed)
-        customPatches = [
-          # Add setting to enable rounded window with no decoration
-          "${inputs.emacs-plus-patches}/patches/emacs-31/round-undecorated-frame.patch"
-          # Make Emacs aware of OS-level light/dark mode
-          "${inputs.emacs-plus-patches}/patches/emacs-31/system-appearance.patch"
-          # Add canvas image support
-          "${inputs.emacs-canvas-patch}/canvas.diff"
-          # Local patches for macOS NS build tweaks
-          ./patches/ns-alpha-background.patch
-          ./patches/ns-mac-input-source.patch
-        ];
+        customPatches =
+          [
+            # Add canvas image support
+            "${inputs.emacs-canvas-patch}/canvas.diff"
+          ]
+          ++ lib.optionals pkgs.stdenv.isDarwin [
+            # Add setting to enable rounded window with no decoration
+            "${inputs.emacs-plus-patches}/patches/emacs-31/round-undecorated-frame.patch"
+            # Make Emacs aware of OS-level light/dark mode
+            "${inputs.emacs-plus-patches}/patches/emacs-31/system-appearance.patch"
+            # Local patches for macOS NS build tweaks
+            ./patches/ns-alpha-background.patch
+            ./patches/ns-mac-input-source.patch
+          ];
 
         # ============================================================================
         # Emacs Base Versions

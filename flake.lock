@@ -118,11 +118,11 @@
     "embr": {
       "flake": false,
       "locked": {
-        "lastModified": 1774287454,
-        "narHash": "sha256-SjIYQ+YT0NR6Ifw1MY8wFihTFhVUXgYP6r6N4A1dd2o=",
+        "lastModified": 1774295378,
+        "narHash": "sha256-laX8imETX2rcC6fuTqhl3wuEaUrRkUAO56k9pYWP9GY=",
         "owner": "emacs-os",
         "repo": "embr.el",
-        "rev": "cb5161a3008c0ef584f385156fd40514750a3143",
+        "rev": "0375a1f7cdfe87aa3f7f0cba40f209f759aa2882",
         "type": "github"
       },
       "original": {

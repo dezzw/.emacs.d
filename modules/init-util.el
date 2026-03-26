@@ -76,11 +76,11 @@
 
 (setup helpful
   (:defer (:require helpful))
-  (keymap-global-set "<remap> <describe-function>" 'helpful-function)
-  (keymap-global-set "<remap> <describe-symbol>" 'helpful-symbol)
-  (keymap-global-set "<remap> <describe-variable>" 'helpful-variable)
-  (keymap-global-set "<remap> <describe-command>" 'helpful-command)
-  (keymap-global-set "<remap> <describe-key>" 'helpful-key))
+  (:global-bind "<remap> <describe-function>" 'helpful-function
+                "<remap> <describe-symbol>" 'helpful-symbol
+                "<remap> <describe-variable>" 'helpful-variable
+                "<remap> <describe-command>" 'helpful-command
+                "<remap> <describe-key>" 'helpful-key))
 
 (setup leetcode
   (:autoload leetcode-list-all)

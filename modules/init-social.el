@@ -4,7 +4,7 @@
 
 (setup telega
   ;; Use (identity telega-prefix-map) since setup.el adds #' to functions
-  (keymap-global-set "C-c t" (identity telega-prefix-map))
+  (:global-bind "C-c t" (identity telega-prefix-map))
   (:when-loaded
     (:also-load telega-url-shorten
                 telega-bridge-bot

@@ -1,6 +1,7 @@
 ;;; init-completion.el --- Interactive completion in buffers -*- lexical-binding: t -*-
 ;;; Commentary:
 ;;; Code:
+
 (setup orderless
   (:defer (:require orderless))
   (:when-loaded

@@ -31,10 +31,10 @@
 
 (setup window
   (:also-load lib-window)
-  (keymap-global-set "C-x |" 'split-window-horizontally-instead)
-  (keymap-global-set "C-x _" 'split-window-vertically-instead)
-  (keymap-global-set "C-x 3" (lambda () (interactive)(select-window (split-window-horizontally))))
-  (keymap-global-set "C-x 2" (lambda () (interactive)(select-window (split-window-vertically)))))
+  (:global-bind "C-x |" 'split-window-horizontally-instead
+                "C-x _" 'split-window-vertically-instead
+                "C-x 3" (lambda () (interactive) (select-window (split-window-horizontally)))
+                "C-x 2" (lambda () (interactive) (select-window (split-window-vertically)))))
 
 (setup frame
   (:when-loaded
@@ -79,8 +79,8 @@
       (require 'org-faces nil t))
     (:also-load rose-pine)
     (:also-load lib-appearance)
-    (keymap-global-set "C-M-8" (lambda () (interactive) (+adjust-opacity nil -2)))
-    (keymap-global-set "C-M-7" (lambda () (interactive) (+adjust-opacity nil 2)))
+    (:global-bind "C-M-8" (lambda () (interactive) (+adjust-opacity nil -2))
+                  "C-M-7" (lambda () (interactive) (+adjust-opacity nil 2)))
     ;; Don't prompt to confirm theme safety. This avoids problems with
     ;; first-time startup on Emacs > 26.3.
     (:option custom-safe-themes t
@@ -130,7 +130,7 @@
 (setup nerd-icons (:defer (:require nerd-icons)))
 
 (setup ace-window
-  (keymap-global-set "C-x o" 'ace-window)
+  (:global-bind "C-x o" 'ace-window)
   (:option aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l)
            aw-scope 'frame))
 
@@ -140,9 +140,9 @@
   (:option zoom-size '(0.618 . 0.618)))
 
 (setup popper
-  (keymap-global-set "C-~" 'popper-toggle)
-  (keymap-global-set "M-~" 'popper-cycle)
-  (keymap-global-set "C-M-`" 'popper-toggle-type)
+  (:global-bind "C-~" 'popper-toggle
+                "M-~" 'popper-cycle
+                "C-M-`" 'popper-toggle-type)
   (:option popper-window-height (lambda (win)
                                   (fit-window-to-buffer
                                    win
@@ -193,8 +193,8 @@
 (setup tab-bar
   (:defer (:require tab-bar))
   (:when-loaded
-    (keymap-global-set "s-t" 'tab-bar-new-tab)
-    (keymap-global-set "s-w" 'tab-bar-close-tab)
+    (:global-bind "s-t" 'tab-bar-new-tab
+                  "s-w" 'tab-bar-close-tab)
     (:also-load lib-tabbar)
     (:option tab-bar-separator ""
              tab-bar-close-button-show nil
@@ -213,8 +213,8 @@
                               tab-bar-format-add-tab
                               tab-bar-format-align-right))))
 (setup tab-line
-  (setopt tab-line-new-button-show nil)
-  (setopt tab-line-close-button-show nil))
+  (:set tab-line-new-button-show nil
+        tab-line-close-button-show nil))
 
 (setup activities
   (:also-load lib-activities)
@@ -222,15 +222,15 @@
   (:hooks after-init-hook activities-tabs-mode)
   (:option edebug-inhibit-emacs-lisp-mode-bindings t
            activities-kill-buffers t)
-  (keymap-global-set "C-c w n" #'activities-new)
-  (keymap-global-set "C-c w d" #'activities-define)
-  (keymap-global-set "C-c w a" #'activities-resume)
-  (keymap-global-set "C-c w s" #'activities-suspend)
-  (keymap-global-set "C-c w k" #'activities-kill)
-  (keymap-global-set "C-c w RET" #'activities-switch)
-  (keymap-global-set "C-c w b" #'activities-switch-buffer)
-  (keymap-global-set "C-c w g" #'activities-revert)
-  (keymap-global-set "C-c w l" #'activities-list)
+  (:global-bind "C-c w n" #'activities-new
+                "C-c w d" #'activities-define
+                "C-c w a" #'activities-resume
+                "C-c w s" #'activities-suspend
+                "C-c w k" #'activities-kill
+                "C-c w RET" #'activities-switch
+                "C-c w b" #'activities-switch-buffer
+                "C-c w g" #'activities-revert
+                "C-c w l" #'activities-list)
   (:when-loaded
     (:after consult
       (+activities-consult-setup))))

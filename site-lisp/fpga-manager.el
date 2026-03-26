@@ -309,6 +309,21 @@ When ENV-PARTS is non-nil, run the full command under that environment."
          "-p" env
          "-l" "1")))
 
+(defun fpga-manager--build-webapp-unlock-command (env)
+  "Build the unlock command that releases ENV after a webapp run."
+  (fpga-manager--build-uv-run-command
+   (list (fpga-manager--lock-script-path)
+         "-p" env
+         "-l" "0")))
+
+(defun fpga-manager--with-post-command (command post-command)
+  "Run COMMAND, then POST-COMMAND, preserving useful failure status.
+If COMMAND fails, return its status after POST-COMMAND runs. If COMMAND
+succeeds, return POST-COMMAND's status."
+  (format "{ %s; command_status=$?; %s; post_status=$?; if [ \"$command_status\" -ne 0 ]; then exit \"$command_status\"; fi; exit \"$post_status\"; }"
+          command
+          post-command))
+
 ;; Buffer name includes project to avoid cross-project reuse.
 (defun fpga-manager--compilation-buffer-name (project-root)
   "Return a compilation buffer name for PROJECT-ROOT."
@@ -636,7 +651,9 @@ Test IDs must come before --browser to avoid argument parsing issues."
                       '("env" "-u" "XDG_CURRENT_DESKTOP"))))
               (full-cmd (fpga-manager--with-uv-sync
                          (fpga-manager--build-webapp-lock-command env)
-                         cmd))
+                         (fpga-manager--with-post-command
+                          cmd
+                          (fpga-manager--build-webapp-unlock-command env))))
               (compilation-buffer-name-function
                (lambda (_mode) "*FPGA Test Output*")))
          ;; Persist args into BSTT state so quick actions reuse them.
@@ -986,7 +1003,9 @@ Each project gets its own FPGA manager buffer, similar to `project-eshell'."
                  "--repeat" (fpga-manager--state-get :repeat)))))
     (fpga-manager--with-uv-sync
      (fpga-manager--build-webapp-lock-command env)
-     main-cmd)))
+     (fpga-manager--with-post-command
+      main-cmd
+      (fpga-manager--build-webapp-unlock-command env)))))
 
 (defun bstt/webapp-compile-run ()
   (interactive)

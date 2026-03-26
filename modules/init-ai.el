@@ -13,15 +13,11 @@
     (:hook gptel-auto-scroll))
   (:hooks gptel-post-response-hook gptel-end-of-response))
 
-(setup gptel-agent
-  (:when-loaded
-    (gptel-agent-update)))
-
 (setup agent-shell
   ;; (:also-load lib-agent-shell)
   ;; (keymap-global-set "C-c a s" 'lib-agent-shell-toggle)
   ;; (keymap-global-set "C-c a f" 'lib-agent-shell-toggle-focus)
-  (keymap-global-set "C-c a d" 'agent-shell-send-dwim)
+  (:global-bind "C-c a d" 'agent-shell-send-dwim)
   ;; (keymap-global-set "C-c a n" 'lib-agent-shell-new)
 
   ;; Make agent-shell bookmark-able
@@ -33,24 +29,16 @@
   ;;                         (lambda ()
   ;;                           `((handler . my/agent-shell-bookmark))))))
   (:when-loaded
-    (setopt agent-shell-show-usage-at-turn-end t)
-    (setopt agent-shell-prefer-viewport-interaction t)
-    (setopt agent-shell-session-strategy 'prompt)
-    (setopt agent-shell-anthropic-claude-environment
-            (agent-shell-make-environment-variables :inherit-env t))
-    (setopt agent-shell-openai-codex-environment
-            (agent-shell-make-environment-variables :inherit-env t))
+    (:set agent-shell-show-usage-at-turn-end t
+          agent-shell-prefer-viewport-interaction t
+          agent-shell-session-strategy 'prompt
+          agent-shell-anthropic-claude-environment
+          (agent-shell-make-environment-variables :inherit-env t)
+          agent-shell-openai-codex-environment
+          (agent-shell-make-environment-variables :inherit-env t)
+          agent-shell-file-completion-enabled t)
     (setq agent-shell-preferred-agent-config
-          (agent-shell-anthropic-make-claude-code-config))
-    (setopt agent-shell-file-completion-enabled t)))
-
-(setup ai-code
-  (:when-loaded
-    (ai-code-set-backend 'cursor)
-    (setq ai-code-backends-infra-terminal-backend 'eat)
-    (setq auto-revert-interval 1)
-    (with-eval-after-load 'magit
-      (ai-code-magit-setup-transients))))
+          (agent-shell-anthropic-make-claude-code-config))))
 
 (provide 'init-ai)
 ;;; init-ai.el ends here

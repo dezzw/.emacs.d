@@ -1,6 +1,7 @@
 ;;; init-bitstream.el --- Bitstream-related configurations -*- lexical-binding: t -*-
 ;;; Commentary:
 ;;; Code:
+
 (setup jenkins
   (:defer (:require jenkins))
   (setq jenkins-api-token (auth-source-pick-first-password :host "jenkins.netint.ca" :user "desmond.wang" :port 8443))
@@ -11,12 +12,12 @@
   (:defer (require 'transient))
   (:when-loaded
     (:also-load fpga-manager)
-    (keymap-global-set "C-c e f" 'fpga-manager-status)
-    (keymap-global-set "C-c e b" 'fpga-manager-menu)
-    (keymap-global-set "C-c e l" 'bstt/lock)
-    (keymap-global-set "C-c e w" 'bstt/webapp-compile)
-    (keymap-global-set "C-c e t" 'bstt/toplevel)
-    (keymap-global-set "C-c e c" 'bstt/code-check)
+    (:global-bind "C-c e f" 'fpga-manager-status
+                  "C-c e b" 'fpga-manager-menu
+                  "C-c e l" 'bstt/lock
+                  "C-c e w" 'bstt/webapp-compile
+                  "C-c e t" 'bstt/toplevel
+                  "C-c e c" 'bstt/code-check)
 
     ;; BSTT Lock Command Transient
     (transient-define-prefix bstt/lock ()

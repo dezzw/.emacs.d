@@ -33,14 +33,14 @@
 
 
 (setup simple
-  (keymap-global-set "C-." 'set-mark-command)
-  (keymap-global-set "C-x C-." 'pop-global-mark)
+  (:global-bind "C-." 'set-mark-command
+                "C-x C-." 'pop-global-mark)
   ;; 从光标位置删除到行首第一个非空格字符。
-  (keymap-global-set "C-M-<backspace>" (lambda ()
-                                         (interactive)
-                                         (let ((prev-pos (point)))
-                                           (back-to-indentation)
-                                           (kill-region (point) prev-pos))))
+  (:global-bind "C-M-<backspace>" (lambda ()
+                                    (interactive)
+                                    (let ((prev-pos (point)))
+                                      (back-to-indentation)
+                                      (kill-region (point) prev-pos))))
   (:option  indent-tabs-mode nil
             save-interprogram-paste-before-kill t
             set-mark-command-repeat-pop t))
@@ -75,57 +75,6 @@
   (:defer (:require meow-tree-sitter))
   (:when-loaded (meow-tree-sitter-register-defaults)))
 
-(setup sis
-  (:defer (:require sis))
-  (:when-loaded
-    (:option sis-english-source "com.apple.keylayout.CA"
-             ;; 用了 emacs-mac 提取的 patch 中的 mac-input-source 方法来切换
-             ;; sis-external-ism "macism"
-             sis-inline-tighten-head-rule nil
-             sis-default-cursor-color "#cf7fa7"
-             sis-other-cursor-color "orange"
-             sis-context-hooks '(meow-insert-enter-hook))
-    (:hooks meow-insert-exit-hook sis-set-english)
-    (if *is-mac*
-        (sis-ism-lazyman-config
-         "com.apple.keylayout.CA"
-         "com.apple.keylayout.Pinyin"))
-    ;; enable the /cursor color/ mode
-    (sis-global-cursor-color-mode t)
-    ;; enable the /respect/ mode
-    (sis-global-respect-mode t)
-    ;; enable the /context/ mode for all buffers
-    (sis-global-context-mode t)
-    ;; enable the /inline english/ mode for all buffers
-    ;; (sis-global-inline-mode t)
-    ;; org title 处切换 Rime，telega 聊天时切换 Rime。
-    ;; 使用模式编辑 meow，需要额外加 meow-insert-mode 条件。
-    (add-to-list 'sis-context-detectors
-                 (lambda (&rest _)
-                   (when (and meow-insert-mode
-                              (or (derived-mode-p 'org-mode
-                                                  'gfm-mode
-                                                  'telega-chat-mode)
-                                  (string-match-p "*new toot*" (buffer-name))))
-                     'other)))
-
-    (add-function :after after-focus-change-function
-                  (lambda ()
-                    (if (frame-focus-state)
-                        (sis-set-english)
-                      (meow-insert-exit))))
-
-    (define-advice sis--auto-refresh-timer-function
-        (:around (orig) toggle-override-map)
-      (funcall orig)
-      (pcase sis--current
-        ('english
-         (setq sis--prefix-override-map-enable nil))
-        ('other
-         (setq sis--prefix-override-map-enable t))))))
-
-
-
 ;; 剪贴板查找
 (setup browse-kill-ring
   (:with-map browse-kill-ring-mode-map
@@ -140,10 +89,10 @@
 ;; it will use those keybindings. For this reason, you might prefer to
 ;; use M-S-up and M-S-down, which will work even in lisp modes.
 (setup move-dup
-  (keymap-global-set "M-<up>"   'move-dup-move-lines-up)
-  (keymap-global-set "M-<down>" 'move-dup-move-lines-down)
-  (keymap-global-set "C-c d"    'move-dup-duplicate-down)
-  (keymap-global-set "C-c u"    'move-dup-duplicate-up))
+  (:global-bind "M-<up>"   'move-dup-move-lines-up
+                "M-<down>" 'move-dup-move-lines-down
+                "C-c d"    'move-dup-duplicate-down
+                "C-c u"    'move-dup-duplicate-up))
 
 ;; 彩虹括号
 (setup rainbow-delimiters
@@ -165,7 +114,7 @@
            "C-S-<tab>" hs-global-cycle)))
 
 (setup whitespace-cleanup-mode
-  (keymap-global-set "<remap> <just-one-space>" 'cycle-spacing)
+  (:global-bind "<remap> <just-one-space>" 'cycle-spacing)
   (setq-default show-trailing-whitespace nil)
   (:with-mode (prog-mode text-mode conf-mode)
     (:local-set show-trailing-whitespace t)))
@@ -194,8 +143,8 @@
                            1)))))))
 
 (setup avy
-  (keymap-global-set "C-;" 'avy-goto-word-or-subword-1)
-  (keymap-global-set "C-:" 'avy-goto-char-in-line)
+  (:global-bind "C-;" 'avy-goto-word-or-subword-1
+                "C-:" 'avy-goto-char-in-line)
   (:option avy-style 'de-bruijn)
   (:defer (:require ace-pinyin)
           (ace-pinyin-global-mode +1)))
@@ -214,10 +163,10 @@
   (:hook-into prog-mode)
   (:hook-into yaml-mode)
   (:option symbol-overlay-temp-highlight-on-region t)
-  (keymap-global-set "C-c s i" #'symbol-overlay-put)
-  (keymap-global-set "C-c s n" #'symbol-overlay-switch-forward)
-  (keymap-global-set "C-c s p" #'symbol-overlay-switch-backward)
-  (keymap-global-set "C-c s c" #'symbol-overlay-remove-all)
+  (:global-bind "C-c s i" #'symbol-overlay-put
+                "C-c s n" #'symbol-overlay-switch-forward
+                "C-c s p" #'symbol-overlay-switch-backward
+                "C-c s c" #'symbol-overlay-remove-all)
   (:when-loaded
     (dolist (key '("h" "q" "i"))
       (define-key symbol-overlay-map (kbd key) nil))

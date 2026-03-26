@@ -56,13 +56,13 @@
 (setup doom-modeline
   (:defer (:require doom-modeline))
   (:when-loaded
-    (setopt doom-modeline-height 18
-            doom-modeline-buffer-file-name-style 'relative-to-project
-            doom-modeline-buffer-modification-icon t
-            doom-modeline-project-name t
-            doom-modeline-bar-width 4
-            doom-modeline-hud t
-            doom-modeline-hud-min-height 1)
+    (:set doom-modeline-height 18
+          doom-modeline-buffer-file-name-style 'relative-to-project
+          doom-modeline-buffer-modification-icon t
+          doom-modeline-project-name t
+          doom-modeline-bar-width 4
+          doom-modeline-hud t
+          doom-modeline-hud-min-height 1)
     (:with-feature telega
       (:when-loaded
         (add-to-list 'global-mode-string '("" (:eval (+mode-line-telega-icon))) t)))
@@ -101,19 +101,19 @@
   (:defer (:require consult))
   (:also-load consult-ripfd)
   (:when-loaded
-    (keymap-global-set "C-c f l" 'consult-line)
-    (keymap-global-set "C-c f i" 'consult-imenu)
-    (keymap-global-set "C-c f f" 'consult-fd)
-    (keymap-global-set "C-c f r" 'consult-ripfd)
-    (keymap-global-set "C-c f g" 'consult-goto-line)
-    (keymap-global-set "C-c f p" 'consult-project-buffer)
-    (keymap-global-set "C-c f b" 'consult-buffer)
-    (keymap-global-set "C-c f d" 'consult-flymake)
-    (keymap-global-set "C-c f m" 'consult-global-mark)
-    (keymap-global-set "<remap> <switch-to-buffer>" 'consult-buffer)
-    (keymap-global-set "<remap> <switch-to-buffer-other-window>" 'consult-buffer-other-window)
-    (keymap-global-set "<remap> <switch-to-buffer-other-frame>" 'consult-buffer-other-frame)
-    (keymap-global-set "<remap> <goto-line>" 'consult-goto-line)
+    (:global-bind "C-c f l" 'consult-line
+                  "C-c f i" 'consult-imenu
+                  "C-c f f" 'consult-fd
+                  "C-c f r" 'consult-ripfd
+                  "C-c f g" 'consult-goto-line
+                  "C-c f p" 'consult-project-buffer
+                  "C-c f b" 'consult-buffer
+                  "C-c f d" 'consult-flymake
+                  "C-c f m" 'consult-global-mark
+                  "<remap> <switch-to-buffer>" 'consult-buffer
+                  "<remap> <switch-to-buffer-other-window>" 'consult-buffer-other-window
+                  "<remap> <switch-to-buffer-other-frame>" 'consult-buffer-other-frame
+                  "<remap> <goto-line>" 'consult-goto-line)
     (:also-load lib-consult)
     (:option consult-async-min-input 2
              xref-show-xrefs-function #'consult-xref
@@ -123,7 +123,7 @@
 (setup consult-dir
   (:load-after vertico)
   (:when-loaded
-    (keymap-global-set "C-x C-d" 'consult-dir)
+    (:global-bind "C-x C-d" 'consult-dir)
     (:with-map vertico-map
       (:bind
        "C-x C-d" consult-dir
@@ -144,9 +144,9 @@
       (interactive "fFile: ")
       (shell-command (format "open -R %s && osascript -e 'tell application \"Finder\" to activate'" (shell-quote-argument (expand-file-name file)))))
     
-    (keymap-global-set "C-c ." 'embark-act)
-    (keymap-global-set "M-n"   'embark-next-symbol)
-    (keymap-global-set "M-p"   'embark-previous-symbol)
+    (:global-bind "C-c ." 'embark-act
+                  "M-n"   'embark-next-symbol
+                  "M-p"   'embark-previous-symbol)
     (:with-map embark-file-map (when *is-mac* (:bind "o" +embark-open-in-finder)))
     (:option embark-indicators '(embark-minimal-indicator
                                  embark-highlight-indicator

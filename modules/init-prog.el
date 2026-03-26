@@ -31,7 +31,6 @@
   (:with-mode json-ts-mode (:match-file "*.json"))
   (:with-mode nix-ts-mode (:match-file "*.nix"))
   (:with-mode lua-ts-mode (:match-file "*.lua"))
-  (:with-mode fennel-mode (:match-file "*.fnl"))
   (:with-mode dockerfile-ts-mode (:match-file "*.Dockerfile"))
   (:with-mode rust-ts-mode (:match-file "*.rs"))
   (:with-mode go-ts-mode (:match-file "*.go"))
@@ -59,7 +58,7 @@
 (setup apheleia
   (:hook-into prog-mode)
   (:when-loaded
-    (keymap-global-set "C-c C-x C-f" 'apheleia-format-buffer)
+    (:global-bind "C-c C-x C-f" 'apheleia-format-buffer)
     (setf (alist-get 'python-ts-mode     apheleia-mode-alist) 'ruff)
     (setf (alist-get 'my-html-mode       apheleia-mode-alist) 'prettier-html)
     (setf (alist-get 'sql-mode           apheleia-mode-alist) 'pgformatter)
@@ -98,7 +97,7 @@
 (setup lisp-mode
   (:also-load lib-lisp)
   (:require macrostep)
-  (global-set-key [remap eval-expression] 'pp-eval-expression)
+  (:global-bind "<remap> <eval-expression>" 'pp-eval-expression)
   (:with-map emacs-lisp-mode-map
     (:bind
      "C-x C-e" +eval-last-sexp-or-region
@@ -115,11 +114,11 @@
 
 (setup project
   (:when-loaded
-    (keymap-global-set "C-c p" (identity project-prefix-map))
+    (:global-bind "C-c p" (identity project-prefix-map))
     (:with-map project-prefix-map
       (:bind "t" project-vterm))
-    (setopt project-vc-extra-root-markers
-            '("package.json" "deps.edn" "project.clj" "Package.swift" ".envrc" ".tags" ".project"))))
+    (:set project-vc-extra-root-markers
+          '("package.json" "deps.edn" "project.clj" "Package.swift" ".envrc" ".tags" ".project"))))
 
 ;; js-ts-mode
 (setup js-ts-mode
@@ -189,10 +188,10 @@
   (:when-loaded
     ;; 注意：当 `flymake-no-changes-timeout` 被设置为 nil 时，
     ;; 需要实现 `eglot-handle-notification` 的 `:after` 方法。
-    (setopt flymake-no-changes-timeout nil
-            flymake-fringe-indicator-position 'right-fringe)
+    (:set flymake-no-changes-timeout nil
+          flymake-fringe-indicator-position 'right-fringe)
     (when (version<= "31" emacs-version)
-      (setopt flymake-show-diagnostics-at-end-of-line t))))
+      (:set flymake-show-diagnostics-at-end-of-line t))))
 
 (setup eldoc-box
   (:load-after eldoc)
@@ -203,12 +202,12 @@
     (:hook eglot-ensure))
   (:when-loaded
     (:also-load lib-eglot)
-    (setopt eglot-code-action-indications '(eldoc-hint)
-            eglot-max-file-watches 30000
-            eglot-events-buffer-config '(:size 0 :format full) ;; 取消 eglot log
-            ;; ignore lsp formatting provider, format with apheleia.
-            eglot-ignored-server-capabilities '(:documentFormattingProvider
-                                                :documentRangeFormattingProvider))
+    (:set eglot-code-action-indications '(eldoc-hint)
+          eglot-max-file-watches 30000
+          eglot-events-buffer-config '(:size 0 :format full)) ;; 取消 eglot log
+    ;; ignore lsp formatting provider, format with apheleia.
+    (:set eglot-ignored-server-capabilities '(:documentFormattingProvider
+                                              :documentRangeFormattingProvider))
     (add-to-list 'eglot-server-programs '(python-ts-mode . ("rass" "python")))
     (add-to-list 'eglot-server-programs `((vue-mode vue-ts-mode typescript-ts-mode) . ("rass" "vuetail")))
     (add-to-list 'eglot-server-programs '(my-html-mode . ("vscode-html-language-server" "--stdio")))
@@ -246,13 +245,13 @@
 (setup citre
   (:defer (:require citre))
   (:also-load citre-config)
-  (global-set-key (kbd "C-c c j") 'citre-jump)
-  (global-set-key (kbd "C-c c J") 'citre-jump-back)
-  (global-set-key (kbd "C-c c p") 'citre-ace-peek)
-  (global-set-key (kbd "C-c c u") 'citre-update-this-tags-file)
+  (:global-bind "C-c c j" 'citre-jump
+                "C-c c J" 'citre-jump-back
+                "C-c c p" 'citre-ace-peek
+                "C-c c u" 'citre-update-this-tags-file)
   (:when-loaded
-    (setopt citre-auto-enable-citre-mode-backends '(eglot tags global))
-    (setopt citre-completion-backends '(eglot tags global))))
+    (:set citre-auto-enable-citre-mode-backends '(eglot tags global)
+          citre-completion-backends '(eglot tags global))))
 
 (setup topsy
   (:defer (:require topsy))

@@ -182,16 +182,13 @@ let
       diff-hl
       doom-modeline
       eglot-booster
-      elfeed
       embark
       embark-consult
       eshell-syntax-highlighting
-      forge
       git-link
       git-modes
       goggles
       gptel
-      gptel-agent
       highlight-parentheses
       indent-bars
       language-detection
@@ -203,20 +200,16 @@ let
       mmm-mode
       mode-line-bell
       move-dup
-      mpv
       nerd-icons
       nerd-icons-completion
       nerd-icons-corfu
       nerd-icons-dired
-      nov
       orderless
-      ox-pandoc
       plz
       popper
       rainbow-delimiters
       rainbow-mode
       separedit
-      sis
       speed-type
       swift-mode
       ultra-scroll
@@ -250,7 +243,6 @@ let
       babashka
       cider
       clojure-ts-mode
-      fennel-mode
       geiser-chez
       neil
       nix-ts-mode
@@ -260,8 +252,6 @@ let
     epkgs: with epkgs; [
       activities
       agent-shell
-      ai-code
-      eca
       citre
       consult-notes
       eldoc-box
@@ -269,7 +259,6 @@ let
       helpful
       jenkins
       jinx
-      jira
       keyfreq
       reformatter
       topsy

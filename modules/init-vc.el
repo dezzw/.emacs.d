@@ -19,7 +19,11 @@
   (:when-loaded
     (:also-load lib-magit)
     (:with-map magit-status-mode-map
-      (:bind "C-M-<up>" magit-section-up))
+      (:bind
+       "C-M-<up>" magit-section-up
+       ;; Work around a Transient/Magit discard bug on Emacs 31 by
+       ;; providing a direct entry point that bypasses dispatch popup "k".
+       "C-c C-k" magit-discard))
     (:with-map vc-prefix-map
       (:bind "l" +magit-or-vc-log-file
              ;; file binding for vc-git-grep
@@ -30,8 +34,8 @@
              "C-n"     magit-blob-next
              "C-p"     magit-blob-previous))
     ;; quickly open magit on any one of your projects.
-    (keymap-global-set "C-x g" 'magit-status)
-    (keymap-global-set "C-x M-g" 'magit-dispatch)
+    (:global-bind "C-x g" 'magit-status
+                  "C-x M-g" 'magit-dispatch)
     (:option magit-diff-refine-hunk t
              ;; Don't autosave repo buffers. This is too magical, and saving can
              ;; trigger a bunch of unwanted side-effects, like save hooks and
@@ -61,17 +65,6 @@
     (:option magit-log-margin '(t age-abbreviated magit-log-margin-width :author 11))
     (:advice magit-log-format-margin :filter-args #'+magit-log--abbreviate-author)))
 
-(setup forge
-  (:load-after magit)
-  (:when-loaded
-    ;; Make it easier to see that a topic was closed.
-    (:face forge-topic-closed ((t (:strike-through t))))
-    (push '("git.netint.ca"               ; GITHOST
-            "git.netint.ca/api/v4"        ; APIHOST
-            "git.netint.ca"               ; WEBHOST and INSTANCE-ID
-            forge-gitlab-repository)    ; CLASS
-          forge-alist)))
-
 (setup diff-hl
   (:defer (diff-hl-mode))
   (:when-loaded
@@ -83,15 +76,15 @@
 (setup blame-reveal
   (:defer (:require blame-reveal))
   (:when-loaded
-    (setq blame-reveal-recent-days-limit 'auto)        ; Adapt to commit frequency
-    (setq blame-reveal-gradient-quality 'auto)         ; Balanced quality
+    (:set blame-reveal-recent-days-limit 'auto         ; Adapt to commit frequency
+          blame-reveal-gradient-quality 'auto)         ; Balanced quality
     
     ;; Display
-    (setq blame-reveal-display-layout 'compact)        ; Show commit info
-    (setq blame-reveal-show-uncommitted-fringe nil)    ; Use diff-hl instead
+    (:set blame-reveal-display-layout 'compact         ; Show commit info
+          blame-reveal-show-uncommitted-fringe nil)    ; Use diff-hl instead
 
     ;; Performance
-    (setq blame-reveal-async-blame 'auto)              ; Async for large files
+    (:set blame-reveal-async-blame 'auto)              ; Async for large files
 
     ;; Enable recursive blame
     (require 'blame-reveal-recursive)))

@@ -62,6 +62,7 @@ eln-cache
 project*
 dev-profile*
 result
+.nix-generated/
 
 # ============================================
 # AI & Development Tools

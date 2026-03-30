@@ -162,68 +162,67 @@ let
       vterm
     ];
 
-  melpaCorePackages =
+  melpaUiPackages =
     epkgs: with epkgs; [
-      ace-pinyin
       ace-window
-      apheleia
-      avy
-      browse-kill-ring
-      cape
-      cdlatex
-      company
-      consult
-      consult-dir
-      corfu
       default-text-scale
-      denote
       diredfl
       dirvish
-      diff-hl
       doom-modeline
-      eglot-booster
-      embark
-      embark-consult
-      eshell-syntax-highlighting
-      git-link
-      git-modes
-      goggles
-      gptel
       highlight-parentheses
-      indent-bars
-      language-detection
-      macrostep
-      marginalia
-      markdown-mode
-      meow
-      meow-tree-sitter
-      mmm-mode
       mode-line-bell
-      move-dup
       nerd-icons
       nerd-icons-completion
       nerd-icons-corfu
       nerd-icons-dired
-      orderless
-      plz
       popper
+      ultra-scroll
+      vertico
+      vertico-posframe
+      zoom
+    ];
+
+  melpaCompletionPackages =
+    epkgs: with epkgs; [
+      cape
+      company
+      consult
+      consult-dir
+      corfu
+      embark
+      embark-consult
+      marginalia
+      orderless
+      yasnippet
+    ];
+
+  melpaEditingPackages =
+    epkgs: with epkgs; [
+      ace-pinyin
+      apheleia
+      avy
+      browse-kill-ring
+      goggles
+      jinx
+      macrostep
+      meow
+      meow-tree-sitter
+      move-dup
       rainbow-delimiters
       rainbow-mode
       separedit
       speed-type
-      swift-mode
-      ultra-scroll
-      verb
-      vertico
-      vertico-posframe
+      undo-fu
+      undo-fu-session
       vundo
-      web-mode
       whitespace-cleanup-mode
-      yasnippet
     ];
 
   melpaOrgPackages =
     epkgs: with epkgs; [
+      cdlatex
+      consult-notes
+      denote
       denote-markdown
       denote-org
       ob-async
@@ -244,27 +243,49 @@ let
       cider
       clojure-ts-mode
       geiser-chez
+      markdown-mode
       neil
       nix-ts-mode
+      swift-mode
+      web-mode
+    ];
+
+  melpaProgPackages =
+    epkgs: with epkgs; [
+      citre
+      eglot-booster
+      eldoc-box
+      envrc
+      indent-bars
+      mmm-mode
+      reformatter
+      topsy
+      verb
+    ];
+
+  melpaVcPackages =
+    epkgs: with epkgs; [
+      diff-hl
+      git-link
+      git-modes
+      magit
+    ];
+
+  melpaAiPackages =
+    epkgs: with epkgs; [
+      agent-shell
+      gptel
     ];
 
   melpaUtilityPackages =
     epkgs: with epkgs; [
       activities
-      agent-shell
-      citre
-      consult-notes
-      eldoc-box
-      envrc
+      eshell-syntax-highlighting
       helpful
       jenkins
-      jinx
       keyfreq
-      reformatter
-      topsy
-      undo-fu
-      undo-fu-session
-      zoom
+      language-detection
+      plz
     ];
 in
 {
@@ -272,8 +293,13 @@ in
     epkgs:
     (nativePackages epkgs)
     ++ (builtins.attrValues (mkCustomPackages epkgs))
-    ++ (melpaCorePackages epkgs)
+    ++ (melpaUiPackages epkgs)
+    ++ (melpaCompletionPackages epkgs)
+    ++ (melpaEditingPackages epkgs)
     ++ (melpaOrgPackages epkgs)
     ++ (melpaLangPackages epkgs)
+    ++ (melpaProgPackages epkgs)
+    ++ (melpaVcPackages epkgs)
+    ++ (melpaAiPackages epkgs)
     ++ (melpaUtilityPackages epkgs);
 }

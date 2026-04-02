@@ -279,13 +279,13 @@ let
 
   melpaUtilityPackages =
     epkgs: with epkgs; [
-      activities
       eshell-syntax-highlighting
       helpful
       jenkins
       keyfreq
       language-detection
       plz
+      tabspaces
     ];
 in
 {

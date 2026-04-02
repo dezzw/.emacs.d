@@ -216,24 +216,23 @@
   (:set tab-line-new-button-show nil
         tab-line-close-button-show nil))
 
-(setup activities
-  (:also-load lib-activities)
-  (:hooks after-init-hook activities-mode)
-  (:hooks after-init-hook activities-tabs-mode)
-  (:option edebug-inhibit-emacs-lisp-mode-bindings t
-           activities-kill-buffers t)
-  (:global-bind "C-c w n" #'activities-new
-                "C-c w d" #'activities-define
-                "C-c w a" #'activities-resume
-                "C-c w s" #'activities-suspend
-                "C-c w k" #'activities-kill
-                "C-c w RET" #'activities-switch
-                "C-c w b" #'activities-switch-buffer
-                "C-c w g" #'activities-revert
-                "C-c w l" #'activities-list)
+(setup tabspaces
+  (:also-load lib-tabspaces)
+  (:hooks after-init-hook tabspaces-mode)
+  (:option tabspaces-use-filtered-buffers-as-default t
+           tabspaces-default-tab "Default"
+           tabspaces-remove-to-default t
+           tabspaces-include-buffers '("*scratch*")
+           tabspaces-initialize-project-with-todo t
+           tabspaces-todo-file-name "project-todo.org"
+           tabspaces-session t
+           tabspaces-session-auto-restore t
+           tabspaces-fully-resolve-paths t
+           tabspaces-exclude-buffers '("*Messages*" "*Compile-Log*")
+           tab-bar-new-tab-choice "*scratch*")
   (:when-loaded
     (:after consult
-      (+activities-consult-setup))))
+      (+tabspaces-consult-setup))))
 
 (setup which-key
   (:hook-into after-init))

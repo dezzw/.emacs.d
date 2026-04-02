@@ -186,7 +186,7 @@ Visual customization and window management.
 
 - =zoom= - Golden ratio window sizing
 - =popper= - Popup window management (shells, help, compilation)
-- =activities= - Session/workspace management
+- =tabspaces= - Session/workspace management
 
 *** Tab Bar & Tab Line
 

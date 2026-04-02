@@ -108,6 +108,7 @@ If nil, will auto-detect based on system username."
           :webapp-browser "chrome"
           :log-level ""
           :repeat "1"
+          :keep-locked t
           :custom "")
   "Plist holding defaults/last values for FPGA helper commands.")
 
@@ -263,13 +264,17 @@ Returns a list with section headers and entries."
   "Build a shell command string from PARTS."
   (mapconcat #'shell-quote-argument parts " "))
 
+(defun fpga-manager--ensure-list (value)
+  "Return VALUE as a list."
+  (if (listp value) value (list value)))
+
 (defun fpga-manager--flatten-command-args (args)
   "Expand ARGS into shell-ready parts.
 Each entry may already be a single argument or a short command fragment."
   (apply #'append
          (mapcar #'split-string-and-unquote
                  (let (parts)
-                   (dolist (arg (if (listp args) args (list args)) (nreverse parts))
+                   (dolist (arg (fpga-manager--ensure-list args) (nreverse parts))
                      (unless (string-empty-p arg)
                        (push arg parts)))))))
 
@@ -302,19 +307,12 @@ When ENV-PARTS is non-nil, run the full command under that environment."
          (fpga-manager--build-command '("uv" "sync"))
          commands))
 
-(defun fpga-manager--build-webapp-lock-command (env)
-  "Build the lock command that reserves ENV before a webapp run."
+(defun fpga-manager--build-lock-state-command (env lock-value)
+  "Build the lock command that sets ENV to LOCK-VALUE."
   (fpga-manager--build-uv-run-command
    (list (fpga-manager--lock-script-path)
          "-p" env
-         "-l" "1")))
-
-(defun fpga-manager--build-webapp-unlock-command (env)
-  "Build the unlock command that releases ENV after a webapp run."
-  (fpga-manager--build-uv-run-command
-   (list (fpga-manager--lock-script-path)
-         "-p" env
-         "-l" "0")))
+         "-l" lock-value)))
 
 (defun fpga-manager--with-post-command (command post-command)
   "Run COMMAND, then POST-COMMAND, preserving useful failure status.
@@ -323,6 +321,17 @@ succeeds, return POST-COMMAND's status."
   (format "{ %s; command_status=$?; %s; post_status=$?; if [ \"$command_status\" -ne 0 ]; then exit \"$command_status\"; fi; exit \"$post_status\"; }"
           command
           post-command))
+
+(defun fpga-manager--build-webapp-session-command (env command &optional keep-locked)
+  "Build a shell command that locks ENV, runs COMMAND, and maybe unlocks it.
+When KEEP-LOCKED is non-nil, leave ENV locked after COMMAND exits."
+  (fpga-manager--with-uv-sync
+   (fpga-manager--build-lock-state-command env "1")
+   (if keep-locked
+       command
+     (fpga-manager--with-post-command
+      command
+      (fpga-manager--build-lock-state-command env "0")))))
 
 ;; Buffer name includes project to avoid cross-project reuse.
 (defun fpga-manager--compilation-buffer-name (project-root)
@@ -526,8 +535,9 @@ Handles both flag-only args like \\='-d\\=' and value args like \\='-r 5\\='."
         (repeat nil)
         (delay nil)
         (headless nil)
+        (keep-locked nil)
         (remaining '()))
-    (dolist (arg (if (listp args) args (list args)))
+    (dolist (arg (fpga-manager--ensure-list args))
       (cond
        ((string-prefix-p "--protocol=" arg)
         (setq protocol (substring arg 11)))
@@ -543,6 +553,8 @@ Handles both flag-only args like \\='-d\\=' and value args like \\='-r 5\\='."
         (setq delay t))
        ((string= arg "--headless")
         (setq headless t))
+       ((string= arg "--keep-locked")
+        (setq keep-locked t))
        (t
         (push arg remaining))))
     `((protocol . ,protocol)
@@ -551,6 +563,7 @@ Handles both flag-only args like \\='-d\\=' and value args like \\='-r 5\\='."
       (repeat . ,repeat)
       (delay . ,delay)
       (headless . ,headless)
+      (keep-locked . ,keep-locked)
       (remaining . ,(nreverse remaining)))))
 
 (defun fpga-manager--convert-bitstream-args (args)
@@ -560,32 +573,42 @@ Converts \\='-i\\=' to \\='--local\\=' for bitstream tests."
             (if (string-prefix-p "-i " arg)
                 (concat "--local " (substring arg 3))
               arg))
-          (if (listp args) args (list args))))
+          (fpga-manager--ensure-list args)))
 
 ;; Build the command parts in a stable order so downstream scripts parse
 ;; positional arguments correctly.
-(defun fpga-manager--build-command-parts (base-parts parsed-args)
-  "Build command parts list from BASE-PARTS and PARSED-ARGS alist.
-Test IDs must come before --browser to avoid argument parsing issues."
-  (let* ((parts base-parts)
+(defun fpga-manager--build-webapp-command-parts (script-name env parsed-args)
+  "Build webapp command parts from SCRIPT-NAME, ENV, and PARSED-ARGS."
+  (let* ((protocol (alist-get 'protocol parsed-args))
          (delay (alist-get 'delay parsed-args))
          (repeat (alist-get 'repeat parsed-args))
          (browser (alist-get 'browser parsed-args))
-         (test-ids (alist-get 'test-ids parsed-args))
+         (test-ids (or (alist-get 'test-ids parsed-args) "webapp"))
          (remaining (alist-get 'remaining parsed-args)))
-    ;; Add test IDs first (positional arguments must come before --browser)
-    (when test-ids
-      (setq parts (append parts (list test-ids))))
-    (when remaining
-      (setq parts (append parts remaining)))
-    ;; Now add optional flags
-    (when delay
-      (setq parts (append parts '("-d"))))
-    (when repeat
-      (setq parts (append parts (list "--repeat" repeat))))
-    (when browser
-      (setq parts (append parts (list "--browser" browser))))
-    parts))
+    (unless protocol
+      (error "Protocol is required for webapp tests"))
+    (let ((parts (list script-name protocol env test-ids)))
+      ;; Positional arguments must come before optional flags.
+      (when remaining
+        (setq parts (append parts remaining)))
+      ;; Now add optional flags
+      (when delay
+        (setq parts (append parts '("-d"))))
+      (when repeat
+        (setq parts (append parts (list "--repeat" repeat))))
+      (when browser
+        (setq parts (append parts (list "--browser" browser))))
+      parts)))
+
+(defun fpga-manager--build-webapp-main-command (script-path env parsed-args)
+  "Build the main webapp command for SCRIPT-PATH, ENV, and PARSED-ARGS."
+  (fpga-manager--build-uv-run-command
+   (fpga-manager--build-webapp-command-parts
+    (file-name-nondirectory script-path)
+    env
+    parsed-args)
+   (when (alist-get 'headless parsed-args)
+     '("env" "-u" "XDG_CURRENT_DESKTOP"))))
 
 ;;; Test Execution
 
@@ -593,7 +616,7 @@ Test IDs must come before --browser to avoid argument parsing issues."
   "Run test (bitstream or webapp) with ARGS."
   (interactive (list (transient-args 'fpga-manager-test-menu)))
   ;; Save arguments so the next menu invocation can reuse them.
-  (setq fpga-manager-test-last-args args)
+  (fpga-manager--remember-test-args fpga-manager-test-type args)
   (if (eq fpga-manager-test-type 'bitstream)
       (fpga-manager-run-bitstream-test args)
     (fpga-manager-run-webapp-test args)))
@@ -632,35 +655,20 @@ Test IDs must come before --browser to avoid argument parsing issues."
      (let* ((script-path (fpga-manager-find-webapp-script))
             (default-directory (file-name-directory script-path))
             (parsed (fpga-manager--parse-test-args args))
-            (protocol (alist-get 'protocol parsed))
-            (headless (alist-get 'headless parsed)))
-       ;; Protocol is required because it is a positional argument.
-       (unless protocol
-         (error "Protocol is required for webapp tests"))
-       (let* ((base-parts (list (file-name-nondirectory script-path)
-                                protocol
-                                env))
-              (cmd-parts (fpga-manager--build-command-parts
-                          base-parts
-                          (cons (cons 'test-ids
-                                      (or (alist-get 'test-ids parsed) "webapp"))
-                                parsed)))
-              (cmd (fpga-manager--build-uv-run-command
-                    cmd-parts
-                    (when headless
-                      '("env" "-u" "XDG_CURRENT_DESKTOP"))))
-              (full-cmd (fpga-manager--with-uv-sync
-                         (fpga-manager--build-webapp-lock-command env)
-                         (fpga-manager--with-post-command
-                          cmd
-                          (fpga-manager--build-webapp-unlock-command env))))
+            (headless (alist-get 'headless parsed))
+            (keep-locked (alist-get 'keep-locked parsed)))
+       (let* ((cmd (fpga-manager--build-webapp-main-command
+                    script-path env parsed))
+              (full-cmd (fpga-manager--build-webapp-session-command
+                         env cmd keep-locked))
               (compilation-buffer-name-function
                (lambda (_mode) "*FPGA Test Output*")))
          ;; Persist args into BSTT state so quick actions reuse them.
          (fpga-manager--bstt-sync-from-webapp env args parsed)
          ;; Headless mode drops the desktop variable to avoid GUI dependency.
-         (message "Running webapp test%s: %s"
+         (message "Running webapp test%s%s: %s"
                   (if headless " (headless)" "")
+                  (if keep-locked " (keeping host locked)" "")
                   full-cmd)
          (compile full-cmd))))))
 
@@ -722,6 +730,7 @@ Test IDs must come before --browser to avoid argument parsing issues."
    ["Webapp Options"
     :if (lambda () (eq fpga-manager-test-type 'webapp))
     ("-h" "Headless mode" "--headless")
+    ("-k" "Keep host locked" "--keep-locked")
     ("-p" "Protocol" "--protocol="
      :class transient-option
      :prompt "Protocol (http/https): "
@@ -845,6 +854,30 @@ Each project gets its own FPGA manager buffer, similar to `project-eshell'."
         (plist-put fpga-manager--state key value))
   value)
 
+(defun fpga-manager--state-get-string (key)
+  "Get KEY from shared state when it is a non-empty string."
+  (let ((value (fpga-manager--state-get key)))
+    (when (and (stringp value)
+               (not (string-empty-p value)))
+      value)))
+
+(defun fpga-manager--push-arg-if-value (args prefix value)
+  "Push PREFIX plus VALUE onto ARGS when VALUE is non-empty."
+  (if value
+      (cons (concat prefix value) args)
+    args))
+
+(defun fpga-manager--remember-test-args (type args)
+  "Remember transient TYPE and ARGS for the next test menu invocation."
+  (setq fpga-manager-test-type type
+        fpga-manager-test-last-args (fpga-manager--ensure-list args)))
+
+(defun fpga-manager--sync-state-from-alist (mapping parsed-args)
+  "Apply MAPPING from PARSED-ARGS keys to state plist keys."
+  (dolist (entry mapping)
+    (when-let* ((value (alist-get (car entry) parsed-args)))
+      (fpga-manager--state-set (cdr entry) value))))
+
 (defun fpga-manager-state-get (key)
   "Get shared fpga-manager state value for KEY."
   (fpga-manager--state-get key))
@@ -852,34 +885,42 @@ Each project gets its own FPGA manager buffer, similar to `project-eshell'."
 (defun fpga-manager--bstt-build-bitstream-args ()
   "Build fpga-manager transient args from BSTT bitstream state."
   (let ((args '("-d")))
-    (when-let* ((local (fpga-manager--state-get :test-case)))
-      (unless (string-empty-p local)
-        (push (concat "-i " local) args)))
-    (when-let* ((level (fpga-manager--state-get :log-level)))
-      (unless (string-empty-p level)
-        (push (concat "-l " level) args)))
-    (when-let* ((repeat (fpga-manager--state-get :repeat)))
-      (unless (string-empty-p repeat)
-        (push (concat "-r " repeat) args)))
-    (when-let* ((cfg (fpga-manager--state-get :custom)))
-      (unless (string-empty-p cfg)
-        (push (concat "-c " cfg) args)))
+    (setq args (fpga-manager--push-arg-if-value
+                args "-i " (fpga-manager--state-get-string :test-case)))
+    (setq args (fpga-manager--push-arg-if-value
+                args "-l " (fpga-manager--state-get-string :log-level)))
+    (setq args (fpga-manager--push-arg-if-value
+                args "-r " (fpga-manager--state-get-string :repeat)))
+    (setq args (fpga-manager--push-arg-if-value
+                args "-c " (fpga-manager--state-get-string :custom)))
     (nreverse args)))
 
 (defun fpga-manager--bstt-build-webapp-args ()
   "Build fpga-manager transient args from BSTT webapp state."
   (let ((args nil))
-    (push (concat "--protocol=" (or (fpga-manager--state-get :protocol) "http")) args)
-    (when-let* ((batch (fpga-manager--state-get :test-case)))
-      (unless (string-empty-p batch)
-        (push (concat "-i " batch) args)))
-    (when-let* ((repeat (fpga-manager--state-get :repeat)))
-      (unless (string-empty-p repeat)
-        (push (concat "-r " repeat) args)))
-    (when-let* ((browser (fpga-manager--state-get :webapp-browser)))
-      (unless (string-empty-p browser)
-        (push (concat "--browser=" browser) args)))
+    (push (concat "--protocol="
+                  (or (fpga-manager--state-get-string :protocol) "http"))
+          args)
+    (setq args (fpga-manager--push-arg-if-value
+                args "-i " (fpga-manager--state-get-string :test-case)))
+    (setq args (fpga-manager--push-arg-if-value
+                args "-r " (fpga-manager--state-get-string :repeat)))
+    (setq args (fpga-manager--push-arg-if-value
+                args "--browser=" (fpga-manager--state-get-string :webapp-browser)))
+    (when (fpga-manager--state-get :keep-locked)
+      (push "--keep-locked" args))
     (nreverse args)))
+
+(defun fpga-manager--bstt-webapp-parsed-args ()
+  "Build canonical parsed webapp args from shared BSTT state."
+  `((protocol . ,(or (fpga-manager--state-get-string :protocol) "http"))
+    (test-ids . ,(or (fpga-manager--state-get-string :test-case) "webapp"))
+    (browser . ,(fpga-manager--state-get-string :webapp-browser))
+    (repeat . ,(fpga-manager--state-get-string :repeat))
+    (delay . nil)
+    (headless . nil)
+    (keep-locked . ,(fpga-manager--state-get :keep-locked))
+    (remaining . nil)))
 
 (defun fpga-manager--bstt-sync-test-menu (type)
   "Sync fpga-manager test menu defaults from BSTT state."
@@ -892,7 +933,7 @@ Each project gets its own FPGA manager buffer, similar to `project-eshell'."
 (defun fpga-manager--bstt-sync-from-bitstream (env args)
   "Update BSTT bitstream defaults from fpga-manager ENV and ARGS."
   (fpga-manager--state-set :port env)
-  (dolist (arg (if (listp args) args (list args)))
+  (dolist (arg (fpga-manager--ensure-list args))
     (cond
      ((string-prefix-p "-i " arg)
       (fpga-manager--state-set :test-case (substring arg 3)))
@@ -902,22 +943,19 @@ Each project gets its own FPGA manager buffer, similar to `project-eshell'."
       (fpga-manager--state-set :log-level (substring arg 3)))
      ((string-prefix-p "-c " arg)
       (fpga-manager--state-set :custom (substring arg 3)))))
-  (setq fpga-manager-test-type 'bitstream
-        fpga-manager-test-last-args (if (listp args) args (list args))))
+  (fpga-manager--remember-test-args 'bitstream args))
 
 (defun fpga-manager--bstt-sync-from-webapp (env args parsed-args)
   "Update BSTT webapp defaults from fpga-manager ENV, ARGS, and PARSED-ARGS."
   (fpga-manager--state-set :port env)
-  (when-let* ((protocol (alist-get 'protocol parsed-args)))
-    (fpga-manager--state-set :protocol protocol))
-  (when-let* ((test-ids (alist-get 'test-ids parsed-args)))
-    (fpga-manager--state-set :test-case test-ids))
-  (when-let* ((browser (alist-get 'browser parsed-args)))
-    (fpga-manager--state-set :webapp-browser browser))
-  (when-let* ((repeat (alist-get 'repeat parsed-args)))
-    (fpga-manager--state-set :repeat repeat))
-  (setq fpga-manager-test-type 'webapp
-        fpga-manager-test-last-args (if (listp args) args (list args))))
+  (fpga-manager--sync-state-from-alist
+   '((protocol . :protocol)
+     (test-ids . :test-case)
+     (browser . :webapp-browser)
+     (repeat . :repeat))
+   parsed-args)
+  (fpga-manager--state-set :keep-locked (and (alist-get 'keep-locked parsed-args) t))
+  (fpga-manager--remember-test-args 'webapp args))
 
 (defun fpga-manager--state-read-string-into (prompt key)
   "Prompt with PROMPT and store the entered value into KEY."
@@ -994,18 +1032,14 @@ Each project gets its own FPGA manager buffer, similar to `project-eshell'."
 
 (defun bstt/webapp-compile-build-cmd ()
   (let* ((env (fpga-manager--state-get :port))
-         (main-cmd
-          (fpga-manager--build-uv-run-command
-           (list "main.py" (or (fpga-manager--state-get :protocol) "http")
-                 env
-                 (fpga-manager--state-get :test-case)
-                 "--browser" (fpga-manager--state-get :webapp-browser)
-                 "--repeat" (fpga-manager--state-get :repeat)))))
-    (fpga-manager--with-uv-sync
-     (fpga-manager--build-webapp-lock-command env)
-     (fpga-manager--with-post-command
-      main-cmd
-      (fpga-manager--build-webapp-unlock-command env)))))
+         (parsed-args (fpga-manager--bstt-webapp-parsed-args))
+         (script-path (fpga-manager-find-webapp-script))
+         (main-cmd (fpga-manager--build-webapp-main-command
+                    script-path env parsed-args)))
+    (fpga-manager--build-webapp-session-command
+     env
+     main-cmd
+     (alist-get 'keep-locked parsed-args))))
 
 (defun bstt/webapp-compile-run ()
   (interactive)

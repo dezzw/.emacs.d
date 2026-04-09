@@ -1,20 +1,17 @@
 ;;; init-setup.el --- Setup.el config -*- lexical-binding: t -*-
 ;;; Commentary:
 
-;; setup extension
-
 ;;; Code:
 
-;; Setup is now installed via Nix, just require it
 (require 'setup)
 
 (setup-define :defer
-  (lambda (features)
+  (lambda (body)
     `(run-with-idle-timer 1 nil
                           (lambda ()
                             (catch 'setup-quit
-                              ,features))))
-  :documentation "Delay loading the feature until a certain amount of idle time has passed."
+                              ,body))))
+  :documentation "Evaluate BODY after Emacs has been idle for a short time."
   :repeatable t)
 
 (setup-define :advice
@@ -58,7 +55,7 @@ See `advice-add' for more details."
 (setup-define :hooks
   (lambda (hook func)
     `(add-hook ',hook #',func))
-  :documentation "Add pairs of hooks."
+  :documentation "Add FUNC to HOOK."
   :repeatable t)
 
 (setup-define :load-after
@@ -86,11 +83,12 @@ See `advice-add' for more details."
 
 (setup-define :autoload
   (lambda (func)
-    (let ((fn (if (memq (car-safe func) '(quote function))
-                  (cadr func)
-                func)))
-      `(unless (fboundp (quote ,fn))
-         (autoload (function ,fn) ,(symbol-name (setup-get 'feature)) nil t))))
+    (let* ((fn (if (memq (car-safe func) '(quote function))
+                   (cadr func)
+                 func))
+           (feature (symbol-name (setup-get 'feature))))
+      `(unless (fboundp ',fn)
+         (autoload #',fn ,feature nil t))))
   :documentation "Autoload COMMAND if not already bound."
   :repeatable t
   :signature '(FUNC ...))

@@ -184,7 +184,6 @@ Visual customization and window management.
 
 *** Window Management
 
-- =zoom= - Golden ratio window sizing
 - =popper= - Popup window management (shells, help, compilation)
 - =tabspaces= - Session/workspace management
 
@@ -244,7 +243,6 @@ Automatic input source switching for CJK support.
 | Package               | Purpose                        |
 |-----------------------+--------------------------------|
 | =move-dup=            | Move/duplicate lines           |
-| =avy=                 | Jump to visible text           |
 | =rainbow-delimiters=  | Colorful parentheses           |
 | =symbol-overlay=      | Highlight symbols              |
 | =vundo=               | Visual undo tree               |
@@ -666,7 +664,6 @@ Shared helper functions used across modules:
 | =lib-appearance=  | Theme switching, opacity adjustment  |
 | =lib-consult=     | Consult extensions                   |
 | =lib-eglot=       | LSP server configurations            |
-| =lib-elfeed=      | RSS feed management                  |
 | =lib-env=         | Environment variable loading         |
 | =lib-eshell=      | Eshell prompt and aliases            |
 | =lib-face=        | Font setup                           |
@@ -676,12 +673,10 @@ Shared helper functions used across modules:
 | =lib-magit=       | Magit enhancements                   |
 | =lib-meow=        | Meow keybinding setup                |
 | =lib-org=         | Org-mode utilities                   |
-| =lib-org-agenda=  | Agenda customization                 |
 | =lib-tabbar=      | Tab bar formatting                   |
 | =lib-telega=      | Telegram helpers                     |
 | =lib-transient=   | Transient menu definitions           |
 | =lib-treesit=     | Tree-sitter grammar sources          |
-| =lib-vertico=     | Vertico extensions                   |
 | =lib-vterm=       | Vterm keybindings                    |
 | =lib-window=      | Window manipulation                  |
 

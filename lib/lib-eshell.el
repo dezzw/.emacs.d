@@ -1,4 +1,4 @@
-;;; lib-eshell.el --- Insert description here -*- lexical-binding: t -*-
+;;; lib-eshell.el --- Eshell helpers -*- lexical-binding: t -*-
 ;;; Commentary:
 ;;; Code:
 
@@ -41,7 +41,7 @@
   "Open FILE."
   (find-file file))
 
-(defvar +aliases
+(defvar +eshell-aliases
   '((ll . "ls -lah")
     (bupg . "brew upgrade")
     (clear . clear-scrollback)))
@@ -64,7 +64,7 @@
 
 (defun eshell/cat-with-syntax-highlighting (filename)
   "Like cat(1) but with syntax highlighting.
-Stole from aweshell"
+Stolen from aweshell."
   (let ((existing-buffer (get-file-buffer filename))
         (buffer (find-file-noselect filename)))
     (eshell-print
@@ -99,6 +99,7 @@ Stole from aweshell"
 
 ;; Extend
 (defun +consult-eshell-history ()
+  "Insert a command from Eshell history with `consult--read'."
   (interactive)
   (require 'em-hist)
   (let* ((start-pos (save-excursion (eshell-bol) (point)))
@@ -110,24 +111,9 @@ Stole from aweshell"
          (command (consult--read history
                                  :prompt "Command: "
                                  :initial input)))
-    (setf (buffer-substring start-pos end-pos) command)
+    (delete-region start-pos end-pos)
+    (insert command)
     (end-of-line)))
-
-(defun consult-switch-to-eshell-buffer ()
-  "Switch to an Eshell buffer, or create one."
-  (interactive)
-  (let ((buffers (seq-filter
-                  (lambda (buf)
-                    (eq (buffer-local-value 'major-mode buf) 'eshell-mode))
-                  (buffer-list))))
-    (if buffers
-        (switch-to-buffer
-         (consult--read
-          (mapcar #'buffer-name buffers)
-          :prompt "Eshell buffer: "
-          :sort nil
-          :require-match t))
-      (eshell))))
 
 (provide 'lib-eshell)
 ;;; lib-eshell.el ends here

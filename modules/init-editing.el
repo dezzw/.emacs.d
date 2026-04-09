@@ -30,8 +30,6 @@
 (setup indent (:option tab-always-indent 'complete))
 (setup mouse (:option mouse-yank-at-point t))
 
-
-
 (setup simple
   (:global-bind "C-." 'set-mark-command
                 "C-x C-." 'pop-global-mark)
@@ -46,44 +44,45 @@
             set-mark-command-repeat-pop t))
 
 (setup meow
-  (:require meow)
+  (:defer (:require meow))
   (:also-load undo-fu undo-fu-session lib-meow)
-  (:with-function meow-setup (:autoload-this))
-  (undo-fu-session-global-mode)
-  (meow-global-mode 1)
-  (meow-setup)
-  (:option undo-limit 67108864
-           undo-strong-limit 100663296
-           undo-outer-limit 1006632960)
-  (:option meow-use-clipboard t
-           wrap-keymap (let ((map (make-keymap)))
-                         (suppress-keymap map)
-                         (dolist (k '("(" "[" "{" "<"))
-                           (define-key map k #'insert-pair))
-                         map))
-  (meow-normal-define-key (cons "\\" wrap-keymap))
-  (:hooks meow-insert-mode-hook
-          (lambda ()
-            (if meow-insert-mode
-                (run-hooks 'meow-entering-insert-mode-hook)
-              (run-hooks 'meow-leaving-insert-mode-hook))))
-  (when *is-mac*
-    (:advice meow-mark-thing :override meow-mark-thing-cjk)
-    (:advice meow-next-thing :override meow-next-thing-cjk)))
+  (:when-loaded
+    (:with-function meow-setup (:autoload-this))
+    (undo-fu-session-global-mode)
+    (meow-global-mode 1)
+    (meow-setup)
+    (:option undo-limit 67108864
+             undo-strong-limit 100663296
+             undo-outer-limit 1006632960)
+    (:option meow-use-clipboard t
+             wrap-keymap (let ((map (make-keymap)))
+                           (suppress-keymap map)
+                           (dolist (k '("(" "[" "{" "<"))
+                             (define-key map k #'insert-pair))
+                           map))
+    (meow-normal-define-key (cons "\\" wrap-keymap))
+    (:hooks meow-insert-mode-hook
+            (lambda ()
+              (if meow-insert-mode
+                  (run-hooks 'meow-entering-insert-mode-hook)
+                (run-hooks 'meow-leaving-insert-mode-hook))))
+    (when *is-mac*
+      (:advice meow-mark-thing :override meow-mark-thing-cjk)
+      (:advice meow-next-thing :override meow-next-thing-cjk))))
 
 (setup meow-tree-sitter
-  (:defer (:require meow-tree-sitter))
-  (:when-loaded (meow-tree-sitter-register-defaults)))
+  (:defer (meow-tree-sitter-register-defaults)))
 
 ;; 剪贴板查找
 (setup browse-kill-ring
-  (:with-map browse-kill-ring-mode-map
-    (:bind
-     "M-Y" browse-kill-ring
-     "C-g" browse-kill-ring-quit
-     "M-n" browse-kill-ring-forward
-     "M-p" browse-kill-ring-previous))
-  (:option browse-kill-ring-separator "\f"))
+  (:global-bind "M-Y" 'browse-kill-ring)
+  (:option browse-kill-ring-separator "\f")
+  (:after browse-kill-ring
+    (:with-map browse-kill-ring-mode-map
+      (:bind
+       "C-g" browse-kill-ring-quit
+       "M-n" browse-kill-ring-forward
+       "M-p" browse-kill-ring-previous))))
 
 ;; Shift lines up and down with M-up and M-down. When paredit is enabled,
 ;; it will use those keybindings. For this reason, you might prefer to
@@ -100,7 +99,7 @@
 
 (setup rainbow-mode
   ;; add support for ARGB color format e.g "0xFFFF0000"
-  (:when-loaded
+  (:after rainbow-mode
     (add-to-list 'rainbow-hexadecimal-colors-font-lock-keywords
                  '("0[xX][0-9a-fA-F]\\{2\\}\\([0-9A-Fa-f]\\{6\\}\\)\\b"
                    (0 (rainbow-colorize-hexadecimal-without-sharp))))))
@@ -126,28 +125,23 @@
            vundo-roll-back-on-quit t))
 
 (require 'map)
+(defun +imenu-add-setup-pattern ()
+  "Teach `imenu' to recognize `setup' forms in Emacs Lisp buffers."
+  (setf (map-elt imenu-generic-expression "Setup")
+        (list (rx line-start (0+ blank)
+                  "(setup" (1+ blank)
+                  (or (group-n 1 (1+ (or (syntax word)
+                                         (syntax symbol))))
+                      (seq "(:" (or "require" "package")
+                           (1+ blank)
+                           (group-n 1 (1+ (or (syntax word)
+                                              (syntax symbol)))))))
+              1)))
+
 (setup imenu
   (:when-loaded
     (:with-mode emacs-lisp-mode
-      (:hook (lambda ()
-               (setf (map-elt imenu-generic-expression "Setup")
-                     (list (rx line-start (0+ blank)
-                               "(setup" (1+ blank)
-                               (or (group-n 1 (1+ (or (syntax word)
-                                                      (syntax symbol))))
-                                   ;; Add here items that can define a feature:
-                                   (seq "(:" (or "require" "package")
-                                        (1+ blank)
-                                        (group-n 1 (1+ (or (syntax word)
-                                                           (syntax symbol)))))))
-                           1)))))))
-
-(setup avy
-  (:global-bind "C-;" 'avy-goto-word-or-subword-1
-                "C-:" 'avy-goto-char-in-line)
-  (:option avy-style 'de-bruijn)
-  (:defer (:require ace-pinyin)
-          (ace-pinyin-global-mode +1)))
+      (:hook +imenu-add-setup-pattern))))
 
 (setup goggles
   (:hook-into prog-mode)
@@ -175,14 +169,12 @@
     (define-key symbol-overlay-map (kbd "c") #'symbol-overlay-put)
     (define-key symbol-overlay-map (kbd "C") #'symbol-overlay-remove-all)))
 
-(setup speed-type (:defer (:require speed-type)))
+(setup speed-type)
 
 (setup ultra-scroll
-  (:defer (:require ultra-scroll))
-  (:when-loaded
-    (:option scroll-conservatively 101 ; important!
-             scroll-margin 0)
-    (ultra-scroll-mode 1)))
+  (:option scroll-conservatively 101 ; important!
+           scroll-margin 0)
+  (:defer (ultra-scroll-mode 1)))
 
 (provide 'init-editing)
 ;;; init-editing.el ends here

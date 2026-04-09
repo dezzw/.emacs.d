@@ -1,4 +1,4 @@
-;;; lib-eglot.el --- Insert description here -*- lexical-binding: t -*-
+;;; lib-eglot.el --- Eglot helpers -*- lexical-binding: t -*-
 ;;; Commentary:
 ;;; Code:
 
@@ -41,7 +41,7 @@
       (+eglot-report-streamed-diagnostics))))
 
 (defun vue-eglot-init-options ()
-  "VUE language server init options."
+  "Return initialization options for the Vue language server."
   (let ((tsdk-path (expand-file-name "typescript/lib"
                                      (string-trim-right (shell-command-to-string "npm root -g")))))
     `(:typescript (:tsdk ,tsdk-path

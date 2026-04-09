@@ -2,14 +2,21 @@
 ;;; Commentary:
 ;;; Code:
 
+(defun +jenkins-api-token ()
+  "Return the Jenkins API token from `auth-source'."
+  (auth-source-pick-first-password
+   :host "jenkins.netint.ca"
+   :user "desmond.wang"
+   :port 8443))
+
 (setup jenkins
-  (:defer (:require jenkins))
-  (setq jenkins-api-token (auth-source-pick-first-password :host "jenkins.netint.ca" :user "desmond.wang" :port 8443))
-  (setq jenkins-url "https://jenkins.netint.ca:8443/")
-  (setq jenkins-username "desmond.wang"))
+  (:option jenkins-url "https://jenkins.netint.ca:8443/"
+           jenkins-username "desmond.wang")
+  (:when-loaded
+    (setq jenkins-api-token (+jenkins-api-token))))
 
 (setup transient
-  (:defer (require 'transient))
+  (:require transient)
   (:when-loaded
     (:also-load fpga-manager)
     (:global-bind "C-c e f" 'fpga-manager-status
@@ -19,7 +26,6 @@
                   "C-c e t" 'bstt/toplevel
                   "C-c e c" 'bstt/code-check)
 
-    ;; BSTT Lock Command Transient
     (transient-define-prefix bstt/lock ()
       "Edit args and run linuxPC_Lock.py in project_root/fpga directory."
       :info-manual "(bstt-lock) BSTT Lock Command"
@@ -32,7 +38,6 @@
          ("RET" "Run command" bstt/lock-run)
          ("q" "Quit menu" transient-quit-one)] ])
 
-    ;; BSTT Webapp Compile Command Transient
     (transient-define-prefix bstt/webapp-compile ()
       "Edit args and run webapp compile command in project_root/webapp directory."
       :info-manual "(bstt-webapp-compile) BSTT Webapp Compile Command"
@@ -49,7 +54,6 @@
          ("RET" "Run command" bstt/webapp-compile-run)
          ("q" "Quit menu" transient-quit-one)] ])
 
-    ;; BSTT Toplevel Command Transient
     (transient-define-prefix bstt/toplevel ()
       "Edit args and run toplevel.py in project_root/bitstreams directory."
       :info-manual "(bstt-toplevel) BSTT Toplevel Command"
@@ -68,7 +72,6 @@
          ("RET" "Run command" bstt/toplevel-run)
          ("q" "Quit menu" transient-quit-one)] ])
 
-    ;; BSTT Code Submission Check Command Transient
     (transient-define-prefix bstt/code-check ()
       "Run code_submission_check.py in project_root/webapp directory."
       :info-manual "(bstt-code-check) BSTT Code Submission Check Command"

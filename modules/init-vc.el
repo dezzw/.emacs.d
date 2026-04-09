@@ -6,17 +6,18 @@
   (:option ediff-split-window-function 'split-window-horizontally
            ediff-window-setup-function 'ediff-setup-windows-plain))
 
-(add-hook 'prog-mode-hook (function smerge-mode))
+(setup smerge-mode
+  (:hooks prog-mode-hook smerge-mode))
 
 (setup autorevert
-  (:defer (:require autorevert))
-  (:when-loaded
-    (:option  global-auto-revert-non-file-buffers t
-              auto-revert-verbose nil)
-    (global-auto-revert-mode)))
+  (:option global-auto-revert-non-file-buffers t
+           auto-revert-verbose nil)
+  (:hooks after-init-hook global-auto-revert-mode))
 
 (setup magit
-  (:when-loaded
+  (:global-bind "C-x g" 'magit-status
+                "C-x M-g" 'magit-dispatch)
+  (:after magit
     (:also-load lib-magit)
     (:with-map magit-status-mode-map
       (:bind
@@ -33,9 +34,6 @@
       (:bind "C-c C-c" +magit-blob-save
              "C-n"     magit-blob-next
              "C-p"     magit-blob-previous))
-    ;; quickly open magit on any one of your projects.
-    (:global-bind "C-x g" 'magit-status
-                  "C-x M-g" 'magit-dispatch)
     (:option magit-diff-refine-hunk t
              ;; Don't autosave repo buffers. This is too magical, and saving can
              ;; trigger a bunch of unwanted side-effects, like save hooks and
@@ -58,33 +56,28 @@
       (add-hook 'magit-mode-hook (lambda () (local-unset-key [(meta h)]))))))
 
 (setup magit-log
-  (:load-after magit)
-  (:when-loaded
+  (:after magit
     ;; Show commit ages with 1-char time units (m/h/d/w/M/Y)
     ;; Reduce author column width to 11 as name is abbreviated
     (:option magit-log-margin '(t age-abbreviated magit-log-margin-width :author 11))
     (:advice magit-log-format-margin :filter-args #'+magit-log--abbreviate-author)))
 
 (setup diff-hl
-  (:defer (diff-hl-mode))
-  (:when-loaded
-    (:option diff-hl-update-async t)
-    (:hooks prog-mode-hook diff-hl-mode
-            conf-mode-hook diff-hl-mode
-            dired-mode-hook diff-hl-dired-mode)))
+  (:option diff-hl-update-async t)
+  (:hooks prog-mode-hook diff-hl-mode
+          conf-mode-hook diff-hl-mode
+          dired-mode-hook diff-hl-dired-mode))
 
 (setup blame-reveal
-  (:defer (:require blame-reveal))
-  (:when-loaded
-    (:set blame-reveal-recent-days-limit 'auto         ; Adapt to commit frequency
-          blame-reveal-gradient-quality 'auto)         ; Balanced quality
-    
+  (:set blame-reveal-recent-days-limit 'auto
+        blame-reveal-gradient-quality 'auto)
+  (:after blame-reveal
     ;; Display
-    (:set blame-reveal-display-layout 'compact         ; Show commit info
-          blame-reveal-show-uncommitted-fringe nil)    ; Use diff-hl instead
+    (:set blame-reveal-display-layout 'compact
+          blame-reveal-show-uncommitted-fringe nil)
 
     ;; Performance
-    (:set blame-reveal-async-blame 'auto)              ; Async for large files
+    (:set blame-reveal-async-blame 'auto)
 
     ;; Enable recursive blame
     (require 'blame-reveal-recursive)))

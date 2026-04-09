@@ -3,7 +3,7 @@
 ;;; Code:
 
 (setup transient
-  (:defer (require 'transient))
+  (:require transient)
   (:when-loaded
     (:also-load lib-transient)
     (:global-bind "C-c e e" 'emacs-access-transient
@@ -16,8 +16,7 @@
       (:bind "<escape>" transient-quit-one))
     (:option transient-semantic-coloring t)
 
-    ;; file access
-    (transient-define-prefix  emacs-access-transient ()
+    (transient-define-prefix emacs-access-transient ()
       "Emacs quick access"
       :info-manual "Emacs quick access"
       [["Emacs"
@@ -32,8 +31,6 @@
        ("RET" "Emacs quick access" browse-path)]
       [("q" "Quit" transient-quit-one)])
 
-    ;; transient 适合大量单一相关的功能需要在 buffer 进行交互的，单纯频次较高的功能按键其实并不适合。
-    ;; TODO 需要改为单纯的快捷键
     (transient-define-prefix prog-commands ()
       "Prog commands"
       :info-manual "Prog commands"

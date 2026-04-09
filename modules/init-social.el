@@ -1,6 +1,11 @@
-;;; init-social.el  --- Custom configuration -*- lexical-binding: t -*-
+;;; init-social.el --- Social and chat integrations -*- lexical-binding: t -*-
 ;;; Commentary:
 ;;; Code:
+
+(defun +telega-browse-current-kill ()
+  "Open the current kill-ring entry as a URL."
+  (interactive)
+  (browse-url (current-kill 0)))
 
 (setup telega
   ;; Use (identity telega-prefix-map) since setup.el adds #' to functions
@@ -13,8 +18,6 @@
                 cl-lib
                 telega-notifications
                 language-detection)
-
-    ;;;; Keybindings
     (:with-map telega-prefix-map
       (:bind
        "p" telega-chatbuf-filter-search
@@ -22,13 +25,12 @@
        "m" telega-describe-chat-members
        "h" telega-notifications-history
        "x" telega-chatbuf-thread-cancel
-       "o" (lambda () (interactive) (browse-url (current-kill 0)))))
+       "o" +telega-browse-current-kill))
     (:with-map telega-msg-button-map
       (:bind
        "C" +telega-save-file-to-clipboard
        "s" +telega-msg-save-to-cloud-copyleft))
 
-    ;;;; Theme Palettes
     (setq telega-builtin-palettes-alist
           '((light
              ((:outline "#b4637a") (:foreground "#b4637a") (:background "#d1c7c7"))
@@ -46,7 +48,7 @@
              ((:outline "#81a2be") (:foreground "#81a2be") (:background "#234242"))
              ((:outline "#9ccfd8") (:foreground "#9ccfd8") (:background "#1e262e"))
              ((:outline "#ebbcba") (:foreground "#ebbcba") (:background "#470528")))))
-    ;;;; General Settings
+
     (setopt
      telega-autoplay-mode t
      telega-notifications-mode t
@@ -59,7 +61,6 @@
      telega-sticker-size '(6 . 24)
      telega-avatar-workaround-gaps-for (when (display-graphic-p) '(return t)))
 
-    ;;;; Symbols & Icons
     (setopt
      ;; Remove items from telega-symbols-emojify to use custom symbols
      telega-symbols-emojify
@@ -83,7 +84,6 @@
      telega-msg-save-dir "~/Downloads"
      telega-chat-input-markups '("markdown2" "org"))
 
-    ;;;; URL Shortening
     (setopt
      telega-url-shorten-regexps
      (list `(too-long-link
@@ -91,7 +91,6 @@
              :symbol ,(nerd-icons-faicon "nf-fa-link")
              :replace " \\1\\2...")))
 
-    ;;;; Root Buffer
     (setopt
      telega-root-keep-cursor 'track
      telega-root-show-avatars nil
@@ -101,7 +100,6 @@
      telega-root-fill-column 70
      telega-filter-custom-show-folders nil)
 
-    ;;;; Bridge Bot (Matrix integration)
     (setopt
      telega-bridge-bot-bridge-info-plist
      '(-1001773572820                ; @emacs_china
@@ -126,11 +124,9 @@
        (5296957089                   ; @nichi_matrix_bot
         (:chat-id "!2KhbxzkrlqGS6zMD:nichi.co" :type :matrix))))
 
-    ;;;; Message Filtering
     (:with-hook telega-msg-ignore-predicates
       (:hook (telega-match-gen-predicate 'msg '(sender is-blocked))))
 
-    ;;;; Tab Bar Integration
     (:with-hook telega-connection-state-hook (:hook +tab-bar-telega-icon-update))
     (:with-hook telega-kill-hook (:hook +tab-bar-telega-icon-update))
     (:advice telega--on-updateUnreadChatCount :after #'+tab-bar-telega-icon-update)
@@ -138,18 +134,12 @@
     (:advice telega--on-updateChatUnreadReactionCount :after #'+tab-bar-telega-icon-update)
     (:advice telega-msg-observable-p :after  #'+tab-bar-telega-icon-update)
 
-    ;;;; Mode Hooks
     (:with-mode telega-chat-mode
-      (:require company)
-      (:hook +telega-completion-setup)
       (:hook (lambda () (electric-pair-local-mode -1))))
     (:with-mode telega-image-mode (:hook image-transform-fit-to-window))
 
-    ;;;; Global Modes
     (global-telega-url-shorten-mode 1)
-    (global-telega-mnz-mode 1)
-
-    ))
+    (global-telega-mnz-mode 1)))
 
 
 (provide 'init-social)

@@ -1,13 +1,13 @@
-;;; init-ui.el --- Behaviour specific to non-TTY frames -*- lexical-binding: t -*-
+;;; init-ui.el --- UI and window management -*- lexical-binding: t -*-
 ;;; Commentary:
 ;;; Code:
 
-;; Default text scaling only makes sense on graphical frames.
-(setup default-text-scale
-  (:if-graphic
-   (:hook-into after-init)
-   ;; Don't scale font on trackpad pinch!
-   (global-unset-key (kbd "<pinch>"))))
+(setup window
+  (:also-load lib-window)
+  (:global-bind "C-x |" 'split-window-horizontally-instead
+                "C-x _" 'split-window-vertically-instead
+                "C-x 3" (lambda () (interactive) (select-window (split-window-horizontally)))
+                "C-x 2" (lambda () (interactive) (select-window (split-window-vertically)))))
 
 ;; Better fringe symbol
 (define-fringe-bitmap 'right-curly-arrow
@@ -30,12 +30,17 @@
    #b00110000
    #b01100000])
 
-(setup window
-  (:also-load lib-window)
-  (:global-bind "C-x |" 'split-window-horizontally-instead
-                "C-x _" 'split-window-vertically-instead
-                "C-x 3" (lambda () (interactive) (select-window (split-window-horizontally)))
-                "C-x 2" (lambda () (interactive) (select-window (split-window-vertically)))))
+(setup ace-window
+  (:global-bind "C-x o" 'ace-window)
+  (:option aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l)
+           aw-scope 'frame))
+
+;; Default text scaling only makes sense on graphical frames.
+(setup default-text-scale
+  (:if-graphic
+   (:hook-into after-init)
+   ;; Don't scale font on trackpad pinch!
+   (global-unset-key (kbd "<pinch>"))))
 
 (setup frame
   (:if-graphic
@@ -53,7 +58,7 @@
 
 (setup panel
   (:if-graphic
-   (:require panel)
+   (:defer (:require panel))
    (:option panel-latitude 43.45193874534566
             panel-longitude -80.49129101085033
             panel-path-max-length 35
@@ -62,8 +67,9 @@
             panel-image-width 400
             panel-image-height 169
             panel-title "The best way to predict the future is to invent it.")
-   (:face panel-title-face ((t (:inherit font-lock-constant-face :height 1.2 :italic t :family "Operator Mono"))))
-   (panel-create-hook)))
+   (:when-loaded
+     (:face panel-title-face ((t (:inherit font-lock-constant-face :height 1.2 :italic t :family "Operator Mono"))))
+     (panel-create-hook))))
 
 (setup faces
   (:if-graphic
@@ -133,15 +139,14 @@
 
 (setup nerd-icons (:defer (:require nerd-icons)))
 
-(setup ace-window
-  (:global-bind "C-x o" 'ace-window)
-  (:option aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l)
-           aw-scope 'frame))
-
-(setup zoom
-  (:require zoom)
-  ;; (:hook-into window-setup server-after-make-frame)
-  (:option zoom-size '(0.618 . 0.618)))
+(defun +popper-close-window-hack (&rest _)
+  "Close popper window via `C-g'."
+  (when (and (called-interactively-p 'interactive)
+             (not (region-active-p))
+             popper-open-popup-alist)
+    (let ((window (caar popper-open-popup-alist)))
+      (when (window-live-p window)
+        (delete-window window)))))
 
 (setup popper
   (:global-bind "C-c w p" 'popper-toggle
@@ -182,47 +187,39 @@
              "\\*Telegram Message Info\\*$"
              "\\*Telegram Sticker Set\\*$"
              "\\*Telegram Notification Messages\\*$"))
-  (:defer (popper-mode +1)
-          ;; (popper-echo-mode +1)
-          (popper-tab-line-mode +1))
-  ;; HACK: close popper window with `C-g'
-  (defun +popper-close-window-hack (&rest _)
-    "Close popper window via `C-g'."
-    (when (and (called-interactively-p 'interactive)
-               (not (region-active-p))
-               popper-open-popup-alist)
-      (let ((window (caar popper-open-popup-alist)))
-        (when (window-live-p window)
-          (delete-window window)))))
-  (advice-add #'keyboard-quit :before #'+popper-close-window-hack))
+  (:defer
+    (popper-mode +1)
+    ;; (popper-echo-mode +1)
+    (popper-tab-line-mode +1))
+  (:after popper
+    (advice-add #'keyboard-quit :before #'+popper-close-window-hack)))
 
 (setup tab-bar
-  (:defer (:require tab-bar))
-  (:when-loaded
+  (:option tab-bar-separator ""
+           tab-bar-close-button-show nil
+           tab-bar-new-button-show nil
+           tab-bar-new-tab-to 'rightmost
+           tab-bar-tab-hints t
+           tab-bar-show 1
+           tab-bar-new-tab-choice "*scratch*"
+           tab-bar-select-tab-modifiers '(super)
+           tab-bar-tab-name-truncated-max 20
+           tab-bar-auto-width nil
+           ;; Add spaces for tab-name
+           tab-bar-tab-name-function '+tab-bar-tab-name-function
+           tab-bar-tab-name-format-function '+tab-bar-tab-name-format-function
+           tab-bar-format '(tab-bar-format-tabs
+                            tab-bar-format-add-tab
+                            tab-bar-format-align-right))
+  (:after tab-bar
     (:also-load lib-tabbar)
-    (:option tab-bar-separator ""
-             tab-bar-close-button-show nil
-             tab-bar-new-button-show nil
-             tab-bar-new-tab-to 'rightmost
-             tab-bar-tab-hints t
-             tab-bar-show 1
-             tab-bar-new-tab-choice "*scratch*"
-             tab-bar-select-tab-modifiers '(super)
-             tab-bar-tab-name-truncated-max 20
-             tab-bar-auto-width nil
-             ;; Add spaces for tab-name
-             tab-bar-tab-name-function '+tab-bar-tab-name-function
-             tab-bar-tab-name-format-function '+tab-bar-tab-name-format-function
-             tab-bar-format '(tab-bar-format-tabs
-                              tab-bar-format-add-tab
-                              tab-bar-format-align-right))))
+    (when (fboundp 'tab-bar--update-tab-bar-lines)
+      (tab-bar--update-tab-bar-lines))))
 (setup tab-line
   (:set tab-line-new-button-show nil
         tab-line-close-button-show nil))
 
 (setup tabspaces
-  (:also-load lib-tabspaces)
-  (:hooks after-init-hook tabspaces-mode)
   (:option tabspaces-use-filtered-buffers-as-default t
            tabspaces-default-tab "Default"
            tabspaces-remove-to-default t
@@ -234,12 +231,14 @@
            tabspaces-fully-resolve-paths t
            tabspaces-exclude-buffers '("*Messages*" "*Compile-Log*")
            tab-bar-new-tab-choice "*scratch*")
-  (:when-loaded
+  (:defer (tabspaces-mode 1))
+  (:after tabspaces
+    (:also-load lib-tabspaces)
     (:after consult
       (+tabspaces-consult-setup))))
 
 (setup which-key
-  (:hook-into after-init))
+  (:defer (which-key-mode 1)))
 
 (provide 'init-ui)
 ;;; init-ui.el ends here

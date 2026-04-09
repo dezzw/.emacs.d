@@ -3,26 +3,27 @@
 ;;; Code:
 
 (setup (:with-hook after-init-hook
-         (:hook savehist-mode)
-         (:hook mode-line-bell-mode)))
+         (:hook savehist-mode)))
 
 (setup recentf
-  (:hook-into after-init)
-  (:when-loaded
-    (:option recentf-max-saved-items 50
-             recentf-exclude (list "\\.?cache" ".cask" "url" "COMMIT_EDITMSG\\'" "bookmarks"
-                                   "\\.?ido\\.last$" "\\.revive$" "/G?TAGS$" "/.elfeed/"
-                                   "^/tmp/" "^/var/folders/.+$" "^/ssh:" "/persp-confs/"
-                                   (lambda (file) (file-in-directory-p file package-user-dir))
-                                   (expand-file-name recentf-save-file))
-             recentf-keep nil)
-    ;; Add dired directories to recentf file list.
-    (:with-mode dired-mode
-      (:hook (lambda () (recentf-add-file default-directory))))
+  (:option recentf-max-saved-items 50
+           recentf-exclude (list "\\.?cache" ".cask" "url" "COMMIT_EDITMSG\\'" "bookmarks"
+                                 "\\.?ido\\.last$" "\\.revive$" "/G?TAGS$" "/.elfeed/"
+                                 "^/tmp/" "^/var/folders/.+$" "^/ssh:" "/persp-confs/"
+                                 (lambda (file) (file-in-directory-p file package-user-dir))
+                                 (expand-file-name recentf-save-file))
+           recentf-keep nil)
+  ;; Add dired directories to recentf file list once recentf is active.
+  (:with-mode dired-mode
+    (:hook (lambda ()
+             (when (bound-and-true-p recentf-mode)
+               (recentf-add-file default-directory)))))
+  (:after recentf
     (add-to-list 'recentf-filename-handlers #'abbreviate-file-name)
     ;; HACK: Text properties inflate the size of recentf's files, and there is
     ;; no purpose in persisting them (Must be first in the list!)
-    (add-to-list 'recentf-filename-handlers #'substring-no-properties)))
+    (add-to-list 'recentf-filename-handlers #'substring-no-properties))
+  (:hooks after-init-hook recentf-mode))
 
 (setup minibuffer
   ;; 用于对补全候选项进行分类的变量。通过将它们设置为 nil，我们禁用了 Emacs 自动分类补全候选项的功能，从而获得更简洁的补全列表。
@@ -53,37 +54,37 @@
 ;;   (:when-loaded
 ;;     (miniline-mode 1)))
 
+(setup isearch
+  (:option isearch-lazy-count t
+           isearch-allow-motion t
+           isearch-motion-changes-direction t))
+
 (setup doom-modeline
-  (:defer (:require doom-modeline))
-  (:when-loaded
-    (:set doom-modeline-height 18
-          doom-modeline-buffer-file-name-style 'relative-to-project
-          doom-modeline-buffer-modification-icon t
-          doom-modeline-project-name t
-          doom-modeline-bar-width 4
-          doom-modeline-hud t
-          doom-modeline-hud-min-height 1)
+  (:set doom-modeline-height 18
+        doom-modeline-buffer-file-name-style 'relative-to-project
+        doom-modeline-buffer-modification-icon t
+        doom-modeline-project-name t
+        doom-modeline-bar-width 4
+        doom-modeline-hud t
+        doom-modeline-hud-min-height 1)
+  (:after doom-modeline
     (:with-feature telega
       (:when-loaded
-        (add-to-list 'global-mode-string '("" (:eval (+mode-line-telega-icon))) t)))
-
-    (doom-modeline-mode)))
+        (add-to-list 'global-mode-string '("" (:eval (+mode-line-telega-icon))) t))))
+  (:defer (doom-modeline-mode 1)))
 
 (setup vertico
-  (:defer (:require vertico))
-  (:when-loaded
-    (:option vertico-cycle t)
+  (:option vertico-cycle t)
+  (:after vertico
     (:with-map vertico-map
       (:bind
        "RET" vertico-directory-enter
        "DEL" vertico-directory-delete-char
-       "M-DEL" vertico-directory-delete-word))
-    (vertico-mode)))
+       "M-DEL" vertico-directory-delete-word)))
+  (:defer (vertico-mode 1)))
 
 (setup vertico-posframe
-  (:load-after vertico)
-  (:require vertico-posframe)
-  (:when-loaded
+  (:after vertico
     (setq vertico-multiform-commands
           '((consult-line
              posframe
@@ -97,72 +98,64 @@
             (t posframe)))
     (vertico-posframe-mode 1)))
 
-(setup consult
-  (:defer (:require consult))
-  (:also-load consult-ripfd)
-  (:when-loaded
-    (:global-bind "C-c f l" 'consult-line
-                  "C-c f i" 'consult-imenu
-                  "C-c f f" 'consult-fd
-                  "C-c f r" 'consult-ripfd
-                  "C-c f g" 'consult-goto-line
-                  "C-c f p" 'consult-project-buffer
-                  "C-c f b" 'consult-buffer
-                  "C-c f d" 'consult-flymake
-                  "C-c f m" 'consult-global-mark
-                  "<remap> <switch-to-buffer>" 'consult-buffer
-                  "<remap> <switch-to-buffer-other-window>" 'consult-buffer-other-window
-                  "<remap> <switch-to-buffer-other-frame>" 'consult-buffer-other-frame
-                  "<remap> <goto-line>" 'consult-goto-line)
-    (:also-load lib-consult)
-    (:option consult-async-min-input 2
-             xref-show-xrefs-function #'consult-xref
-             xref-show-definitions-function #'consult-xref)
-    (:hooks minibuffer-setup-hook mcfly-time-travel)))
-
-(setup consult-dir
-  (:load-after vertico)
-  (:when-loaded
-    (:global-bind "C-x C-d" 'consult-dir)
-    (:with-map vertico-map
-      (:bind
-       "C-x C-d" consult-dir
-       "C-x C-j" consult-dir-jump-file))))
-
-(setup isearch
-  (:option isearch-lazy-count t
-           isearch-allow-motion t
-           isearch-motion-changes-direction t))
-
-(setup embark
-  (:defer (:require embark))
-  (:when-loaded
-    (:also-load embark-consult)
-
-    (defun +embark-open-in-finder (file)
-      "Open FILE in macOS Finder."
-      (interactive "fFile: ")
-      (shell-command (format "open -R %s && osascript -e 'tell application \"Finder\" to activate'" (shell-quote-argument (expand-file-name file)))))
-    
-    (:global-bind "C-c ." 'embark-act
-                  "M-n"   'embark-next-symbol
-                  "M-p"   'embark-previous-symbol)
-    (:with-map embark-file-map (when *is-mac* (:bind "o" +embark-open-in-finder)))
-    (:option embark-indicators '(embark-minimal-indicator
-                                 embark-highlight-indicator
-                                 embark-isearch-highlight-indicator)
-             embark-cycle-key "."
-             embark-help-key "?")
-    (:hooks embark-collect-mode-hook consult-preview-at-point-mode)))
-
 (setup marginalia
-  (:load-after vertico)
-  (:when-loaded
-    (marginalia-mode)))
+  (:after vertico
+    (marginalia-mode 1)))
 
 (setup nerd-icons-completion
-  (:load-after vertico)
-  (:when-loaded (nerd-icons-completion-mode)))
+  (:after vertico
+    (nerd-icons-completion-mode 1)))
+
+(setup consult
+  (:global-bind "C-c f l" 'consult-line
+                "C-c f i" 'consult-imenu
+                "C-c f f" 'consult-fd
+                "C-c f r" 'consult-ripfd
+                "C-c f g" 'consult-goto-line
+                "C-c f p" 'consult-project-buffer
+                "C-c f b" 'consult-buffer
+                "C-c f d" 'consult-flymake
+                "C-c f m" 'consult-global-mark
+                "<remap> <switch-to-buffer>" 'consult-buffer
+                "<remap> <switch-to-buffer-other-window>" 'consult-buffer-other-window
+                "<remap> <switch-to-buffer-other-frame>" 'consult-buffer-other-frame
+                "<remap> <goto-line>" 'consult-goto-line)
+  (:option consult-async-min-input 2
+           xref-show-xrefs-function #'consult-xref
+           xref-show-definitions-function #'consult-xref)
+  (:hooks minibuffer-setup-hook mcfly-time-travel)
+  (:after consult
+    (:also-load consult-ripfd)
+    (:also-load lib-consult)))
+
+(setup consult-dir
+  (:global-bind "C-x C-d" 'consult-dir)
+  (:after vertico
+    (:after consult-dir
+      (:with-map vertico-map
+      (:bind
+       "C-x C-d" consult-dir
+       "C-x C-j" consult-dir-jump-file)))))
+
+(defun +embark-open-in-finder (file)
+  "Open FILE in macOS Finder."
+  (interactive "fFile: ")
+  (shell-command (format "open -R %s && osascript -e 'tell application \"Finder\" to activate'"
+                         (shell-quote-argument (expand-file-name file)))))
+
+(setup embark
+  (:global-bind "C-c ." 'embark-act
+                "M-n"   'embark-next-symbol
+                "M-p"   'embark-previous-symbol)
+  (:option embark-indicators '(embark-minimal-indicator
+                               embark-highlight-indicator
+                               embark-isearch-highlight-indicator)
+           embark-cycle-key "."
+           embark-help-key "?")
+  (:hooks embark-collect-mode-hook consult-preview-at-point-mode)
+  (:after embark
+    (:also-load embark-consult)
+    (:with-map embark-file-map (when *is-mac* (:bind "o" +embark-open-in-finder)))))
 
 (provide 'init-minibuffer)
 ;;; init-minibuffer.el ends here

@@ -14,20 +14,7 @@
   (:hooks gptel-post-response-hook gptel-end-of-response))
 
 (setup agent-shell
-  ;; (:also-load lib-agent-shell)
-  ;; (keymap-global-set "C-c a s" 'lib-agent-shell-toggle)
-  ;; (keymap-global-set "C-c a f" 'lib-agent-shell-toggle-focus)
   (:global-bind "C-c a d" 'agent-shell-send-dwim)
-  ;; (keymap-global-set "C-c a n" 'lib-agent-shell-new)
-
-  ;; Make agent-shell bookmark-able
-  ;; (defun my/agent-shell-bookmark (_bookmark)
-  ;;   (agent-shell))
-  ;; (add-hook 'agent-shell-mode-hook
-  ;;           (lambda ()
-  ;;             (setq-local bookmark-make-record-function
-  ;;                         (lambda ()
-  ;;                           `((handler . my/agent-shell-bookmark))))))
   (:when-loaded
     (:set agent-shell-show-usage-at-turn-end t
           agent-shell-prefer-viewport-interaction t

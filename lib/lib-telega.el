@@ -1,19 +1,6 @@
-;;; lib-telega.el  --- Custom configuration -*- lexical-binding: t -*-
-;;; Commentary
-(defun +telega-webpage-open-url-in-xwidget ()
-  (interactive)
-  (let ((entry-link
-         (if (eq major-mode 'telega-chat-mode)
-             (telega-url-at-point))))
-    (xwidget-webkit-browse-url entry-link)))
-
-;; 补全
-(defun +telega-completion-setup ()
-  (make-variable-buffer-local 'completion-at-point-functions)
-  (setq completion-at-point-functions
-        (append (mapcar #'cape-company-to-capf telega-company-backends)
-                completion-at-point-functions))
-  (corfu-mode 1))
+;;; lib-telega.el --- Telega helpers -*- lexical-binding: t -*-
+;;; Commentary:
+;;; Code:
 
 (defun +telega-save-file-to-clipboard (msg)
   "Save file at point to clipboard.
@@ -67,41 +54,16 @@ NOTE: macOS only."
                    :disable_content_type_detection nil))
             (message (format "Saved to cloud: %s" fname))))))))
 
-;; telega notification
 (defvar +tab-bar-telega-indicator-cache nil)
 
-(defun +tab-bar-telega-icon-update (&rest rest)
+(defun +tab-bar-telega-icon-update (&rest _)
   "Update the Telega icon in the tab bar, reflecting notification counts.
-This function takes REST as an optional argument, though it is not used
-within the function body.
-
-The function checks if the Telega server is live and if the server buffer
-is active.  It computes various counts, including:
-
-- The number of unread messages (`unread-count`).
-- The number of mentions (`mentioned-count`).
-- The number of unread reactions (`reaction-count`).
-- The number of keyword matches (`keyword-count`).
-
-The total `notification-count` is the sum of these counts.  If this total
-is greater than zero, a formatted string with icons and counts is returned.
-This string includes:
-
-- A Telegram icon.
-- A bullet with the unread count.
-- An at-sign with the mention count.
-- A heart with the reaction count.
-- A hash with the keyword count.
-
-The function uses `nerd-icons-faicon` for the Telegram icon and applies
-specific faces to the counts for visual differentiation."
+This is used from Telega hooks and advice, so it accepts ignored args."
   (setq +tab-bar-telega-indicator-cache
         (when (and (fboundp 'telega-server-live-p)
                    (telega-server-live-p)
                    (buffer-live-p telega-server--buffer))
-          (let* ((me-user (telega-user-me 'locally))
-                 (online-p (and me-user (telega-user-online-p me-user)))
-                 (keyword-count (length (ring-elements telega--notification-messages-ring)))
+          (let* ((keyword-count (length (ring-elements telega--notification-messages-ring)))
                  (unread-count (or (plist-get telega--unread-chat-count :unread_unmuted_count) 0))
                  (mentioned-count (apply '+ (mapcar (telega--tl-prop :unread_mention_count)
                                                     (telega-filter-chats (telega-chats-list)

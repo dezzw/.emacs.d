@@ -12,8 +12,7 @@
   (:global-bind "C-c n m" 'dired-copy-images-links)
   (:when-loaded
     (:also-load lib-org)
-    (:also-load image-slicing)
-    (:also-load org-download)
+    (:also-load lib-org-archive-hierachical)
     (:option
      org-directory *org-path*
      ;; emphasis
@@ -30,7 +29,6 @@
                                  "\\|"
                                  "\\(?:\\*\\|[+-]?[[:alnum:].,\\]*[[:alnum:]]\\)\\)")
      org-image-actual-width nil
-     org-download-image-dir "./images/"
      ;; remove org-src content indent
      org-edit-src-content-indentation 0
      org-src-preserve-indentation nil
@@ -50,8 +48,8 @@
      org-tags-column 80
      ;; refiling
      org-refile-use-cache nil
-     ;; Targets include this file and any file contributing to the agenda - up to 5 levels deep
-     org-refile-targets '((nil :maxlevel . 5) (org-agenda-files :maxlevel . 5))
+     ;; Keep refiling local by default after removing agenda-specific workflow.
+     org-refile-targets '((nil :maxlevel . 5))
      ;; Allow refile to create parent tasks with confirmation
      org-refile-allow-creating-parent-nodes 'confirm
      ;; Targets start with the file name - allows creating level 1 tasks
@@ -78,26 +76,20 @@
                                          (not (member
                                                (nth 2 (org-heading-components))
                                                org-done-keywords))))
-    (:also-load lib-org-archive-hierachical)
-    (:advice org-refile :after (lambda (&rest _) (gtd-save-org-buffers)))
     (:with-mode org-mode
       (:hook (lambda () (electric-pair-local-mode -1)))
-      (:hook (lambda () (setq truncate-lines nil)))
-      (:hook (lambda ()
-               (setq visual-fill-column-width 110
-                     visual-fill-column-center-text t)
-               (visual-fill-column-mode 1)))
-      (:hook valign-mode)
-      (:hook org-appear-mode)
-      (:hook (lambda ()
-               (setq org-tidy-properties-style 'fringe)
-               (org-tidy-mode 1))))
-    (:with-hook org-after-todo-state-change-hook
-      (:hook log-todo-next-creation-date)
-      (:hook org-copy-todo-to-today))
+      (:hook (lambda () (setq truncate-lines nil))))
     (+org-emphasize-bindings)
     (org-set-emph-re 'org-emphasis-regexp-components org-emphasis-regexp-components)
     (org-element-update-syntax)))
+
+(setup image-slicing
+  (:load-after org))
+
+(setup org-download
+  (:load-after org)
+  (:when-loaded
+    (:option org-download-image-dir "./images/")))
 
 (setup ob-core
   (:load-after org)
@@ -189,130 +181,31 @@
        ;; You should not load the algorithm2e, algcompatible, algorithmic packages if you have already loaded algpseudocode.
        ;; ("" "algpseudocode" t)
        ;; for chinese preview
-       ;; ("fontset=LXGW WenKai,UTF8" "ctex" t)
+     ;; ("fontset=LXGW WenKai,UTF8" "ctex" t)
        ))))
 
-(setup org-agenda
-  (:when-loaded
-    (:option
-     org-agenda-sort-notime-is-late nil
-     ;; 时间显示为两位数(9:30 -> 09:30)
-     org-agenda-time-leading-zero t
-     ;; 过滤掉 dynamic
-     org-agenda-hide-tags-regexp (regexp-opt '("dynamic"))
-     org-agenda-files (file-expand-wildcards (concat *org-path* "/agenda/*.org"))
-     org-agenda-compact-blocks t
-     org-agenda-sticky t
-     org-agenda-start-on-weekday nil
-     org-agenda-span 'day
-     org-agenda-include-diary nil
-     org-agenda-current-time-string (concat "◀┈┈┈┈┈┈┈┈┈┈┈┈┈ ⏰")
-     org-agenda-sorting-strategy
-     '((agenda habit-down time-up user-defined-up effort-up category-keep)
-       (todo category-up effort-up)
-       (tags category-up effort-up)
-       (search category-up))
-     org-agenda-window-setup 'current-window
-     org-agenda-custom-commands
-     `(("N" "Notes" tags "NOTE"
-        ((org-agenda-overriding-header "Notes")
-         (org-tags-match-list-sublevels t)))
-       ("g" "GTD"
-        ((agenda "" nil)
-         (tags-todo "-inbox"
-                    ((org-agenda-overriding-header "Next Actions")
-                     (org-agenda-tags-todo-honor-ignore-options t)
-                     (org-agenda-todo-ignore-scheduled 'future)
-                     (org-agenda-skip-function
-                      (lambda ()
-                        (or (org-agenda-skip-subtree-if 'todo '("HOLD" "WAITING"))
-                            (org-agenda-skip-entry-if 'nottodo '("NEXT")))))
-                     (org-tags-match-list-sublevels t)
-                     (org-agenda-sorting-strategy
-                      '(todo-state-down effort-up category-keep))))
-         (tags-todo "-reading/PROJECT"
-                    ((org-agenda-overriding-header "Project")
-                     (org-agenda-prefix-format "%-11c%5(org-todo-age) ")
-                     (org-tags-match-list-sublevels t)
-                     (org-agenda-sorting-strategy
-                      '(category-keep))))
-         (tags-todo "+reading/PROJECT"
-                    ((org-agenda-overriding-header "Reading")
-                     (org-agenda-prefix-format "%-11c%5(org-todo-age) ")
-                     (org-tags-match-list-sublevels t)
-                     (org-agenda-sorting-strategy
-                      '(category-keep))))
-         (tags-todo "/WAITING"
-                    ((org-agenda-overriding-header "Waiting")
-                     (org-agenda-tags-todo-honor-ignore-options t)
-                     (org-agenda-todo-ignore-scheduled 'future)
-                     (org-agenda-sorting-strategy
-                      '(category-keep))))
-         (tags-todo "/DELEGATED"
-                    ((org-agenda-overriding-header "Delegated")
-                     (org-agenda-tags-todo-honor-ignore-options t)
-                     (org-agenda-todo-ignore-scheduled 'future)
-                     (org-agenda-sorting-strategy
-                      '(category-keep))))
-         (tags-todo "-inbox"
-                    ((org-agenda-overriding-header "On Hold")
-                     (org-agenda-skip-function
-                      (lambda ()
-                        (or (org-agenda-skip-subtree-if 'todo '("WAITING"))
-                            (org-agenda-skip-entry-if 'nottodo '("HOLD")))))
-                     (org-tags-match-list-sublevels nil)
-                     (org-agenda-sorting-strategy
-                      '(category-keep))))
-         ))
-       ("v" "Orphaned Tasks"
-        ((agenda "" nil)
-         (tags "inbox"
-               ((org-agenda-overriding-header "Inbox")
-                (org-agenda-prefix-format "%-11c%5(org-todo-age) ")
-                (org-tags-match-list-sublevels nil)))
-         (tags-todo "+book&-reading/PROJECT"
-                    ((org-agenda-overriding-header "Book Plan")
-                     (org-agenda-prefix-format "%-11c%5(org-todo-age) ")
-                     (org-tags-match-list-sublevels t)
-                     (org-agenda-sorting-strategy
-                      '(category-keep))))
-         (tags-todo "-inbox/-NEXT"
-                    ((org-agenda-overriding-header "Orphaned Tasks")
-                     (org-agenda-tags-todo-honor-ignore-options t)
-                     (org-agenda-prefix-format "%-11c%5(org-todo-age) ")
-                     (org-agenda-todo-ignore-scheduled 'future)
-                     (org-agenda-skip-function
-                      (lambda ()
-                        (or (org-agenda-skip-subtree-if 'todo '("PROJECT" "HOLD" "WAITING" "DELEGATED"))
-                            (org-agenda-skip-subtree-if 'nottododo '("TODO")))))
-                     (org-tags-match-list-sublevels t)
-                     (org-agenda-sorting-strategy
-                      '(category-keep))))))))
+(setup visual-fill-column
+  (:load-after org)
+  (:with-mode org-mode
+    (:hook (lambda ()
+             (setq visual-fill-column-width 110
+                   visual-fill-column-center-text t)
+             (visual-fill-column-mode 1)))))
 
-    (:also-load lib-org-agenda)
-    (setq-default org-agenda-clockreport-parameter-plist
-                  '(:link t :maxlevel 3))
-    (add-to-list 'org-agenda-after-show-hook 'org-show-entry)
-    ;; Re-align tags when window shape changes
-    (:with-mode org-agenda-mode
-      (lambda () (add-hook 'window-configuration-change-hook 'org-agenda-align-tags nil t)))))
+(setup valign
+  (:load-after org)
+  (:with-mode org-mode (:hook valign-mode)))
 
-(setup org-habit
-  (:load-after org-agenda)
-  (:when-loaded
-    (:option org-habit-following-days 1
-             org-habit-preceding-days 7
-             org-habit-show-all-today t
-             org-habit-graph-column 57
-             org-habit-overdue-glyph ?○
-             org-habit-alert-glyph ?○
-             org-habit-today-glyph ?○
-             org-habit-completed-glyph ?●
-             org-habit-show-done-always-green t)
-    (:with-feature org-agenda
-      (:also-load org-habit)
-      (let ((agenda-sorting-strategy (assoc 'agenda org-agenda-sorting-strategy)))
-        (setcdr agenda-sorting-strategy (remove 'habit-down (cdr agenda-sorting-strategy)))))))
+(setup org-appear
+  (:load-after org)
+  (:with-mode org-mode (:hook org-appear-mode)))
+
+(setup org-tidy
+  (:load-after org)
+  (:with-mode org-mode
+    (:hook (lambda ()
+             (setq org-tidy-properties-style 'fringe)
+             (org-tidy-mode 1)))))
 
 (setup org-modern
   (:load-after org)

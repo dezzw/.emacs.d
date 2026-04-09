@@ -10,8 +10,8 @@ let
 
   epkgsFromNames = epkgs: names: builtins.map (name: epkgs.${name}) names;
 
-  # Most custom packages are trivialBuild packages.
-  # Add/remove simple packages here.
+  # Simple custom-source packages that are not coming from the default
+  # Emacs package set.
   simpleCustomSpecs = {
     blame-reveal = {
       input = "blame-reveal";
@@ -144,6 +144,7 @@ let
 
   mkCustomPackages = epkgs: (mkSimpleCustomPackages epkgs) // (mkSpecialCustomPackages epkgs);
 
+  # Native dependencies or packages with non-trivial runtime/build integration.
   nativePackages =
     epkgs: with epkgs; [
       pdf-tools
@@ -151,7 +152,8 @@ let
       vterm
     ];
 
-  melpaUiPackages =
+  # UI enhancements on top of built-in frame/window/minibuffer behavior.
+  uiPackages =
     epkgs: with epkgs; [
       ace-window
       default-text-scale
@@ -159,7 +161,6 @@ let
       dirvish
       doom-modeline
       highlight-parentheses
-      mode-line-bell
       nerd-icons
       nerd-icons-completion
       nerd-icons-corfu
@@ -168,13 +169,12 @@ let
       ultra-scroll
       vertico
       vertico-posframe
-      zoom
     ];
 
-  melpaCompletionPackages =
+  # The retained third-party completion stack.
+  completionPackages =
     epkgs: with epkgs; [
       cape
-      company
       consult
       consult-dir
       corfu
@@ -185,11 +185,10 @@ let
       yasnippet
     ];
 
-  melpaEditingPackages =
+  # Core editing workflow packages.
+  editingPackages =
     epkgs: with epkgs; [
-      ace-pinyin
       apheleia
-      avy
       browse-kill-ring
       goggles
       jinx
@@ -207,7 +206,8 @@ let
       whitespace-cleanup-mode
     ];
 
-  melpaOrgPackages =
+  # Org, notes, and reading/presentation helpers.
+  orgPackages =
     epkgs: with epkgs; [
       cdlatex
       consult-notes
@@ -225,7 +225,8 @@ let
       visual-fill-column
     ];
 
-  melpaLangPackages =
+  # Language major modes and language-specific support.
+  languagePackages =
     epkgs: with epkgs; [
       auctex
       babashka
@@ -239,7 +240,8 @@ let
       web-mode
     ];
 
-  melpaProgPackages =
+  # Programming extras layered on top of built-in project/xref/eglot/flymake.
+  programmingPackages =
     epkgs: with epkgs; [
       citre
       eglot-booster
@@ -252,7 +254,8 @@ let
       verb
     ];
 
-  melpaVcPackages =
+  # Version control workflow.
+  vcPackages =
     epkgs: with epkgs; [
       diff-hl
       git-link
@@ -260,13 +263,15 @@ let
       magit
     ];
 
-  melpaAiPackages =
+  # Optional AI helpers.
+  aiPackages =
     epkgs: with epkgs; [
       agent-shell
       gptel
     ];
 
-  melpaUtilityPackages =
+  # Misc retained utilities and integrations.
+  utilityPackages =
     epkgs: with epkgs; [
       eshell-syntax-highlighting
       helpful
@@ -282,13 +287,13 @@ in
     epkgs:
     (nativePackages epkgs)
     ++ (builtins.attrValues (mkCustomPackages epkgs))
-    ++ (melpaUiPackages epkgs)
-    ++ (melpaCompletionPackages epkgs)
-    ++ (melpaEditingPackages epkgs)
-    ++ (melpaOrgPackages epkgs)
-    ++ (melpaLangPackages epkgs)
-    ++ (melpaProgPackages epkgs)
-    ++ (melpaVcPackages epkgs)
-    ++ (melpaAiPackages epkgs)
-    ++ (melpaUtilityPackages epkgs);
+    ++ (editingPackages epkgs)
+    ++ (completionPackages epkgs)
+    ++ (vcPackages epkgs)
+    ++ (orgPackages epkgs)
+    ++ (languagePackages epkgs)
+    ++ (programmingPackages epkgs)
+    ++ (uiPackages epkgs)
+    ++ (aiPackages epkgs)
+    ++ (utilityPackages epkgs);
 }

@@ -90,26 +90,26 @@
   (keyfreq-mode 1)
   (keyfreq-autosave-mode 1))
 
-(when *is-mac* (require 'init-mac))
-(require 'init-ui)
+(when *is-mac*
+  (require 'init-mac))
 
+(require 'init-auth)
+
+(require 'init-ui)
 (require 'init-editing)
-(require 'init-vc)
 (require 'init-minibuffer)
 (require 'init-completion)
 (require 'init-prog)
+(require 'init-vc)
 (require 'init-util)
 (require 'init-transient)
-(require 'init-bitstream)
-
 (require 'init-org)
+
 (require 'init-reader)
 (require 'init-social)
-
 (require 'init-shell)
-
 (require 'init-ai)
-
+(require 'init-bitstream)
 (require 'init-local)
 
 (server-start)

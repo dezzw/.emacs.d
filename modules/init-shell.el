@@ -13,8 +13,18 @@
     (:option vterm-shell "zsh"
              vterm-always-compile-module t)))
 
+(setup ghostel
+  (:autoload ghostel ghostel-other ghostel-download-module)
+  (:when-loaded
+    (:option ghostel-shell "zsh"
+             ghostel-module-auto-install 'download))) 
+
+(unless (display-graphic-p)
+  (setup kitty-graphics
+    (:hook-into after-init)))
+
 (setup esh-mode
-  (:global-bind "<f8>" 'eshell)
+  (:global-bind "C-c z" 'eshell)
   (:when-loaded
     (:require eshell)
     (:also-load esh-mode)    

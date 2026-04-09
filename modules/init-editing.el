@@ -89,8 +89,8 @@
 ;; it will use those keybindings. For this reason, you might prefer to
 ;; use M-S-up and M-S-down, which will work even in lisp modes.
 (setup move-dup
-  (:global-bind "M-<up>"   'move-dup-move-lines-up
-                "M-<down>" 'move-dup-move-lines-down
+  (:global-bind "C-c m p"  'move-dup-move-lines-up
+                "C-c m n"  'move-dup-move-lines-down
                 "C-c d"    'move-dup-duplicate-down
                 "C-c u"    'move-dup-duplicate-up))
 

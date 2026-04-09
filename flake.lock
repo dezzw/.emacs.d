@@ -165,6 +165,22 @@
         "type": "github"
       }
     },
+    "ghostel": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1775736693,
+        "narHash": "sha256-ELHcdi1qRJNbAltNjzK22TdOileQMfk9N4C3HmA67Ck=",
+        "owner": "dakra",
+        "repo": "ghostel",
+        "rev": "698d9f50a54283d8413cad2dc2594e2fb0725f15",
+        "type": "github"
+      },
+      "original": {
+        "owner": "dakra",
+        "repo": "ghostel",
+        "type": "github"
+      }
+    },
     "image-slicing": {
       "flake": false,
       "locked": {
@@ -181,6 +197,22 @@
         "type": "github"
       }
     },
+    "kitty-graphics": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1775267872,
+        "narHash": "sha256-YsC68WiGhWq0R/Rt2TVnQwn8LuIeel4GIXARMU/0U/c=",
+        "owner": "cashmeredev",
+        "repo": "kitty-graphics.el",
+        "rev": "7e4faffa32d6f0ef885fceb0a9ecd93b3fe5c43f",
+        "type": "github"
+      },
+      "original": {
+        "owner": "cashmeredev",
+        "repo": "kitty-graphics.el",
+        "type": "github"
+      }
+    },
     "leetcode-emacs": {
       "flake": false,
       "locked": {
@@ -194,22 +226,6 @@
       "original": {
         "owner": "ginqi7",
         "repo": "leetcode-emacs",
-        "type": "github"
-      }
-    },
-    "lsp-proxy": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1773532811,
-        "narHash": "sha256-AntAhcrpSlO6qHuNnpTRRaD/w32i6IZEJXFM2glfnB4=",
-        "owner": "jadestrong",
-        "repo": "lsp-proxy",
-        "rev": "85706b52ec7599ea282b7a0b821c145a9e2cbec7",
-        "type": "github"
-      },
-      "original": {
-        "owner": "jadestrong",
-        "repo": "lsp-proxy",
         "type": "github"
       }
     },
@@ -321,9 +337,10 @@
         "embr": "embr",
         "emt": "emt",
         "flake-utils": "flake-utils",
+        "ghostel": "ghostel",
         "image-slicing": "image-slicing",
+        "kitty-graphics": "kitty-graphics",
         "leetcode-emacs": "leetcode-emacs",
-        "lsp-proxy": "lsp-proxy",
         "miniline": "miniline",
         "nixpkgs": "nixpkgs_2",
         "org-modern-indent": "org-modern-indent",

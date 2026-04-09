@@ -2,11 +2,12 @@
 ;;; Commentary:
 ;;; Code:
 
-;; Change global font size easily
-(setup (:require default-text-scale)
-  (:hook-into after-init))
-;; Don't scale font on trackpad pinch!
-(global-unset-key (kbd "<pinch>"))
+;; Default text scaling only makes sense on graphical frames.
+(setup default-text-scale
+  (:if-graphic
+   (:hook-into after-init)
+   ;; Don't scale font on trackpad pinch!
+   (global-unset-key (kbd "<pinch>"))))
 
 ;; Better fringe symbol
 (define-fringe-bitmap 'right-curly-arrow
@@ -37,40 +38,43 @@
                 "C-x 2" (lambda () (interactive) (select-window (split-window-vertically)))))
 
 (setup frame
-  (:when-loaded
-    (let ((border '(internal-border-width . 12)))
-      (add-to-list 'default-frame-alist border)
-      (add-to-list 'initial-frame-alist border))))
+  (:if-graphic
+   (:when-loaded
+     (let ((border '(internal-border-width . 12)))
+       (add-to-list 'default-frame-alist border)
+       (add-to-list 'initial-frame-alist border)))))
 
 (setup window-divider
-  (:option window-divider-default-right-width 1
-           window-divider-default-bottom-width 0
-           window-divider-default-places t)
-  (:hook-into window-setup-hook))
+  (:if-graphic
+   (:option window-divider-default-right-width 1
+            window-divider-default-bottom-width 0
+            window-divider-default-places t)
+   (:hook-into window-setup-hook)))
 
-(when (or window-system (daemonp))
-  (setup (:require panel)
-    (:option panel-latitude 43.45193874534566
-             panel-longitude -80.49129101085033
-             panel-path-max-length 35
-             panel-min-left-padding 10
-             panel-image-file (concat user-emacs-directory "assets/bitmap.png")
-             panel-image-width 400
-             panel-image-height 169
-             panel-title "The best way to predict the future is to invent it.")
-    (:face panel-title-face ((t (:inherit font-lock-constant-face :height 1.2 :italic t :family "Operator Mono"))))
-    (panel-create-hook)))
+(setup panel
+  (:if-graphic
+   (:require panel)
+   (:option panel-latitude 43.45193874534566
+            panel-longitude -80.49129101085033
+            panel-path-max-length 35
+            panel-min-left-padding 10
+            panel-image-file (concat user-emacs-directory "assets/bitmap.png")
+            panel-image-width 400
+            panel-image-height 169
+            panel-title "The best way to predict the future is to invent it.")
+   (:face panel-title-face ((t (:inherit font-lock-constant-face :height 1.2 :italic t :family "Operator Mono"))))
+   (panel-create-hook)))
 
-(when (or window-system (daemonp))
-  (setup faces
-    (:also-load lib-face)
-    (:hooks window-setup-hook +setup-fonts
-            server-after-make-frame-hook +setup-fonts
-            after-make-frame-functions
-            (lambda (frame)
-              (with-selected-frame frame
-                (+setup-fonts))))
-    (+setup-fonts)))
+(setup faces
+  (:if-graphic
+   (:also-load lib-face)
+   (:hooks window-setup-hook +setup-fonts
+           server-after-make-frame-hook +setup-fonts
+           after-make-frame-functions
+           (lambda (frame)
+             (with-selected-frame frame
+               (+setup-fonts))))
+   (+setup-fonts)))
 
 (setup custom
   (:when-loaded
@@ -79,8 +83,6 @@
       (require 'org-faces nil t))
     (:also-load rose-pine)
     (:also-load lib-appearance)
-    (:global-bind "C-M-8" (lambda () (interactive) (+adjust-opacity nil -2))
-                  "C-M-7" (lambda () (interactive) (+adjust-opacity nil 2)))
     ;; Don't prompt to confirm theme safety. This avoids problems with
     ;; first-time startup on Emacs > 26.3.
     (:option custom-safe-themes t
@@ -89,17 +91,19 @@
              light-theme 'rose-pine-day
              dark-theme 'rose-pine-night)
 
-    (when *is-mac*
-      (apply-theme-based-on-appearance)
-      (:with-hook ns-system-appearance-change-functions
-        (:hook apply-theme-based-on-appearance)))
+    (:if-graphic
+     (:global-bind "C-M-8" (lambda () (interactive) (+adjust-opacity nil -2))
+                   "C-M-7" (lambda () (interactive) (+adjust-opacity nil 2)))
+     (when *is-mac*
+       (apply-theme-based-on-appearance)
+       (:with-hook ns-system-appearance-change-functions
+         (:hook apply-theme-based-on-appearance)))
+     (:with-hook window-setup-hook
+       (:hook reapply-themes)
+       (:hook opacity-dark-theme)
+       (:hook set-dividers-and-fringe-color))
+     (:with-hook after-make-frame-functions (:hook opacity-dark-theme)))
 
-    (:with-hook window-setup-hook
-      (:hook reapply-themes)
-      (:hook opacity-dark-theme)
-      (:hook set-dividers-and-fringe-color))
-
-    (:with-hook after-make-frame-functions (:hook opacity-dark-theme))
     (:with-hook after-init-hook (:hook reapply-themes))))
 
 (setup hl-line
@@ -140,9 +144,9 @@
   (:option zoom-size '(0.618 . 0.618)))
 
 (setup popper
-  (:global-bind "C-~" 'popper-toggle
-                "M-~" 'popper-cycle
-                "C-M-`" 'popper-toggle-type)
+  (:global-bind "C-c w p" 'popper-toggle
+                "C-c w n" 'popper-cycle
+                "C-c w P" 'popper-toggle-type)
   (:option popper-window-height (lambda (win)
                                   (fit-window-to-buffer
                                    win
@@ -163,6 +167,8 @@
              ;; Terminal emulators
              "\\*vterm\\*$"
              "\\*.*-vterm\\*$"
+             "\\*ghostel\\*$"
+             "\\*.*-ghostel\\*$"
              "\\*eat\\*$"
              "\\*eshell\\*$"
              "\\*.*-eshell\\*$"
@@ -193,8 +199,6 @@
 (setup tab-bar
   (:defer (:require tab-bar))
   (:when-loaded
-    (:global-bind "s-t" 'tab-bar-new-tab
-                  "s-w" 'tab-bar-close-tab)
     (:also-load lib-tabbar)
     (:option tab-bar-separator ""
              tab-bar-close-button-show nil

@@ -95,5 +95,12 @@ See `advice-add' for more details."
   :repeatable t
   :signature '(FUNC ...))
 
+(setup-define :if-graphic
+  (lambda (&rest body)
+    `(when (or (display-graphic-p) (daemonp))
+       ,@body))
+  :documentation "Evaluate BODY only when Emacs is graphical, or running as a daemon."
+  :indent 0)
+
 (provide 'init-setup)
 ;;; init-setup.el ends here

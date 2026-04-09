@@ -3,7 +3,6 @@
   inputs,
   treesit-grammars-with-clojure-override,
   tdlib-head,
-  emacs-lsp-proxy-binary,
 }:
 let
   versionOf = inputName: toString inputs.${inputName}.lastModified;
@@ -21,8 +20,11 @@ let
       input = "consult-ripfd";
       packageRequires = [ "consult" ];
     };
-    eat = {
-      input = "eat";
+    ghostel = {
+      input = "ghostel";
+    };
+    kitty-graphics = {
+      input = "kitty-graphics";
     };
     eglot-x = {
       input = "eglot-x";
@@ -83,32 +85,19 @@ let
     ) simpleCustomSpecs;
 
   mkSpecialCustomPackages = epkgs: {
-    lsp-proxy =
+    eat =
       let
-        version = versionOf "lsp-proxy";
+        version = versionOf "eat";
       in
       epkgs.melpaBuild {
-        pname = "lsp-proxy";
+        pname = "eat";
         inherit version;
-        src = srcOf "lsp-proxy";
-        postPatch = ''
-          substituteInPlace lsp-proxy-core.el \
-            --replace-fail \
-            "(executable-find \"emacs-lsp-proxy\")" \
-            "\"${emacs-lsp-proxy-binary}/bin/emacs-lsp-proxy\""
-        '';
-        packageRequires = [
-          epkgs.s
-          epkgs.eldoc
-          epkgs.ht
-          epkgs.dash
-          epkgs.f
-          epkgs.yasnippet
-        ];
-        recipe = pkgs.writeText "lsp-proxy-recipe" ''
-          (lsp-proxy :repo "jadestrong/lsp-proxy"
-                     :fetcher github
-                     :files ("*.el"))
+        src = srcOf "eat";
+        packageRequires = [ epkgs.compat ];
+        recipe = pkgs.writeText "eat-recipe" ''
+          (eat :fetcher git
+               :url "https://codeberg.org/Stebalien/emacs-eat.git"
+               :files ("*.el"))
         '';
       };
 

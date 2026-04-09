@@ -32,6 +32,14 @@
       url = "git+https://codeberg.org/Stebalien/emacs-eat.git";
       flake = false;
     };
+    ghostel = {
+      url = "github:dakra/ghostel";
+      flake = false;
+    };
+    kitty-graphics = {
+      url = "github:cashmeredev/kitty-graphics.el";
+      flake = false;
+    };
     eglot-x = {
       url = "github:nemethf/eglot-x";
       flake = false;
@@ -75,10 +83,6 @@
     };
     blame-reveal = {
       url = "github:LuciusChen/blame-reveal";
-      flake = false;
-    };
-    lsp-proxy = {
-      url = "github:jadestrong/lsp-proxy";
       flake = false;
     };
     symbol-overlay = {
@@ -199,16 +203,6 @@
           makeFlags = (old.makeFlags or [ ]) ++ [ "-j2" ];
         });
 
-        # Build lsp-proxy Rust binary from HEAD source
-        emacs-lsp-proxy-binary = pkgs.rustPlatform.buildRustPackage {
-          pname = "emacs-lsp-proxy";
-          version = "unstable-${timestampToDate inputs.lsp-proxy.lastModified}";
-          src = inputs.lsp-proxy;
-          cargoLock = {
-            lockFile = "${inputs.lsp-proxy}/Cargo.lock";
-          };
-        };
-
         # ============================================================================
         # Package Definitions
         # ============================================================================
@@ -234,7 +228,6 @@
         # Centralized package definitions/build recipes/group lists
         packageModule = import ./customized-package.nix {
           inherit
-            emacs-lsp-proxy-binary
             inputs
             pkgs
             tdlib-head

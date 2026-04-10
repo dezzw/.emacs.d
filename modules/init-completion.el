@@ -2,11 +2,6 @@
 ;;; Commentary:
 ;;; Code:
 
-(defun +orderless-pinyin-initialism (str)
-  "Build an Orderless regexp for STR using pinyin initial matching."
-  (orderless-regexp
-   (pinyinlib-build-regexp-string str)))
-
 (defun +orderless-basic-all (str table pred point)
   "Fallback from Orderless to basic completion for STR.
 TABLE, PRED, and POINT are forwarded to the completion backends."
@@ -29,8 +24,6 @@ TABLE, PRED, and POINT are forwarded to the completion backends."
              ;; 需要通过修改 completion-category-overrides 改为 orderless
              completion-category-overrides '((file (styles partial-completion basic)))
              orderless-component-separator "[ &]")
-    ;; pinyinlib.el 用于匹配简体/繁体汉字拼音首字母
-    (add-to-list 'orderless-matching-styles #'+orderless-pinyin-initialism)
     (add-to-list 'completion-styles-alist
                  '(orderless+basic
                    +orderless-basic-try
@@ -38,13 +31,14 @@ TABLE, PRED, and POINT are forwarded to the completion backends."
                    "Unholy mix of Orderless and Basic."))))
 
 (setup corfu
-  (:option corfu-cycle t
-           corfu-auto t
-           corfu-auto-prefix 2
-           corfu-preselect 'prompt
-           corfu-quit-no-match 'separator)
-  (:defer (global-corfu-mode 1))
-  (:after corfu
+  (:defer (:require corfu))
+  (:when-loaded
+    (setopt corfu-cycle t
+            corfu-auto t
+            corfu-auto-prefix 2
+            corfu-preselect 'prompt
+            corfu-quit-no-match 'separator)
+    (global-corfu-mode)
     (:with-feature nerd-icons-corfu
       (add-to-list 'corfu-margin-formatters #'nerd-icons-corfu-formatter))
     (:with-mode corfu
@@ -59,16 +53,18 @@ TABLE, PRED, and POINT are forwarded to the completion backends."
       (add-hook 'meow-insert-mode-hook #'corfu-quit))))
 
 (setup cape
-  (add-to-list 'completion-at-point-functions #'cape-dabbrev)
-  (add-to-list 'completion-at-point-functions #'cape-file))
+  (:load-after corfu)
+  (:when-loaded
+    (add-to-list 'completion-at-point-functions #'cape-dabbrev)
+    (add-to-list 'completion-at-point-functions #'cape-file)))
 
 (setup yasnippet
   (:option yas-verbosity 0)
-  (:defer (yas-global-mode 1))
-  (:after yasnippet
-    (add-hook 'yas-keymap-disable-hook
-              (lambda () (and (frame-live-p corfu--frame)
-                              (frame-visible-p corfu--frame))))))
+  (:with-hook after-init-hook
+    (:hook yas-global-mode))
+  (add-hook 'yas-keymap-disable-hook
+            (lambda () (and (frame-live-p corfu--frame)
+                            (frame-visible-p corfu--frame)))))
 
 (provide 'init-completion)
 ;;; init-completion.el ends here

@@ -64,22 +64,6 @@
         "type": "github"
       }
     },
-    "emacs-canvas-patch": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1771507732,
-        "narHash": "sha256-fMdiYPf/7IgvrNovajy565bn5dgh7OCP6KOdZaHTDUQ=",
-        "owner": "minad",
-        "repo": "emacs-canvas-patch",
-        "rev": "57a28b5cca57de8cce00d1595eb4b66f1d335401",
-        "type": "github"
-      },
-      "original": {
-        "owner": "minad",
-        "repo": "emacs-canvas-patch",
-        "type": "github"
-      }
-    },
     "emacs-overlay": {
       "inputs": {
         "nixpkgs": "nixpkgs",
@@ -112,22 +96,6 @@
       "original": {
         "owner": "d12frosted",
         "repo": "homebrew-emacs-plus",
-        "type": "github"
-      }
-    },
-    "embr": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1774551690,
-        "narHash": "sha256-mM/oIU5Ep+/maByhWX2djM8Phrwz3hscrPB/2jGnHo8=",
-        "owner": "emacs-os",
-        "repo": "embr.el",
-        "rev": "f514b582ae49ad6afab399c950994c47ddbbcb2e",
-        "type": "github"
-      },
-      "original": {
-        "owner": "emacs-os",
-        "repo": "embr.el",
         "type": "github"
       }
     },
@@ -331,10 +299,8 @@
         "consult-ripfd": "consult-ripfd",
         "eat": "eat",
         "eglot-x": "eglot-x",
-        "emacs-canvas-patch": "emacs-canvas-patch",
         "emacs-overlay": "emacs-overlay",
         "emacs-plus-patches": "emacs-plus-patches",
-        "embr": "embr",
         "emt": "emt",
         "flake-utils": "flake-utils",
         "ghostel": "ghostel",

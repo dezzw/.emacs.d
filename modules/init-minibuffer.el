@@ -6,6 +6,7 @@
          (:hook savehist-mode)))
 
 (setup recentf
+  (:hook-into after-init)
   (:option recentf-max-saved-items 50
            recentf-exclude (list "\\.?cache" ".cask" "url" "COMMIT_EDITMSG\\'" "bookmarks"
                                  "\\.?ido\\.last$" "\\.revive$" "/G?TAGS$" "/.elfeed/"
@@ -18,12 +19,10 @@
     (:hook (lambda ()
              (when (bound-and-true-p recentf-mode)
                (recentf-add-file default-directory)))))
-  (:after recentf
-    (add-to-list 'recentf-filename-handlers #'abbreviate-file-name)
-    ;; HACK: Text properties inflate the size of recentf's files, and there is
-    ;; no purpose in persisting them (Must be first in the list!)
-    (add-to-list 'recentf-filename-handlers #'substring-no-properties))
-  (:hooks after-init-hook recentf-mode))
+  (add-to-list 'recentf-filename-handlers #'abbreviate-file-name)
+  ;; HACK: Text properties inflate the size of recentf's files, and there is
+  ;; no purpose in persisting them (Must be first in the list!)
+  (add-to-list 'recentf-filename-handlers #'substring-no-properties))
 
 (setup minibuffer
   ;; 用于对补全候选项进行分类的变量。通过将它们设置为 nil，我们禁用了 Emacs 自动分类补全候选项的功能，从而获得更简洁的补全列表。
@@ -67,21 +66,21 @@
         doom-modeline-bar-width 4
         doom-modeline-hud t
         doom-modeline-hud-min-height 1)
-  (:after doom-modeline
-    (:with-feature telega
-      (:when-loaded
-        (add-to-list 'global-mode-string '("" (:eval (+mode-line-telega-icon))) t))))
-  (:defer (doom-modeline-mode 1)))
+  (:with-hook after-init-hook
+    (:hook doom-modeline-mode))
+  (:with-feature telega
+    (:when-loaded
+      (add-to-list 'global-mode-string '("" (:eval (+mode-line-telega-icon))) t))))
 
 (setup vertico
   (:option vertico-cycle t)
-  (:after vertico
-    (:with-map vertico-map
-      (:bind
-       "RET" vertico-directory-enter
-       "DEL" vertico-directory-delete-char
-       "M-DEL" vertico-directory-delete-word)))
-  (:defer (vertico-mode 1)))
+  (:with-hook after-init-hook
+    (:hook vertico-mode))
+  (:with-map vertico-map
+    (:bind
+     "RET" vertico-directory-enter
+     "DEL" vertico-directory-delete-char
+     "M-DEL" vertico-directory-delete-word)))
 
 (setup vertico-posframe
   (:after vertico
@@ -124,18 +123,16 @@
            xref-show-xrefs-function #'consult-xref
            xref-show-definitions-function #'consult-xref)
   (:hooks minibuffer-setup-hook mcfly-time-travel)
-  (:after consult
-    (:also-load consult-ripfd)
-    (:also-load lib-consult)))
+  (:also-load consult-ripfd)
+  (:also-load lib-consult))
 
 (setup consult-dir
   (:global-bind "C-x C-d" 'consult-dir)
   (:after vertico
-    (:after consult-dir
-      (:with-map vertico-map
+    (:with-map vertico-map
       (:bind
        "C-x C-d" consult-dir
-       "C-x C-j" consult-dir-jump-file)))))
+       "C-x C-j" consult-dir-jump-file))))
 
 (defun +embark-open-in-finder (file)
   "Open FILE in macOS Finder."
@@ -144,6 +141,7 @@
                          (shell-quote-argument (expand-file-name file)))))
 
 (setup embark
+  (:defer (:require embark))
   (:global-bind "C-c ." 'embark-act
                 "M-n"   'embark-next-symbol
                 "M-p"   'embark-previous-symbol)
@@ -153,9 +151,8 @@
            embark-cycle-key "."
            embark-help-key "?")
   (:hooks embark-collect-mode-hook consult-preview-at-point-mode)
-  (:after embark
-    (:also-load embark-consult)
-    (:with-map embark-file-map (when *is-mac* (:bind "o" +embark-open-in-finder)))))
+  (:also-load embark-consult)
+  (:with-map embark-file-map (when *is-mac* (:bind "o" +embark-open-in-finder))))
 
 (provide 'init-minibuffer)
 ;;; init-minibuffer.el ends here

@@ -17,43 +17,42 @@
 (setup magit
   (:global-bind "C-x g" 'magit-status
                 "C-x M-g" 'magit-dispatch)
-  (:after magit
-    (:also-load lib-magit)
-    (:with-map magit-status-mode-map
-      (:bind
-       "C-M-<up>" magit-section-up
-       ;; Work around a Transient/Magit discard bug on Emacs 31 by
-       ;; providing a direct entry point that bypasses dispatch popup "k".
-       "C-c C-k" magit-discard))
-    (:with-map vc-prefix-map
-      (:bind "l" +magit-or-vc-log-file
-             ;; file binding for vc-git-grep
-             "f" vc-git-grep))
-    ;; 将当前 view 的 buffer 写入文件，实现恢复以前版本的作用
-    (:with-map magit-blob-mode-map
-      (:bind "C-c C-c" +magit-blob-save
-             "C-n"     magit-blob-next
-             "C-p"     magit-blob-previous))
-    (:option magit-diff-refine-hunk t
-             ;; Don't autosave repo buffers. This is too magical, and saving can
-             ;; trigger a bunch of unwanted side-effects, like save hooks and
-             ;; formatters. Trust the user to know what they're doing.
-             magit-save-repository-buffers nil
-             ;; Don't display parent/related refs in commit buffers; they are rarely
-             ;; helpful and only add to runtime costs.
-             magit-revision-insert-related-refs nil
-             magit-blame-styles '((headings
-                                   (heading-format . "  %C %-18a%f %-80s  %H\n")
-                                   (show-message . t))
-                                  (highlight
-                                   (highlight-face . magit-blame-highlight))))
-    (:advice magit-status :around #'magit-fullscreen)
-    (:advice magit-mode-quit-window :after #'magit-restore-screen)
-    ;; kill 因为 blob-next 和 blob-previous 产生的 buffer
-    (:advice magit-blob-next :around #'kill-all-blob-next-after-quit)
-    (:advice magit-blob-previous :around #'kill-all-blob-previous-after-quit)
-    (when *is-mac*
-      (add-hook 'magit-mode-hook (lambda () (local-unset-key [(meta h)]))))))
+  (:also-load lib-magit)
+  (:with-map magit-status-mode-map
+    (:bind
+     "C-M-<up>" magit-section-up
+     ;; Work around a Transient/Magit discard bug on Emacs 31 by
+     ;; providing a direct entry point that bypasses dispatch popup "k".
+     "C-c C-k" magit-discard))
+  (:with-map vc-prefix-map
+    (:bind "l" +magit-or-vc-log-file
+           ;; file binding for vc-git-grep
+           "f" vc-git-grep))
+  ;; 将当前 view 的 buffer 写入文件，实现恢复以前版本的作用
+  (:with-map magit-blob-mode-map
+    (:bind "C-c C-c" +magit-blob-save
+           "C-n"     magit-blob-next
+           "C-p"     magit-blob-previous))
+  (:option magit-diff-refine-hunk t
+           ;; Don't autosave repo buffers. This is too magical, and saving can
+           ;; trigger a bunch of unwanted side-effects, like save hooks and
+           ;; formatters. Trust the user to know what they're doing.
+           magit-save-repository-buffers nil
+           ;; Don't display parent/related refs in commit buffers; they are rarely
+           ;; helpful and only add to runtime costs.
+           magit-revision-insert-related-refs nil
+           magit-blame-styles '((headings
+                                 (heading-format . "  %C %-18a%f %-80s  %H\n")
+                                 (show-message . t))
+                                (highlight
+                                 (highlight-face . magit-blame-highlight))))
+  (:advice magit-status :around #'magit-fullscreen)
+  (:advice magit-mode-quit-window :after #'magit-restore-screen)
+  ;; kill 因为 blob-next 和 blob-previous 产生的 buffer
+  (:advice magit-blob-next :around #'kill-all-blob-next-after-quit)
+  (:advice magit-blob-previous :around #'kill-all-blob-previous-after-quit)
+  (when *is-mac*
+    (add-hook 'magit-mode-hook (lambda () (local-unset-key [(meta h)])))))
 
 (setup magit-log
   (:after magit
@@ -71,16 +70,13 @@
 (setup blame-reveal
   (:set blame-reveal-recent-days-limit 'auto
         blame-reveal-gradient-quality 'auto)
-  (:after blame-reveal
-    ;; Display
-    (:set blame-reveal-display-layout 'compact
-          blame-reveal-show-uncommitted-fringe nil)
-
-    ;; Performance
-    (:set blame-reveal-async-blame 'auto)
-
-    ;; Enable recursive blame
-    (require 'blame-reveal-recursive)))
+  ;; Display
+  (:set blame-reveal-display-layout 'compact
+        blame-reveal-show-uncommitted-fringe nil)
+  ;; Performance
+  (:set blame-reveal-async-blame 'auto)
+  ;; Enable recursive blame
+  (require 'blame-reveal-recursive))
 
 (provide 'init-vc)
 ;;; init-vc.el ends here

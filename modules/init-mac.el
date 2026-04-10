@@ -20,7 +20,7 @@
   (+load-env-file))
 
 (setup emt
-  (:defer (:require emt))
+  (:require emt)
   (:when-loaded
     (:global-bind "M-f" 'emt-forward-word
                   "M-b" 'emt-backward-word)

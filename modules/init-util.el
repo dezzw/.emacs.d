@@ -4,18 +4,18 @@
 
 (setup files
   (:option auto-save-default nil
-            auto-save-visited-interval 1.1
-            auto-save-visited-predicate
-            (lambda () (and (not (buffer-live-p (get-buffer " *vundo tree*")))
-                            (not (string-suffix-p "gpg" (file-name-extension (buffer-name)) t))
-                            (not (eq (buffer-base-buffer (get-buffer (concat "CAPTURE-" (buffer-name))))
-                                     (current-buffer)))
-                            (or (not (boundp 'corfu--total)) (zerop corfu--total))
-                            (or (not (boundp 'yas--active-snippets)) (not yas--active-snippets))))
-            make-backup-files nil
-            enable-local-variables :all
-            ;; emacs@31 feature
-            trusted-content '("~/.emacs.d/"))
+           auto-save-visited-interval 1.1
+           auto-save-visited-predicate
+           (lambda () (and (not (buffer-live-p (get-buffer " *vundo tree*")))
+                           (not (string-suffix-p "gpg" (file-name-extension (buffer-name)) t))
+                           (not (eq (buffer-base-buffer (get-buffer (concat "CAPTURE-" (buffer-name))))
+                                    (current-buffer)))
+                           (or (not (boundp 'corfu--total)) (zerop corfu--total))
+                           (or (not (boundp 'yas--active-snippets)) (not yas--active-snippets))))
+           make-backup-files nil
+           enable-local-variables :all
+           ;; emacs@31 feature
+           trusted-content '("~/.emacs.d/"))
   (:hooks after-init-hook auto-save-visited-mode))
 
 (setup bookmark
@@ -51,20 +51,20 @@
       (modify-syntax-entry '(#x2EBF0 . #x2EE5F) "_" st))))
 
 (setup dirvish
-  (:option dirvish-quick-access-entries
-           '(("h" "~/" "Home")
-             ("e" "~/.emacs.d/" "Emacs")
-             ("p" "~/Library/CloudStorage/BeeStation-MyBeeStation/Projects/" "Projects"))
-           dirvish--debouncing-delay 2
-           dirvish-side-width 50
-           dirvish-attributes '(file-time file-size collapse subtree-state vc-state)
-           dirvish-side-attributes '(vc-state collapse)
-           delete-by-moving-to-trash t
-           dired-listing-switches "-l --almost-all --human-readable --group-directories-first --no-group"
-           dirvish-mode-line-height 15
-           dirvish-header-line-height '(15 .25))
-  (:defer (dirvish-override-dired-mode))
-  (:after dirvish
+  (dirvish-override-dired-mode)
+  (:when-loaded
+    (setopt dirvish-quick-access-entries
+            '(("h" "~/" "Home")
+              ("e" "~/.emacs.d/" "Emacs")
+              ("p" "~/Library/CloudStorage/BeeStation-MyBeeStation/Projects/" "Projects"))
+            dirvish--debouncing-delay 2
+            dirvish-side-width 50
+            dirvish-attributes '(file-time file-size collapse subtree-state vc-state)
+            dirvish-side-attributes '(vc-state collapse)
+            delete-by-moving-to-trash t
+            dired-listing-switches "-l --almost-all --human-readable --group-directories-first --no-group"
+            dirvish-mode-line-height 15
+            dirvish-header-line-height '(15 . 1))
     (:with-map dirvish-mode-map
       (:bind "a" dirvish-quick-access
              "q" dirvish-quit

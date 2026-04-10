@@ -29,18 +29,12 @@ let
     eglot-x = {
       input = "eglot-x";
     };
-    embr = {
-      input = "embr";
-    };
     emt = {
       input = "emt";
     };
     image-slicing = {
       input = "image-slicing";
       packageRequires = [ "f" ];
-    };
-    leetcode-emacs = {
-      input = "leetcode-emacs";
     };
     miniline = {
       input = "miniline";
@@ -69,7 +63,7 @@ let
     epkgs:
     builtins.mapAttrs (
       pname: spec:
-      epkgs.trivialBuild (
+      epkgs.melpaBuild (
         {
           inherit pname;
           version = versionOf spec.input;
@@ -85,6 +79,17 @@ let
     ) simpleCustomSpecs;
 
   mkSpecialCustomPackages = epkgs: {
+    leetcode-emacs =
+      let
+        version = versionOf "leetcode-emacs";
+      in
+      epkgs.melpaBuild {
+        pname = "leetcode-emacs";
+        ename = "leetcode";
+        inherit version;
+        src = srcOf "leetcode-emacs";
+      };
+
     eat =
       let
         version = versionOf "eat";

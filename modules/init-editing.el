@@ -44,7 +44,7 @@
             set-mark-command-repeat-pop t))
 
 (setup meow
-  (:defer (:require meow))
+  (:require meow)
   (:also-load undo-fu undo-fu-session lib-meow)
   (:when-loaded
     (:with-function meow-setup (:autoload-this))
@@ -71,18 +71,18 @@
       (:advice meow-next-thing :override meow-next-thing-cjk))))
 
 (setup meow-tree-sitter
-  (:defer (meow-tree-sitter-register-defaults)))
+  (meow-tree-sitter-register-defaults))
 
 ;; 剪贴板查找
 (setup browse-kill-ring
+  (:defer (:require browse-kill-ring))
   (:global-bind "M-Y" 'browse-kill-ring)
   (:option browse-kill-ring-separator "\f")
-  (:after browse-kill-ring
-    (:with-map browse-kill-ring-mode-map
-      (:bind
-       "C-g" browse-kill-ring-quit
-       "M-n" browse-kill-ring-forward
-       "M-p" browse-kill-ring-previous))))
+  (:with-map browse-kill-ring-mode-map
+    (:bind
+     "C-g" browse-kill-ring-quit
+     "M-n" browse-kill-ring-forward
+     "M-p" browse-kill-ring-previous)))
 
 ;; Shift lines up and down with M-up and M-down. When paredit is enabled,
 ;; it will use those keybindings. For this reason, you might prefer to
@@ -98,8 +98,9 @@
   (:hooks prog-mode-hook rainbow-delimiters-mode))
 
 (setup rainbow-mode
-  ;; add support for ARGB color format e.g "0xFFFF0000"
-  (:after rainbow-mode
+  (:defer (:require rainbow-mode))
+  (:when-loaded
+    ;; add support for ARGB color format e.g "0xFFFF0000"
     (add-to-list 'rainbow-hexadecimal-colors-font-lock-keywords
                  '("0[xX][0-9a-fA-F]\\{2\\}\\([0-9A-Fa-f]\\{6\\}\\)\\b"
                    (0 (rainbow-colorize-hexadecimal-without-sharp))))))
@@ -174,7 +175,8 @@
 (setup ultra-scroll
   (:option scroll-conservatively 101 ; important!
            scroll-margin 0)
-  (:defer (ultra-scroll-mode 1)))
+  (:with-hook after-init-hook
+    (:hook ultra-scroll-mode)))
 
 (provide 'init-editing)
 ;;; init-editing.el ends here

@@ -29,15 +29,15 @@
     (eshell-syntax-highlighting-global-mode 1)))
 
 (setup vterm
+  (:defer (:require vterm))
   (:autoload project-vterm)
   (:option vterm-shell "zsh"
            vterm-always-compile-module t)
-  (:after vterm
-    (:also-load lib-vterm)
-    (:with-map vterm-mode-map
-      (:bind "C-y" vterm-yank
-             "M-y" vterm-yank-pop
-             "C-k" vterm-send-C-k-and-kill))))
+  (:also-load lib-vterm)
+  (:with-map vterm-mode-map
+    (:bind "C-y" vterm-yank
+           "M-y" vterm-yank-pop
+           "C-k" vterm-send-C-k-and-kill)))
 
 (setup ghostel
   (:autoload ghostel ghostel-other ghostel-download-module)

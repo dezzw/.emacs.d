@@ -38,49 +38,49 @@
 ;; Default text scaling only makes sense on graphical frames.
 (setup default-text-scale
   (:if-graphic
-   (:hook-into after-init)
-   ;; Don't scale font on trackpad pinch!
-   (global-unset-key (kbd "<pinch>"))))
+    (:hook-into after-init)
+    ;; Don't scale font on trackpad pinch!
+    (global-unset-key (kbd "<pinch>"))))
 
 (setup frame
   (:if-graphic
-   (:when-loaded
-     (let ((border '(internal-border-width . 12)))
-       (add-to-list 'default-frame-alist border)
-       (add-to-list 'initial-frame-alist border)))))
+    (:when-loaded
+      (let ((border '(internal-border-width . 12)))
+        (add-to-list 'default-frame-alist border)
+        (add-to-list 'initial-frame-alist border)))))
 
 (setup window-divider
   (:if-graphic
-   (:option window-divider-default-right-width 1
-            window-divider-default-bottom-width 0
-            window-divider-default-places t)
-   (:hook-into window-setup-hook)))
+    (:option window-divider-default-right-width 1
+             window-divider-default-bottom-width 0
+             window-divider-default-places t)
+    (:hook-into window-setup-hook)))
 
 (setup panel
   (:if-graphic
-   (:defer (:require panel))
-   (:option panel-latitude 43.45193874534566
-            panel-longitude -80.49129101085033
-            panel-path-max-length 35
-            panel-min-left-padding 10
-            panel-image-file (concat user-emacs-directory "assets/bitmap.png")
-            panel-image-width 400
-            panel-image-height 169
-            panel-title "The best way to predict the future is to invent it.")
-   (:when-loaded
-     (:face panel-title-face ((t (:inherit font-lock-constant-face :height 1.2 :italic t :family "Operator Mono"))))
-     (panel-create-hook))))
+    (:require panel)
+    (:option panel-latitude 43.45193874534566
+             panel-longitude -80.49129101085033
+             panel-path-max-length 35
+             panel-min-left-padding 10
+             panel-image-file (concat user-emacs-directory "assets/bitmap.png")
+             panel-image-width 400
+             panel-image-height 169
+             panel-title "The best way to predict the future is to invent it.")
+    (:when-loaded
+      (:face panel-title-face ((t (:inherit font-lock-constant-face :height 1.2 :italic t :family "Operator Mono"))))
+      (panel-create-hook))))
 
 (setup faces
   (:if-graphic
-   (:also-load lib-face)
-   (:hooks window-setup-hook +setup-fonts
-           server-after-make-frame-hook +setup-fonts
-           after-make-frame-functions
-           (lambda (frame)
-             (with-selected-frame frame
-               (+setup-fonts))))
-   (+setup-fonts)))
+    (:also-load lib-face)
+    (:hooks window-setup-hook +setup-fonts
+            server-after-make-frame-hook +setup-fonts
+            after-make-frame-functions
+            (lambda (frame)
+              (with-selected-frame frame
+                (+setup-fonts))))
+    (+setup-fonts)))
 
 (setup custom
   (:when-loaded
@@ -98,17 +98,17 @@
              dark-theme 'rose-pine-night)
 
     (:if-graphic
-     (:global-bind "C-M-8" (lambda () (interactive) (+adjust-opacity nil -2))
-                   "C-M-7" (lambda () (interactive) (+adjust-opacity nil 2)))
-     (when *is-mac*
-       (apply-theme-based-on-appearance)
-       (:with-hook ns-system-appearance-change-functions
-         (:hook apply-theme-based-on-appearance)))
-     (:with-hook window-setup-hook
-       (:hook reapply-themes)
-       (:hook opacity-dark-theme)
-       (:hook set-dividers-and-fringe-color))
-     (:with-hook after-make-frame-functions (:hook opacity-dark-theme)))
+      (:global-bind "C-M-8" (lambda () (interactive) (+adjust-opacity nil -2))
+                    "C-M-7" (lambda () (interactive) (+adjust-opacity nil 2)))
+      (when *is-mac*
+        (apply-theme-based-on-appearance)
+        (:with-hook ns-system-appearance-change-functions
+          (:hook apply-theme-based-on-appearance)))
+      (:with-hook window-setup-hook
+        (:hook reapply-themes)
+        (:hook opacity-dark-theme)
+        (:hook set-dividers-and-fringe-color))
+      (:with-hook after-make-frame-functions (:hook opacity-dark-theme)))
 
     (:with-hook after-init-hook (:hook reapply-themes))))
 
@@ -128,7 +128,7 @@
              blink-matching-paren-highlight-offscreen t)))
 
 (setup highlight-parentheses
-  (:defer (:require highlight-parentheses))
+  (:require highlight-parentheses)
   (:when-loaded
     (:option highlight-parentheses-colors '("firebrick1" "firebrick3" "orange1" "orange3")
              highlight-parentheses-attributes '((:underline t) (:underline t) (:underline t))
@@ -137,7 +137,7 @@
   (:hook-into prog-mode))
 
 
-(setup nerd-icons (:defer (:require nerd-icons)))
+(setup nerd-icons (:require nerd-icons))
 
 (defun +popper-close-window-hack (&rest _)
   "Close popper window via `C-g'."
@@ -187,12 +187,10 @@
              "\\*Telegram Message Info\\*$"
              "\\*Telegram Sticker Set\\*$"
              "\\*Telegram Notification Messages\\*$"))
-  (:defer
-    (popper-mode +1)
-    ;; (popper-echo-mode +1)
-    (popper-tab-line-mode +1))
-  (:after popper
-    (advice-add #'keyboard-quit :before #'+popper-close-window-hack)))
+  (:with-hook after-init-hook
+    (:hook popper-mode)
+    (:hook popper-tab-line-mode))
+  (advice-add #'keyboard-quit :before #'+popper-close-window-hack))
 
 (setup tab-bar
   (:option tab-bar-separator ""
@@ -211,34 +209,33 @@
            tab-bar-format '(tab-bar-format-tabs
                             tab-bar-format-add-tab
                             tab-bar-format-align-right))
-  (:after tab-bar
-    (:also-load lib-tabbar)
-    (when (fboundp 'tab-bar--update-tab-bar-lines)
-      (tab-bar--update-tab-bar-lines))))
+  (:also-load lib-tabbar)
+  (when (fboundp 'tab-bar--update-tab-bar-lines)
+    (tab-bar--update-tab-bar-lines)))
 (setup tab-line
   (:set tab-line-new-button-show nil
         tab-line-close-button-show nil))
 
 (setup tabspaces
-  (:option tabspaces-use-filtered-buffers-as-default t
-           tabspaces-default-tab "Default"
-           tabspaces-remove-to-default t
-           tabspaces-include-buffers '("*scratch*")
-           tabspaces-initialize-project-with-todo t
-           tabspaces-todo-file-name "project-todo.org"
-           tabspaces-session t
-           tabspaces-session-auto-restore t
-           tabspaces-fully-resolve-paths t
-           tabspaces-exclude-buffers '("*Messages*" "*Compile-Log*")
-           tab-bar-new-tab-choice "*scratch*")
-  (:defer (tabspaces-mode 1))
-  (:after tabspaces
-    (:also-load lib-tabspaces)
-    (:after consult
-      (+tabspaces-consult-setup))))
+  (:also-load lib-tabspaces)
+  (setopt tabspaces-use-filtered-buffers-as-default t
+          tabspaces-default-tab "Default"
+          tabspaces-remove-to-default t
+          tabspaces-include-buffers '("*scratch*")
+          tabspaces-initialize-project-with-todo t
+          tabspaces-todo-file-name "project-todo.org"
+          tabspaces-session t
+          tabspaces-session-auto-restore nil
+          tabspaces-fully-resolve-paths t
+          tabspaces-exclude-buffers '("*Messages*" "*Compile-Log*")
+          tab-bar-new-tab-choice "*scratch*")
+  (tabspaces-mode)
+  (:after consult
+    (+tabspaces-consult-setup)))
 
 (setup which-key
-  (:defer (which-key-mode 1)))
+  (:with-hook after-init-hook
+    (:hook which-key-mode)))
 
 (provide 'init-ui)
 ;;; init-ui.el ends here

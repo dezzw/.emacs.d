@@ -22,11 +22,6 @@
       url = "github:d12frosted/homebrew-emacs-plus";
       flake = false;
     };
-    emacs-canvas-patch = {
-      url = "github:minad/emacs-canvas-patch";
-      flake = false;
-    };
-
     # Custom Emacs packages from GitHub
     eat = {
       url = "git+https://codeberg.org/Stebalien/emacs-eat.git";
@@ -42,10 +37,6 @@
     };
     eglot-x = {
       url = "github:nemethf/eglot-x";
-      flake = false;
-    };
-    embr = {
-      url = "github:emacs-os/embr.el";
       flake = false;
     };
     emt = {
@@ -143,11 +134,14 @@
             patches = (old.patches or [ ]) ++ extraPatches;
           });
 
+        # NS startup fix needed even for the unpatched Darwin base builds.
+        darwinBasePatches = lib.optionals pkgs.stdenv.isDarwin [
+          ./patches/ns-init-colors-after-init-callproc.patch
+        ];
+
         # Custom patches list (can be enabled/disabled as needed)
         customPatches =
-          [
-            # Add canvas image support
-            "${inputs.emacs-canvas-patch}/canvas.diff"
+          lib.optionals pkgs.stdenv.isDarwin [
           ]
           ++ lib.optionals pkgs.stdenv.isDarwin [
             # Add setting to enable rounded window with no decoration
@@ -164,12 +158,16 @@
         # ============================================================================
 
         # IGC base: Use PGTK on Linux, otherwise regular IGC. Remove MPS (now built into emacs repo)
-        emacs-igc-base = pkgs.emacs-igc.overrideAttrs (old: {
+        emacs-igc-base = (pkgs.emacs-igc.overrideAttrs (old: {
           buildInputs = builtins.filter (p: !(p ? pname && p.pname == "mps")) (old.buildInputs or [ ]);
+        })).overrideAttrs (old: {
+          patches = (old.patches or [ ]) ++ darwinBasePatches;
         });
 
         # GIT base: Always use regular emacs-git from emacs-overlay
-        emacs-git-base = pkgs.emacs-git;
+        emacs-git-base = pkgs.emacs-git.overrideAttrs (old: {
+          patches = (old.patches or [ ]) ++ darwinBasePatches;
+        });
 
         # ============================================================================
         # Emacs Patched Versions

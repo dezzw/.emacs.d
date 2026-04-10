@@ -1,0 +1,27 @@
+diff --git a/src/emacs.c b/src/emacs.c
+--- a/src/emacs.c
++++ b/src/emacs.c
+@@ -2051,10 +2051,7 @@
+ 
+ #ifdef HAVE_NS
+   /* For early calls to ns_lisp_to_color or Fns_list_colors.  */
+-  if (!dump_mode)
+-    ns_init_colors ();
+-
+-  if (!noninteractive)
++  if (!noninteractive)
+     {
+ #ifdef NS_IMPL_COCOA
+       /* Started from GUI? */
+@@ -2222,6 +2219,11 @@
+   init_callproc ();	/* Must follow init_cmdargs but not init_sys_modes.  */
+   init_fileio ();
+   init_lread ();
++
++#ifdef HAVE_NS
++  if (!dump_mode)
++    ns_init_colors ();
++#endif
+ 
+   /* If "-version" was specified, produce version information and
+      exit.  We do it here because the code below needs to call Lisp

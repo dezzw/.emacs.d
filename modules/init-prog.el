@@ -139,7 +139,7 @@
     (setf (alist-get 'js-ts-mode apheleia-mode-alist) 'prettier)))
 
 (setup reformatter
-  (:defer (:require reformatter))
+  (:require reformatter)
   (:with-mode python-ts-mode
     (reformatter-define ruff-format
       :program "ruff"
@@ -227,7 +227,8 @@
 
 (setup eglot-booster
   (:option eglot-booster-io-only t)
-  (:defer (eglot-booster-mode 1)))
+  (:with-hook after-init-hook
+    (:hook eglot-booster-mode)))
 
 (setup eglot-x
   (:hooks eglot-managed-mode-hook eglot-x-setup))

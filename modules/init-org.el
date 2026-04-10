@@ -109,7 +109,7 @@
                                  (latex . t)))))
 
 (setup denote
-  (:defer (:require denote))
+  (:require denote)
   (:when-loaded
     (:global-bind "C-c n n" 'denote-open-or-create
                   "C-c n d" 'denote-sort-dired

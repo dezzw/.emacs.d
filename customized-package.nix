@@ -170,6 +170,7 @@ let
       nerd-icons-completion
       nerd-icons-corfu
       nerd-icons-dired
+      posframe
       popper
       ultra-scroll
       vertico

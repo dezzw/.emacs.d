@@ -146,9 +146,10 @@
              popper-open-popup-alist)
     (let ((window (caar popper-open-popup-alist)))
       (when (window-live-p window)
-        (delete-window window)))))
+        (+popper-delete-popup-window window)))))
 
 (setup popper
+  (:also-load lib-posframe)
   (:global-bind "C-c w p" 'popper-toggle
                 "C-c w n" 'popper-cycle
                 "C-c w P" 'popper-toggle-type)
@@ -186,7 +187,9 @@
              "\\*Telegram Chat Info\\*$"
              "\\*Telegram Message Info\\*$"
              "\\*Telegram Sticker Set\\*$"
-             "\\*Telegram Notification Messages\\*$"))
+             "\\*Telegram Notification Messages\\*$")
+           popper-display-function #'+popper-display-posframe)
+  (setq popper-display-control t)
   (:with-hook after-init-hook
     (:hook popper-mode)
     (:hook popper-tab-line-mode))

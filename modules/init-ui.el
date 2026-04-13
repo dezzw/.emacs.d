@@ -149,10 +149,15 @@
         (+popper-delete-popup-window window)))))
 
 (setup popper
-  (:also-load lib-posframe)
+  (:also-load lib-popper)
   (:global-bind "C-c w p" 'popper-toggle
                 "C-c w n" 'popper-cycle
-                "C-c w P" 'popper-toggle-type)
+                "C-c w P" 'popper-toggle-type
+                "C-c w <left>" '+popper-move-floating-popup-left
+                "C-c w <right>" '+popper-move-floating-popup-right
+                "C-c w <up>" '+popper-move-floating-popup-up
+                "C-c w <down>" '+popper-move-floating-popup-down
+                "C-c w r" '+popper-center-floating-popup)
   (:option popper-window-height (lambda (win)
                                   (fit-window-to-buffer
                                    win
@@ -188,7 +193,7 @@
              "\\*Telegram Message Info\\*$"
              "\\*Telegram Sticker Set\\*$"
              "\\*Telegram Notification Messages\\*$")
-           popper-display-function #'+popper-display-posframe)
+           popper-display-function #'+popper-display-child-frame)
   (setq popper-display-control t)
   (:with-hook after-init-hook
     (:hook popper-mode)

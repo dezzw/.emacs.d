@@ -4,6 +4,10 @@
 
 (require 'posframe)
 
+(defcustom +popper-posframe-border-color "#7f849c"
+  "Border color used by floating Popper posframes."
+  :type 'string)
+
 (defvar-local +popper-floating-popup-mode nil
   "Non-nil when the current buffer is displayed as a floating Popper posframe.")
 
@@ -19,6 +23,13 @@
   "Minor mode enabled in Popper floating posframe buffers."
   :lighter nil
   :keymap +popper-floating-popup-mode-map)
+
+(defun +popper-posframe-parent-frame (&optional window)
+  "Return the top-level parent frame for WINDOW or the selected frame."
+  (let ((frame (window-frame (or window (selected-window)))))
+    (while (frame-parent frame)
+      (setq frame (frame-parent frame)))
+    frame))
 
 (defun +popper-child-frame-window-p (window)
   "Return non-nil when WINDOW belongs to a child frame."
@@ -55,32 +66,34 @@
 
 (defun +popper-display-posframe (buffer &optional _alist)
   "Display Popper BUFFER in a floating posframe and return its window."
-  (let* ((frame (posframe-show
-                 buffer
-                 :poshandler #'posframe-poshandler-frame-center
-                 :width 120
-                 :height 24
-                 :border-width 1
-                 :internal-border-width 12
-                 :left-fringe 8
-                 :right-fringe 8
-                 :respect-mode-line nil
-                 :respect-header-line nil
-                 :accept-focus t
-                 :hidehandler #'+popper-posframe-hidehandler
-                 :override-parameters
-                 '((undecorated . t)
-                   (skip-taskbar . t)
-                   (no-other-frame . t)
-                   (unsplittable . t))))
+  (let* ((parent-frame (+popper-posframe-parent-frame))
+         (frame (with-selected-frame parent-frame
+                  (posframe-show
+                   buffer
+                   :parent-frame parent-frame
+                   :poshandler #'posframe-poshandler-frame-center
+                   :width 120
+                   :height 24
+                   :border-width 1
+                   :border-color +popper-posframe-border-color
+                   :internal-border-width 12
+                   :left-fringe 8
+                   :right-fringe 8
+                   :respect-mode-line nil
+                   :respect-header-line nil
+                   :accept-focus t
+                   :hidehandler #'+popper-posframe-hidehandler
+                   :override-parameters
+                   '((undecorated . t)
+                     (skip-taskbar . t)
+                     (no-other-frame . t)
+                     (unsplittable . t)))))
          (window (and (frame-live-p frame)
                       (frame-root-window frame))))
     (when (window-live-p window)
       (set-window-dedicated-p window t)
       (with-current-buffer buffer
         (+popper-floating-popup-mode 1))
-      (select-frame-set-input-focus frame)
-      (select-window window)
       window)))
 
 (with-eval-after-load 'popper

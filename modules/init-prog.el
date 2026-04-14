@@ -146,6 +146,7 @@
       :args '("format" "-"))))
 
 (setup mmm-mode
+  (:defer (:require mmm-mode))
   (:with-mode nxml-mode
     (:hook mmm-mode))
   (:when-loaded
@@ -226,11 +227,13 @@
                (setq eldoc-documentation-strategy #'eldoc-documentation-compose))))))
 
 (setup eglot-booster
-  (:option eglot-booster-io-only t)
+  (:load-after eglot)
+  (setopt eglot-booster-io-only t)
   (:with-hook after-init-hook
     (:hook eglot-booster-mode)))
 
 (setup eglot-x
+  (:load-after eglot)
   (:hooks eglot-managed-mode-hook eglot-x-setup))
 
 (setup citre

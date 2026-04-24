@@ -32,22 +32,6 @@
         "type": "github"
       }
     },
-    "eat": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1759592578,
-        "narHash": "sha256-4uQTL8ujYX0ZxHHMfRL50SBOwRZeWydib8m0KiJFGF8=",
-        "ref": "refs/heads/master",
-        "rev": "dcef0928e0b7c7c444da63e24a8f6bf7da8b8b32",
-        "revCount": 264,
-        "type": "git",
-        "url": "https://codeberg.org/Stebalien/emacs-eat.git"
-      },
-      "original": {
-        "type": "git",
-        "url": "https://codeberg.org/Stebalien/emacs-eat.git"
-      }
-    },
     "eglot-x": {
       "flake": false,
       "locked": {
@@ -130,22 +114,6 @@
       "original": {
         "owner": "numtide",
         "repo": "flake-utils",
-        "type": "github"
-      }
-    },
-    "ghostel": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1776962536,
-        "narHash": "sha256-zU/uAbCyTRcX0DBII4jiSDGWFHOXvG3mDARHbSIjf+I=",
-        "owner": "dakra",
-        "repo": "ghostel",
-        "rev": "d33052d6f779e9b2c2c64b11e4b9c11c19f0e706",
-        "type": "github"
-      },
-      "original": {
-        "owner": "dakra",
-        "repo": "ghostel",
         "type": "github"
       }
     },
@@ -297,13 +265,11 @@
       "inputs": {
         "blame-reveal": "blame-reveal",
         "consult-ripfd": "consult-ripfd",
-        "eat": "eat",
         "eglot-x": "eglot-x",
         "emacs-overlay": "emacs-overlay",
         "emacs-plus-patches": "emacs-plus-patches",
         "emt": "emt",
         "flake-utils": "flake-utils",
-        "ghostel": "ghostel",
         "image-slicing": "image-slicing",
         "kitty-graphics": "kitty-graphics",
         "leetcode-emacs": "leetcode-emacs",

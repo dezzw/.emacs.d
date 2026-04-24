@@ -193,7 +193,8 @@
              "\\*Telegram Message Info\\*$"
              "\\*Telegram Sticker Set\\*$"
              "\\*Telegram Notification Messages\\*$")
-           popper-display-function #'+popper-display-child-frame)
+           ;; popper-display-function #'+popper-display-child-frame
+           )
   (setq popper-display-control t)
   (:with-hook after-init-hook
     (:hook popper-mode)

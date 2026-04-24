@@ -69,14 +69,22 @@
 
 (setup blame-reveal
   (:set blame-reveal-recent-days-limit 'auto
-        blame-reveal-gradient-quality 'auto)
-  ;; Display
-  (:set blame-reveal-display-layout 'compact
+        blame-reveal-gradient-quality 'auto
         blame-reveal-show-uncommitted-fringe nil)
-  ;; Performance
   (:set blame-reveal-async-blame 'auto)
-  ;; Enable recursive blame
-  (require 'blame-reveal-recursive))
+  (:when-loaded
+    (require 'blame-reveal-recursive)
+
+    (defun dw/blame-reveal--abbreviate-author (author)
+      "Abbreviate AUTHOR name."
+      (cond
+       ((string-match "\\(.\\).*?, *\\(.*\\)" author)
+        (replace-match "\\2 \\1" nil nil author))
+       ((string-match "\\(.*?\\)[. ]+\\(.\\).*" author)
+        (replace-match "\\1 \\2" nil nil author))
+       (t author)))
+    (advice-add 'blame-reveal--abbreviate-author :override #'dw/blame-reveal--abbreviate-author)
+    ))
 
 (provide 'init-vc)
 ;;; init-vc.el ends here

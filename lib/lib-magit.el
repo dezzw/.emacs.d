@@ -155,7 +155,7 @@ It is assumed that the author has only one or two names."
           (cond
            ;; Last, First -> First L
            ((string-match-p "," author)
-            (replace-regexp-in-string "\\(.*?\\), *\\(.\\).*" "\\2 \\1" author))
+            (replace-regexp-in-string "\\(.\\).*?, *\\(.*\\)" "\\2 \\1" author))
            ;; First.Last or First Last -> First L
            ((string-match-p "[. ]" author)
             (replace-regexp-in-string "\\`\\([^ .]+\\)\\(?:[. ]+\\)\\(.\\).*\\'" "\\1 \\2" author))
@@ -164,15 +164,5 @@ It is assumed that the author has only one or two names."
     (setf (nth 1 (car args)) author-abbr))
   (car args))
 
-;; replace this function with forge-browse
-;; (defun +git-link-interactive ()
-;;   "Open the Git repository homepage interactively.
-
-;; This function sets the default directory to the root of the current project
-;; and then prompts the user to generate a URL for the project's repository
-;; using `git-link-homepage`, which is opened in the user's web browser."
-;;   (interactive)
-;;   (let ((default-directory (project-root (project-current t))))
-;;     (browse-url (call-interactively #'git-link-homepage))))
 (provide 'lib-magit)
 ;;; lib-magit.el ends here

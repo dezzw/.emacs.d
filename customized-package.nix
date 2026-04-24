@@ -20,9 +20,6 @@ let
       input = "consult-ripfd";
       packageRequires = [ "consult" ];
     };
-    ghostel = {
-      input = "ghostel";
-    };
     kitty-graphics = {
       input = "kitty-graphics";
     };
@@ -90,22 +87,6 @@ let
         src = srcOf "leetcode-emacs";
       };
 
-    eat =
-      let
-        version = versionOf "eat";
-      in
-      epkgs.melpaBuild {
-        pname = "eat";
-        inherit version;
-        src = srcOf "eat";
-        packageRequires = [ epkgs.compat ];
-        recipe = pkgs.writeText "eat-recipe" ''
-          (eat :fetcher git
-               :url "https://codeberg.org/Stebalien/emacs-eat.git"
-               :files ("*.el"))
-        '';
-      };
-
     telega =
       let
         version = versionOf "telega";
@@ -155,6 +136,7 @@ let
       pdf-tools
       treesit-grammars-with-clojure-override
       vterm
+      ghostel
     ];
 
   # UI enhancements on top of built-in frame/window/minibuffer behavior.
@@ -284,7 +266,6 @@ let
       jenkins
       keyfreq
       language-detection
-      plz
       tabspaces
     ];
 in

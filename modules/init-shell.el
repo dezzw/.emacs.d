@@ -31,8 +31,8 @@
 (setup vterm
   (:defer (:require vterm))
   (:autoload project-vterm)
-  (:option vterm-shell "zsh"
-           vterm-always-compile-module t)
+  (setopt vterm-shell "zsh"
+          vterm-always-compile-module t)
   (:also-load lib-vterm)
   (:with-map vterm-mode-map
     (:bind "C-y" vterm-yank
@@ -41,8 +41,11 @@
 
 (setup ghostel
   (:autoload ghostel ghostel-other ghostel-download-module)
-  (:option ghostel-shell "zsh"
-           ghostel-module-auto-install 'download))
+  (setopt ghostel-shell "zsh")
+  (:when-loaded
+    (:also-load 'ghostel-eshell)
+    (add-hook 'eshell-load-hook #'ghostel-eshell-visual-command-mode)
+    ))
 
 (unless (display-graphic-p)
   (setup kitty-graphics

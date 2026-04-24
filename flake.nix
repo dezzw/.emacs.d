@@ -23,14 +23,6 @@
       flake = false;
     };
     # Custom Emacs packages from GitHub
-    eat = {
-      url = "git+https://codeberg.org/Stebalien/emacs-eat.git";
-      flake = false;
-    };
-    ghostel = {
-      url = "github:dakra/ghostel";
-      flake = false;
-    };
     kitty-graphics = {
       url = "github:cashmeredev/kitty-graphics.el";
       flake = false;
@@ -158,11 +150,13 @@
         # ============================================================================
 
         # IGC base: Use PGTK on Linux, otherwise regular IGC. Remove MPS (now built into emacs repo)
-        emacs-igc-base = (pkgs.emacs-igc.overrideAttrs (old: {
-          buildInputs = builtins.filter (p: !(p ? pname && p.pname == "mps")) (old.buildInputs or [ ]);
-        })).overrideAttrs (old: {
-          patches = (old.patches or [ ]) ++ darwinBasePatches;
-        });
+        emacs-igc-base =
+          (pkgs.emacs-igc.overrideAttrs (old: {
+            buildInputs = builtins.filter (p: !(p ? pname && p.pname == "mps")) (old.buildInputs or [ ]);
+          })).overrideAttrs
+            (old: {
+              patches = (old.patches or [ ]) ++ darwinBasePatches;
+            });
 
         # GIT base: Always use regular emacs-git from emacs-overlay
         emacs-git-base = pkgs.emacs-git.overrideAttrs (old: {
@@ -350,11 +344,10 @@
         apps.demacs-igc-patched = mkApp "igc-patched" packages.demacs-igc-patched;
         apps.demacs-git = mkApp "git" packages.demacs-git;
         apps.demacs-git-patched = mkApp "git-patched" packages.demacs-git-patched;
-        apps.export-demacs-package-manifest =
-          flake-utils.lib.mkApp {
-            drv = mkExportManifestApp packages.demacs-package-manifest;
-            name = "export-demacs-package-manifest";
-          };
+        apps.export-demacs-package-manifest = flake-utils.lib.mkApp {
+          drv = mkExportManifestApp packages.demacs-package-manifest;
+          name = "export-demacs-package-manifest";
+        };
         apps.demacs = apps.demacs-git;
         apps.default = apps.demacs;
       }

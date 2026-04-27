@@ -54,11 +54,11 @@
         "nixpkgs-stable": "nixpkgs-stable"
       },
       "locked": {
-        "lastModified": 1777138175,
-        "narHash": "sha256-UrexPU1xQ/qB0qCjuTeljQOCDmjeCNuipZMBv3FyoJM=",
+        "lastModified": 1777224565,
+        "narHash": "sha256-Yvo1PAgHcTMRC6JH6vTFgd1DEmuqQ5BHwvlhHL1l9L0=",
         "owner": "nix-community",
         "repo": "emacs-overlay",
-        "rev": "d7d0c87d15148472eef847dfe298095ef4298dc1",
+        "rev": "c6c9ea2df2df04e1e723c634078ee91d4cff9865",
         "type": "github"
       },
       "original": {
@@ -70,11 +70,11 @@
     "emacs-plus-patches": {
       "flake": false,
       "locked": {
-        "lastModified": 1777091993,
-        "narHash": "sha256-djHkTt+1HFGM0p0FujTEPrD13QJUmCj4sU8i2H5lpz4=",
+        "lastModified": 1777178657,
+        "narHash": "sha256-OOk88DPBHBw4WO7PG9os9NXfDUiT7zvIMAPsCsXPax8=",
         "owner": "d12frosted",
         "repo": "homebrew-emacs-plus",
-        "rev": "83503d459ffb6c018e8f33172f498fd9c9d9f262",
+        "rev": "bf3404f1574954292c866f2d3c9d1dcfc71bacc8",
         "type": "github"
       },
       "original": {
@@ -136,11 +136,11 @@
     "kitty-graphics": {
       "flake": false,
       "locked": {
-        "lastModified": 1775267872,
-        "narHash": "sha256-YsC68WiGhWq0R/Rt2TVnQwn8LuIeel4GIXARMU/0U/c=",
+        "lastModified": 1777237419,
+        "narHash": "sha256-FFjslhiskQ//vbWrZ4Mf0D5wD/LYjHTJ2slB1T3pXVw=",
         "owner": "cashmeredev",
         "repo": "kitty-graphics.el",
-        "rev": "7e4faffa32d6f0ef885fceb0a9ecd93b3fe5c43f",
+        "rev": "2a9c024f9e3c9fbd0835fe0bd07dc1ebd2107a6e",
         "type": "github"
       },
       "original": {

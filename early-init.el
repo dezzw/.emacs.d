@@ -48,7 +48,7 @@
 ;; icon fonts on Windows. This will increase memory usage.
 (setq inhibit-compacting-font-caches t)
 
-;; Disable package.el in favor of straight.el
+;; Disable package.el
 (setq package-enable-at-startup nil
       package-quickstart nil
       package-archives nil)

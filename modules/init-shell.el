@@ -40,10 +40,11 @@
            "C-k" vterm-send-C-k-and-kill)))
 
 (setup ghostel
-  (:autoload ghostel ghostel-other ghostel-download-module)
-  (setopt ghostel-shell "zsh")
+  (:also-load ghostel-eshell)
+  (setopt ghostel-shell "zsh"
+          ghostel-module-auto-install 'nil
+          ghostel-tramp-shell-integration t)
   (:when-loaded
-    (:also-load 'ghostel-eshell)
     (add-hook 'eshell-load-hook #'ghostel-eshell-visual-command-mode)
     ))
 

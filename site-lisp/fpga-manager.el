@@ -124,6 +124,42 @@ If nil, will auto-detect based on system username."
   "Face for separators in FPGA manager."
   :group 'fpga-manager)
 
+(defface fpga-manager-highlight
+  '((t :inherit success))
+  "Face for FPGA row text under mouse."
+  :group 'fpga-manager)
+
+(defvar-local fpga-manager--current-row-overlay nil
+  "Overlay used to highlight the current FPGA row.")
+
+(defun fpga-manager--add-highlight-face-to-entry (entry)
+  "Return ENTRY with mouse hover face on each cell."
+  (let ((cols (copy-sequence (cadr entry))))
+    (dotimes (i (length cols))
+      (aset cols i
+            (propertize (format "%s" (aref cols i))
+                        'mouse-face 'fpga-manager-highlight)))
+    (list (car entry) cols)))
+
+(defun fpga-manager--highlight-current-row ()
+  "Highlight text on the current FPGA row."
+  (when (derived-mode-p 'fpga-manager-mode)
+    (unless fpga-manager--current-row-overlay
+      (setq fpga-manager--current-row-overlay
+            (make-overlay (point-min) (point-min)))
+      (overlay-put fpga-manager--current-row-overlay
+                   'face
+                   'fpga-manager-highlight)
+      (overlay-put fpga-manager--current-row-overlay
+                   'priority
+                   1000))
+
+    (if (fpga-manager--get-env-at-point)
+        (move-overlay fpga-manager--current-row-overlay
+                      (line-beginning-position)
+                      (line-end-position))
+      (delete-overlay fpga-manager--current-row-overlay))))
+
 ;;; Parsing Functions
 
 ;; Parse a single table row produced by linuxPC_Lock.py. The output is a
@@ -229,10 +265,11 @@ Returns a list with section headers and entries."
         (free '()))
     ;; Categorize entries into three buckets based on lock state and user.
     (dolist (entry entries)
-      (cond
-       ((fpga-manager--entry-mine-p entry) (push entry mine))
-       ((fpga-manager--entry-locked-p entry) (push entry in-use))
-       (t (push entry free))))
+      (let ((display-entry (fpga-manager--add-highlight-face-to-entry entry)))
+        (cond
+         ((fpga-manager--entry-mine-p entry) (push display-entry mine))
+         ((fpga-manager--entry-locked-p entry) (push display-entry in-use))
+         (t (push display-entry free)))))
     ;; Build result with sections in order: MY FPGAs, FREE, IN USE
     ;; We build backwards (last section first) since add-section prepends
     (fpga-manager--add-section
@@ -810,6 +847,10 @@ Section headers and separators are styled differently."
         tabulated-list-sort-key nil)
   (setq-local tabulated-list-printer #'fpga-manager--print-entry)
   (add-hook 'tabulated-list-revert-hook #'fpga-manager-refresh nil t)
+  (add-hook 'post-command-hook
+            #'fpga-manager--highlight-current-row
+            nil
+            t)
   (tabulated-list-init-header))
 
 ;;; Entry Point

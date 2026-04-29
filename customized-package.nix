@@ -76,6 +76,34 @@ let
     ) simpleCustomSpecs;
 
   mkSpecialCustomPackages = epkgs: {
+    ghostel = epkgs.ghostel.overrideAttrs (old: {
+      postPatch =
+        (old.postPatch or "")
+        + ''
+          substituteInPlace lisp/ghostel.el \
+            --replace-fail \
+              '(defun ghostel--package-directory ()' \
+              '(defun ghostel--module-storage-dir ()
+  "Return the directory used to persist the Ghostel native module."
+  (file-name-as-directory
+   (expand-file-name "ghostel" user-emacs-directory)))
+
+(defun ghostel--package-directory ()'
+
+          substituteInPlace lisp/ghostel.el \
+            --replace-fail \
+              '(let ((dest (expand-file-name' \
+              '(make-directory dir t)
+          (let ((dest (expand-file-name'
+
+          substituteInPlace lisp/ghostel.el \
+            --replace-fail \
+              '(let* ((dir (ghostel--resource-root))' \
+              '(let* ((dir (ghostel--module-storage-dir))'
+
+        '';
+    });
+
     leetcode-emacs =
       let
         version = versionOf "leetcode-emacs";
@@ -136,7 +164,6 @@ let
       pdf-tools
       treesit-grammars-with-clojure-override
       vterm
-      ghostel
     ];
 
   # UI enhancements on top of built-in frame/window/minibuffer behavior.

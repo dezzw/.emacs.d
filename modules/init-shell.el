@@ -44,8 +44,18 @@
   (setopt ghostel-shell "zsh"
           ghostel-module-auto-install 'nil
           ghostel-tramp-shell-integration t)
+  (defun dw/ghostel-tramp (host &optional user dir)
+    "Open Ghostel directly on HOST as USER using TRAMP."
+    (interactive
+     (list (read-string "Host: ")
+           (read-string "User: " "work")
+           (read-string "Remote dir: " "~/")))
+    (let ((default-directory
+           (format "/ssh:%s@%s:%s" user host (or dir "~/"))))
+      (ghostel)))
   (:when-loaded
     (add-hook 'eshell-load-hook #'ghostel-eshell-visual-command-mode)
+    (add-to-list 'ghostel-eval-cmds '("magit-status-setup-buffer" magit-status-setup-buffer))
     ))
 
 (unless (display-graphic-p)

@@ -3,8 +3,7 @@
 ;;; Code:
 
 (setup auth-source
-  (:option
-   auth-sources '(macos-keychain-generic macos-keychain-internet "~/.authinfo")))
+  (setopt auth-sources '("~/.authinfo" macos-keychain-generic macos-keychain-internet)))
 
 (provide 'init-auth)
 ;;; init-auth.el ends here

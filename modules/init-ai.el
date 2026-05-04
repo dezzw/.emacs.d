@@ -16,16 +16,25 @@
 (setup agent-shell
   (:global-bind "C-c a d" 'agent-shell-send-dwim)
   (:when-loaded
-    (:set agent-shell-show-usage-at-turn-end t
-          agent-shell-prefer-viewport-interaction t
-          agent-shell-session-strategy 'prompt
-          agent-shell-anthropic-claude-environment
-          (agent-shell-make-environment-variables :inherit-env t)
-          agent-shell-openai-codex-environment
-          (agent-shell-make-environment-variables :inherit-env t)
-          agent-shell-file-completion-enabled t)
+    (setopt agent-shell-show-usage-at-turn-end t
+            agent-shell-prefer-viewport-interaction t
+            agent-shell-session-strategy 'prompt
+            agent-shell-anthropic-claude-environment
+            (agent-shell-make-environment-variables :inherit-env t)
+            agent-shell-openai-codex-environment
+            (agent-shell-make-environment-variables :inherit-env t)
+            agent-shell-file-completion-enabled t)
     (setq agent-shell-preferred-agent-config
           (agent-shell-anthropic-make-claude-code-config))))
+
+
+(setup anvil
+  (unless (package-installed-p 'anvil)
+    (package-vc-install
+     '(anvil :url "https://github.com/zawatton/anvil.el.git")))
+  (:when-loaded
+    (anvil-enable)
+    (anvil-server-start)))
 
 (provide 'init-ai)
 ;;; init-ai.el ends here

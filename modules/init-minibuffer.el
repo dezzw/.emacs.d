@@ -59,13 +59,13 @@
            isearch-motion-changes-direction t))
 
 (setup doom-modeline
-  (:set doom-modeline-height 18
-        doom-modeline-buffer-file-name-style 'relative-to-project
-        doom-modeline-buffer-modification-icon t
-        doom-modeline-project-name t
-        doom-modeline-bar-width 4
-        doom-modeline-hud t
-        doom-modeline-hud-min-height 1)
+  (setopt doom-modeline-height 18
+          doom-modeline-buffer-file-name-style 'relative-to-project
+          doom-modeline-buffer-modification-icon t
+          doom-modeline-project-name t
+          doom-modeline-bar-width 4
+          doom-modeline-hud t
+          doom-modeline-hud-min-height 1)
   (:with-hook after-init-hook
     (:hook doom-modeline-mode))
   (:with-feature telega

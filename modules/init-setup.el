@@ -37,20 +37,6 @@ See `advice-add' for more details."
            (nreverse forms))))
   :documentation "Globally bind one or more KEY COMMAND pairs using `keymap-global-set'.")
 
-(setup-define :set
-  (setup-make-setter
-   (lambda (name)
-     `(funcall (or (get ',name 'custom-get)
-                   #'symbol-value)
-               ',name))
-   (lambda (name val)
-     `(progn
-        (custom-load-symbol ',name)
-        (funcall (or (get ',name 'custom-set) #'set-default)
-                 ',name ,val))))
-  :documentation "Set one or more customizable variables using `setopt'."
-  :debug '(sexp form)
-  :repeatable t)
 
 (setup-define :hooks
   (lambda (hook func)

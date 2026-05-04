@@ -90,12 +90,17 @@
       (quit-window nil xref-window))))
 
 (setup project
+  (setopt project-switch-commands
+          '((project-find-file "Find file")
+            (project-find-dir "Find directory")
+            (project-eshell "Eshell")
+            (magit-status "Magit" "m"))
+          project-vc-extra-root-markers
+          '("package.json" "deps.edn" "project.clj" "Package.swift" ".envrc" ".tags" ".project"))
   (:when-loaded
     (:global-bind "C-c p" (identity project-prefix-map))
     (:with-map project-prefix-map
-      (:bind "t" project-vterm))
-    (:set project-vc-extra-root-markers
-          '("package.json" "deps.edn" "project.clj" "Package.swift" ".envrc" ".tags" ".project"))))
+      (:bind "t" project-vterm))))
 
 (setup xref
   (:option xref-auto-jump-to-first-xref 'move)
@@ -195,10 +200,10 @@
 (setup flymake
   ;; When `flymake-no-changes-timeout' is nil, Eglot must handle
   ;; diagnostics refresh explicitly.
-  (:set flymake-no-changes-timeout nil
-        flymake-fringe-indicator-position 'right-fringe)
+  (setopt flymake-no-changes-timeout nil
+          flymake-fringe-indicator-position 'right-fringe)
   (when (version<= "31" emacs-version)
-    (:set flymake-show-diagnostics-at-end-of-line t)))
+    (setopt flymake-show-diagnostics-at-end-of-line t)))
 
 (setup eldoc-box
   (:hooks eglot-managed-mode-hook eldoc-box-hover-mode))
@@ -208,12 +213,12 @@
     (:hook eglot-ensure))
   (:when-loaded
     (:also-load lib-eglot)
-    (:set eglot-code-action-indications '(eldoc-hint)
-          eglot-max-file-watches 30000
-          eglot-events-buffer-config '(:size 0 :format full))
-    ;; Ignore server formatting, format with Apheleia instead.
-    (:set eglot-ignored-server-capabilities '(:documentFormattingProvider
-                                              :documentRangeFormattingProvider))
+    (setopt eglot-code-action-indications '(eldoc-hint)
+            eglot-max-file-watches 30000
+            eglot-events-buffer-config '(:size 0 :format full)
+            ;; Ignore server formatting, format with Apheleia instead.
+            eglot-ignored-server-capabilities '(:documentFormattingProvider
+                                                :documentRangeFormattingProvider))
     (add-to-list 'eglot-server-programs '(python-ts-mode . ("rass" "python")))
     (add-to-list 'eglot-server-programs `((vue-mode vue-ts-mode typescript-ts-mode) . ("rass" "vuetail")))
     (add-to-list 'eglot-server-programs '(my-html-mode . ("vscode-html-language-server" "--stdio")))
@@ -243,8 +248,8 @@
                 "C-c c u" 'citre-update-this-tags-file)
   (:when-loaded
     (:also-load citre-config)
-    (:set citre-auto-enable-citre-mode-backends '(eglot tags global)
-          citre-completion-backends '(eglot tags global))))
+    (setopt citre-auto-enable-citre-mode-backends '(eglot tags global)
+            citre-completion-backends '(eglot tags global))))
 
 (setup topsy
   (:hook-into prog-mode))

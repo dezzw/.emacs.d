@@ -68,10 +68,10 @@
           dired-mode-hook diff-hl-dired-mode))
 
 (setup blame-reveal
-  (:set blame-reveal-recent-days-limit 'auto
-        blame-reveal-gradient-quality 'auto
-        blame-reveal-show-uncommitted-fringe nil)
-  (:set blame-reveal-async-blame 'auto)
+  (setopt blame-reveal-recent-days-limit 'auto
+          blame-reveal-gradient-quality 'auto
+          blame-reveal-show-uncommitted-fringe nil
+          blame-reveal-async-blame 'auto)
   (:when-loaded
     (require 'blame-reveal-recursive)
 

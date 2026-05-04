@@ -222,25 +222,26 @@
   (when (fboundp 'tab-bar--update-tab-bar-lines)
     (tab-bar--update-tab-bar-lines)))
 (setup tab-line
-  (:set tab-line-new-button-show nil
-        tab-line-close-button-show nil))
+  (setopt tab-line-new-button-show nil
+          tab-line-close-button-show nil))
 
 (setup tabspaces
-  (:also-load lib-tabspaces)
-  (setopt tabspaces-use-filtered-buffers-as-default t
-          tabspaces-default-tab "Default"
-          tabspaces-remove-to-default t
-          tabspaces-include-buffers '("*scratch*")
-          tabspaces-initialize-project-with-todo t
-          tabspaces-todo-file-name "project-todo.org"
-          tabspaces-session t
-          tabspaces-session-auto-restore nil
-          tabspaces-fully-resolve-paths t
-          tabspaces-exclude-buffers '("*Messages*" "*Compile-Log*")
-          tab-bar-new-tab-choice "*scratch*")
-  (tabspaces-mode)
-  (:after consult
-    (+tabspaces-consult-setup)))
+  (:after project
+    (:also-load lib-tabspaces)
+    (setopt tabspaces-use-filtered-buffers-as-default t
+            tabspaces-default-tab "Default"
+            tabspaces-remove-to-default t
+            tabspaces-include-buffers '("*scratch*")
+            tabspaces-initialize-project-with-todo t
+            tabspaces-todo-file-name "project-todo.org"
+            tabspaces-session t
+            tabspaces-session-auto-restore nil
+            tabspaces-fully-resolve-paths t
+            tabspaces-exclude-buffers '("*Messages*" "*Compile-Log*")
+            tab-bar-new-tab-choice "*scratch*")
+    (tabspaces-mode)
+    (:after consult
+      (+tabspaces-consult-setup))))
 
 (setup which-key
   (:with-hook after-init-hook

@@ -10,7 +10,7 @@
              eshell-highlight-prompt nil
              eshell-banner-message ""
              eshell-cmpl-ignore-case t)
-    (:with-map eshell-mode-map
+    (:with-map eshell-command-mode-map
       (:bind "C-l"  +eshell-clear
              "<tab>" completion-at-point
              "C-c l" +consult-eshell-history))
@@ -19,10 +19,7 @@
                (+set-eshell-aliases +eshell-aliases)
                (display-line-numbers-mode -1)
                (eshell-cmpl-mode -1)))
-      (:hooks eshell-directory-change-hook +sync-dir-in-buffer-name)))
-  (:with-hook eshell-load-hook
-    (:hook eat-eshell-mode)
-    (:hook eat-eshell-visual-command-mode)))
+      (:hooks eshell-directory-change-hook +sync-dir-in-buffer-name))))
 
 (setup eshell-syntax-highlighting
   (:after eshell

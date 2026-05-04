@@ -94,7 +94,7 @@
           '((project-find-file "Find file")
             (project-find-dir "Find directory")
             (project-eshell "Eshell")
-            (magit-status "Magit" "m"))
+            (magit-project-status "Magit" ?\m))
           project-vc-extra-root-markers
           '("package.json" "deps.edn" "project.clj" "Package.swift" ".envrc" ".tags" ".project"))
   (:when-loaded

@@ -1,6 +1,7 @@
 {
-  pkgs,
   inputs,
+  lib,
+  pkgs,
   treesit-grammars-with-clojure-override,
   tdlib-head,
 }:
@@ -132,12 +133,14 @@ let
 
   # Native dependencies or packages with non-trivial runtime/build integration.
   nativePackages =
-    epkgs: with epkgs; [
+    epkgs:
+    with epkgs;
+    [
       pdf-tools
       treesit-grammars-with-clojure-override
       vterm
-      ghostel
-    ];
+    ]
+    ++ lib.optionals pkgs.stdenv.isLinux [ ghostel ];
 
   # UI enhancements on top of built-in frame/window/minibuffer behavior.
   uiPackages =

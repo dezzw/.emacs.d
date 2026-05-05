@@ -221,6 +221,7 @@
         packageModule = import ./customized-package.nix {
           inherit
             inputs
+            lib
             pkgs
             tdlib-head
             treesit-grammars-with-clojure-override

@@ -53,6 +53,8 @@
       package-quickstart nil
       package-archives nil)
 
+(autoload 'transient-define-prefix "transient")
+
 (package-activate-all)
 
 (unless (daemonp)

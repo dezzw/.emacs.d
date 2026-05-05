@@ -112,7 +112,8 @@
 (require 'init-bitstream)
 (require 'init-local)
 
-(server-start)
+(unless (daemonp)
+  (server-start))
 
 (provide 'init)
 ;; Local Variables:

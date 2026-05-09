@@ -54,11 +54,11 @@
         "nixpkgs-stable": "nixpkgs-stable"
       },
       "locked": {
-        "lastModified": 1778149596,
-        "narHash": "sha256-49vva6E91dm8v+9092K4ph/VL7726RQ3P06b/57nveI=",
+        "lastModified": 1778263701,
+        "narHash": "sha256-xZKbShdjwFvABcPn7hrTQnXPRItbT9cmQXhmODsuxDo=",
         "owner": "nix-community",
         "repo": "emacs-overlay",
-        "rev": "5bf130789d22455c6adec4de06074ebf2af50a63",
+        "rev": "5dab538fce92fd1fe70acecf34496fa85f81c1e9",
         "type": "github"
       },
       "original": {
@@ -350,11 +350,11 @@
     "telega": {
       "flake": false,
       "locked": {
-        "lastModified": 1777256311,
-        "narHash": "sha256-JXc8rq0R2oYw5LW4a6tPQctRHxainaOg6EQTNBausS8=",
+        "lastModified": 1778209482,
+        "narHash": "sha256-ksDGVubqWa1pRdtG9cIPrSBW0ENHyXUL57bH4DBy1tU=",
         "owner": "LuciusChen",
         "repo": "telega.el",
-        "rev": "a9355c2ffd9991651199985425eccade636e73b7",
+        "rev": "437752bbedc1f8ea380c3f509c10dbe51036deec",
         "type": "github"
       },
       "original": {

@@ -57,19 +57,18 @@
     (:hook-into window-setup-hook)))
 
 (setup panel
-  (:if-graphic
-    (:require panel)
-    (:option panel-latitude 43.45193874534566
-             panel-longitude -80.49129101085033
-             panel-path-max-length 35
-             panel-min-left-padding 10
-             panel-image-file (concat user-emacs-directory "assets/bitmap.png")
-             panel-image-width 400
-             panel-image-height 169
-             panel-title "The best way to predict the future is to invent it.")
-    (:when-loaded
-      (:face panel-title-face ((t (:inherit font-lock-constant-face :height 1.2 :italic t :family "Operator Mono"))))
-      (panel-create-hook))))
+  (:require panel)
+  (:option panel-latitude 43.45193874534566
+           panel-longitude -80.49129101085033
+           panel-path-max-length 35
+           panel-min-left-padding 10
+           panel-image-file (concat user-emacs-directory "assets/bitmap.png")
+           panel-image-width 400
+           panel-image-height 169
+           panel-title "The best way to predict the future is to invent it.")
+  (:when-loaded
+    (:face panel-title-face ((t (:inherit font-lock-constant-face :height 1.2 :italic t :family "Operator Mono"))))
+    (panel-create-hook)))
 
 (setup faces
   (:if-graphic

@@ -36,7 +36,7 @@
            "M-y" vterm-yank-pop
            "C-k" vterm-send-C-k-and-kill)))
 
-(unless *is-linux*
+(unless *is-mac*
   (setup ghostel
     (:also-load ghostel-eshell)
     (setopt ghostel-shell "zsh"
@@ -56,9 +56,10 @@
       (add-to-list 'ghostel-eval-cmds '("magit-status-setup-buffer" magit-status-setup-buffer))
       )))
 
-(unless (display-graphic-p)
-  (setup kitty-graphics
-    (:hook-into after-init)))
+(if (and (not (display-graphic-p))
+         (eq (daemonp) "tui"))
+    (setup kitty-graphics
+      (:hook-into after-init)))
 
 (provide 'init-shell)
 ;;; init-shell.el ends here

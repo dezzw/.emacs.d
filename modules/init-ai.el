@@ -23,6 +23,8 @@
             (agent-shell-make-environment-variables :inherit-env t)
             agent-shell-openai-codex-environment
             (agent-shell-make-environment-variables :inherit-env t)
+            agent-shell-openai-authentication
+            (agent-shell-openai-make-authentication :api-key (lambda () (getenv "OPENAI_API_KEY")))
             agent-shell-file-completion-enabled t)
     (setq agent-shell-preferred-agent-config
           (agent-shell-anthropic-make-claude-code-config))))

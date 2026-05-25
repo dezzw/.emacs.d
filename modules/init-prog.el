@@ -209,7 +209,7 @@
   (:hooks eglot-managed-mode-hook eldoc-box-hover-mode))
 
 (setup eglot
-  (:with-mode (python-ts-mode js-ts-mode tsx-ts-mode vue-mode latex-mode)
+  (:with-mode (python-ts-mode js-ts-mode tsx-ts-mode typescript-ts-mode vue-mode latex-mode)
     (:hook eglot-ensure))
   (:when-loaded
     (:also-load lib-eglot)
@@ -220,9 +220,9 @@
             eglot-ignored-server-capabilities '(:documentFormattingProvider
                                                 :documentRangeFormattingProvider))
     (add-to-list 'eglot-server-programs '(python-ts-mode . ("rass" "python")))
-    (add-to-list 'eglot-server-programs `((vue-mode vue-ts-mode typescript-ts-mode) . ("rass" "vuetail")))
+    (add-to-list 'eglot-server-programs `((vue-mode vue-ts-mode) . ("rass" "vuetail")))
+    (add-to-list 'eglot-server-programs '((js-ts-mode typescript-ts-mode tsx-ts-mode) . ("rass" "tslint")))
     (add-to-list 'eglot-server-programs '(my-html-mode . ("vscode-html-language-server" "--stdio")))
-    (add-to-list 'eglot-server-programs '(js-mode . ("typescript-language-server" "--stdio")))
     (advice-add 'eglot-completion-at-point :around #'cape-wrap-buster)
     (:with-hook eglot-managed-mode-hook
       (:hook (lambda ()

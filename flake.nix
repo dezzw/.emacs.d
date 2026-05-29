@@ -128,22 +128,20 @@
 
         # NS startup fix needed even for the unpatched Darwin base builds.
         darwinBasePatches = lib.optionals pkgs.stdenv.isDarwin [
-          ./patches/ns-init-colors-after-init-callproc.patch
         ];
 
         # Custom patches list (can be enabled/disabled as needed)
-        customPatches =
-          lib.optionals pkgs.stdenv.isDarwin [
-          ]
-          ++ lib.optionals pkgs.stdenv.isDarwin [
-            # Add setting to enable rounded window with no decoration
-            "${inputs.emacs-plus-patches}/patches/emacs-31/round-undecorated-frame.patch"
-            # Make Emacs aware of OS-level light/dark mode
-            "${inputs.emacs-plus-patches}/patches/emacs-31/system-appearance.patch"
-            # Local patches for macOS NS build tweaks
-            ./patches/ns-alpha-background.patch
-            ./patches/ns-mac-input-source.patch
-          ];
+        customPatches = [
+        ]
+        ++ lib.optionals pkgs.stdenv.isDarwin [
+          # Add setting to enable rounded window with no decoration
+          "${inputs.emacs-plus-patches}/patches/emacs-31/round-undecorated-frame.patch"
+          # Make Emacs aware of OS-level light/dark mode
+          "${inputs.emacs-plus-patches}/patches/emacs-31/system-appearance.patch"
+          # Local patches for macOS NS build tweaks
+          ./patches/ns-alpha-background.patch
+          ./patches/ns-mac-input-source.patch
+        ];
 
         # ============================================================================
         # Emacs Base Versions

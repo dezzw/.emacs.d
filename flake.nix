@@ -138,9 +138,6 @@
           "${inputs.emacs-plus-patches}/patches/emacs-31/round-undecorated-frame.patch"
           # Make Emacs aware of OS-level light/dark mode
           "${inputs.emacs-plus-patches}/patches/emacs-31/system-appearance.patch"
-          # Local patches for macOS NS build tweaks
-          ./patches/ns-alpha-background.patch
-          ./patches/ns-mac-input-source.patch
         ];
 
         # ============================================================================

@@ -163,7 +163,7 @@
 (push '(vertical-scroll-bars) default-frame-alist)
 (push '(horizontal-scroll-bars) default-frame-alist)
 (push '(undecorated-round . t) default-frame-alist)
-(push '(fullscreen . maximized) default-frame-alist)
+(push '(fullscreen . fullscreen) default-frame-alist)
 
 ;; (setq initial-frame-alist '((width . 100) (height . 40)))
 

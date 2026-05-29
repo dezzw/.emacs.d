@@ -32,8 +32,8 @@
 
 (setup ace-window
   (:global-bind "C-x o" 'ace-window)
-  (:option aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l)
-           aw-scope 'frame))
+  (setopt aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l)
+          aw-scope 'frame))
 
 ;; Default text scaling only makes sense on graphical frames.
 (setup default-text-scale
@@ -51,21 +51,21 @@
 
 (setup window-divider
   (:if-graphic
-    (:option window-divider-default-right-width 1
-             window-divider-default-bottom-width 0
-             window-divider-default-places t)
+    (setopt window-divider-default-places 'right-only
+            window-divider-default-right-width 1)
     (:hook-into window-setup-hook)))
 
 (setup panel
   (:require panel)
-  (:option panel-latitude 43.45193874534566
-           panel-longitude -80.49129101085033
-           panel-path-max-length 35
-           panel-min-left-padding 10
-           panel-image-file (concat user-emacs-directory "assets/bitmap.png")
-           panel-image-width 400
-           panel-image-height 169
-           panel-title "The best way to predict the future is to invent it.")
+  (setopt
+   ;; panel-latitude 43.45193874534566
+   ;; panel-longitude -80.49129101085033
+   panel-path-max-length 35
+   panel-min-left-padding 10
+   panel-image-file (concat user-emacs-directory "assets/bitmap.png")
+   panel-image-width 400
+   panel-image-height 169
+   panel-title "The best way to predict the future is to invent it.")
   (:when-loaded
     (:face panel-title-face ((t (:inherit font-lock-constant-face :height 1.2 :italic t :family "Operator Mono"))))
     (panel-create-hook)))
@@ -90,11 +90,11 @@
     (:also-load lib-appearance)
     ;; Don't prompt to confirm theme safety. This avoids problems with
     ;; first-time startup on Emacs > 26.3.
-    (:option custom-safe-themes t
-             ;; If you don't customize it, this is the theme you get.
-             custom-enabled-themes '(rose-pine-night)
-             light-theme 'rose-pine-day
-             dark-theme 'rose-pine-night)
+    (setopt custom-safe-themes t
+            ;; If you don't customize it, this is the theme you get.
+            custom-enabled-themes '(rose-pine-night)
+            light-theme 'rose-pine-day
+            dark-theme 'rose-pine-night)
 
     (:if-graphic
       (:global-bind "C-M-8" (lambda () (interactive) (+adjust-opacity nil -2))
@@ -112,26 +112,26 @@
     (:with-hook after-init-hook (:hook reapply-themes))))
 
 (setup hl-line
-  (:option hl-line-range-function
-           (lambda () (cons (line-end-position)
-                            (line-beginning-position 2))))
+  (setopt hl-line-range-function
+          (lambda () (cons (line-end-position)
+                           (line-beginning-position 2))))
   (global-hl-line-mode))
 
 (setup paren
   (:face show-paren-match ((t (:foreground "SpringGreen3" :underline t :weight bold))))
   (:when-loaded
-    (:option show-paren-when-point-inside-paren t
-             show-paren-when-point-in-periphery t
-             show-paren-context-when-offscreen t
-             show-paren-delay 0.2
-             blink-matching-paren-highlight-offscreen t)))
+    (setopt show-paren-when-point-inside-paren t
+            show-paren-when-point-in-periphery t
+            show-paren-context-when-offscreen t
+            show-paren-delay 0.2
+            blink-matching-paren-highlight-offscreen t)))
 
 (setup highlight-parentheses
   (:require highlight-parentheses)
   (:when-loaded
-    (:option highlight-parentheses-colors '("firebrick1" "firebrick3" "orange1" "orange3")
-             highlight-parentheses-attributes '((:underline t) (:underline t) (:underline t))
-             highlight-parentheses-delay 0.2))
+    (setopt highlight-parentheses-colors '("firebrick1" "firebrick3" "orange1" "orange3")
+            highlight-parentheses-attributes '((:underline t) (:underline t) (:underline t))
+            highlight-parentheses-delay 0.2))
   (:hooks minibuffer-setup-hook highlight-parentheses-minibuffer-setup)
   (:hook-into prog-mode))
 
@@ -157,43 +157,43 @@
                 "C-c w <up>" '+popper-move-floating-popup-up
                 "C-c w <down>" '+popper-move-floating-popup-down
                 "C-c w r" '+popper-center-floating-popup)
-  (:option popper-window-height (lambda (win)
-                                  (fit-window-to-buffer
-                                   win
-                                   (max 15 (floor (frame-height) 3))
-                                   15))
-           popper-reference-buffers
-           '(;; Shell/build output
-             "\\*Messages\\*"
-             "Output\\*$"
-             "\\*Async Shell Command\\*"
-             help-mode
-             compilation-mode
-             ;; Help and navigation
-             "\\*Help\\*$"
-             "\\*xref\\*$"
-             ;; AI/Chat
-             "\\*chatgpt\\*$"
-             ;; Terminal emulators
-             "\\*vterm\\*$"
-             "\\*.*-vterm\\*$"
-             "\\*ghostel\\*$"
-             "\\*.*-ghostel\\*$"
-             "\\*eat\\*$"
-             "\\*eshell\\*$"
-             "\\*.*-eshell\\*$"
-             ;; Org mode
-             "\\*Org Select\\*$"
-             ;; Verb/restclient HTTP responses
-             "\\*HTTP Response.*\\*$"
-             ;; Telegram buffers
-             "\\*Telega User\\*$"
-             "\\*Telegram Chat Info\\*$"
-             "\\*Telegram Message Info\\*$"
-             "\\*Telegram Sticker Set\\*$"
-             "\\*Telegram Notification Messages\\*$")
-           ;; popper-display-function #'+popper-display-child-frame
-           )
+  (setopt popper-window-height (lambda (win)
+                                 (fit-window-to-buffer
+                                  win
+                                  (max 15 (floor (frame-height) 3))
+                                  15))
+          popper-reference-buffers
+          '(;; Shell/build output
+            "\\*Messages\\*"
+            "Output\\*$"
+            "\\*Async Shell Command\\*"
+            help-mode
+            compilation-mode
+            ;; Help and navigation
+            "\\*Help\\*$"
+            "\\*xref\\*$"
+            ;; AI/Chat
+            "\\*chatgpt\\*$"
+            ;; Terminal emulators
+            "\\*vterm\\*$"
+            "\\*.*-vterm\\*$"
+            "\\*ghostel\\*$"
+            "\\*.*-ghostel\\*$"
+            "\\*eat\\*$"
+            "\\*eshell\\*$"
+            "\\*.*-eshell\\*$"
+            ;; Org mode
+            "\\*Org Select\\*$"
+            ;; Verb/restclient HTTP responses
+            "\\*HTTP Response.*\\*$"
+            ;; Telegram buffers
+            "\\*Telega User\\*$"
+            "\\*Telegram Chat Info\\*$"
+            "\\*Telegram Message Info\\*$"
+            "\\*Telegram Sticker Set\\*$"
+            "\\*Telegram Notification Messages\\*$")
+          ;; popper-display-function #'+popper-display-child-frame
+          )
   (setq popper-display-control t)
   (:with-hook after-init-hook
     (:hook popper-mode)
@@ -201,23 +201,23 @@
   (advice-add #'keyboard-quit :before #'+popper-close-window-hack))
 
 (setup tab-bar
-  (:option tab-bar-separator ""
-           tab-bar-close-button-show nil
-           tab-bar-new-button-show nil
-           tab-bar-new-tab-to 'rightmost
-           tab-bar-tab-hints t
-           tab-bar-show 1
-           tab-bar-new-tab-choice "*scratch*"
-           tab-bar-select-tab-modifiers '(super)
-           tab-bar-tab-name-truncated-max 20
-           tab-bar-auto-width nil
-           ;; Add spaces for tab-name
-           tab-bar-tab-name-function '+tab-bar-tab-name-function
-           tab-bar-tab-name-format-function '+tab-bar-tab-name-format-function
-           tab-bar-format '(tab-bar-format-tabs
-                            tab-bar-format-add-tab
-                            tab-bar-format-align-right))
   (:also-load lib-tabbar)
+  (setopt tab-bar-separator ""
+          tab-bar-close-button-show nil
+          tab-bar-new-button-show nil
+          tab-bar-new-tab-to 'rightmost
+          tab-bar-tab-hints t
+          tab-bar-show 1
+          tab-bar-new-tab-choice "*scratch*"
+          tab-bar-select-tab-modifiers '(super)
+          tab-bar-tab-name-truncated-max 20
+          tab-bar-auto-width nil
+          ;; Add spaces for tab-name
+          tab-bar-tab-name-function '+tab-bar-tab-name-function
+          tab-bar-tab-name-format-function '+tab-bar-tab-name-format-function
+          tab-bar-format '(tab-bar-format-tabs
+                           tab-bar-format-add-tab
+                           tab-bar-format-align-right))
   (when (fboundp 'tab-bar--update-tab-bar-lines)
     (tab-bar--update-tab-bar-lines)))
 (setup tab-line

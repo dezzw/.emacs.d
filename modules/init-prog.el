@@ -34,7 +34,8 @@
   (:with-mode rust-ts-mode (:match-file "*.rs"))
   (:with-mode go-ts-mode (:match-file "*.go"))
   (:with-mode markdown-ts-mode (:match-file "*.md"))
-  (:with-mode basilisp-ts-mode (:match-file "*.lpy")))
+  (:with-mode basilisp-ts-mode (:match-file "*.lpy"))
+  (:with-mode clojure-ts-mode (:match-file "*.bb")))
 
 (setup display-fill-column-indicator (:hook-into prog-mode))
 (setup display-line-numbers (:hook-into prog-mode))

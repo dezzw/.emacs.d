@@ -47,6 +47,7 @@
                                 (highlight
                                  (highlight-face . magit-blame-highlight))))
   (:advice magit-status :around #'magit-fullscreen)
+  (:advice magit-project-status :around #'magit-fullscreen)
   (:advice magit-mode-quit-window :after #'magit-restore-screen)
   ;; kill 因为 blob-next 和 blob-previous 产生的 buffer
   (:advice magit-blob-next :around #'kill-all-blob-next-after-quit)

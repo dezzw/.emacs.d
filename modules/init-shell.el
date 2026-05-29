@@ -40,7 +40,7 @@
   (setup ghostel
     (:also-load ghostel-eshell)
     (setopt ghostel-shell "zsh"
-            ghostel-module-auto-install 'nil
+            ghostel-module-directory user-emacs-directory
             ghostel-tramp-shell-integration t)
     (:hooks eshell-load-hook ghostel-eshell-visual-command-mode)
     (defun dw/ghostel-tramp (host &optional user dir)

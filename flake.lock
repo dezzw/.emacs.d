@@ -54,11 +54,11 @@
         "nixpkgs-stable": "nixpkgs-stable"
       },
       "locked": {
-        "lastModified": 1781121682,
-        "narHash": "sha256-2z+teE5nDe7H7jrrY9rkphVxhzuHjaUiq7mFvaE26MI=",
+        "lastModified": 1781231286,
+        "narHash": "sha256-WWuAI0OsAebBtBSblLcpF04PGvzsjbwFSj/gVb4FRYU=",
         "owner": "dezzw",
         "repo": "emacs-overlay",
-        "rev": "e85cf421eb8eee8c3c41dbb5e9a294e098ba47a9",
+        "rev": "77bc832af065d8b0781637aa1d8c42e43c055712",
         "type": "github"
       },
       "original": {
@@ -136,11 +136,11 @@
     "kitty-graphics": {
       "flake": false,
       "locked": {
-        "lastModified": 1780703771,
-        "narHash": "sha256-mtOroJua/M1m3jVHaxPriWkSxXfnIfBgJAkAWzzT8FA=",
+        "lastModified": 1781170125,
+        "narHash": "sha256-58ZLdwxamLTrt1BcjDuh8RJ7cqbzMitnmGZvCcX/wL8=",
         "owner": "cashmeredev",
         "repo": "kitty-graphics.el",
-        "rev": "43840da38f76f603f8001038de0ebea89554435e",
+        "rev": "be88100e6bc715b0391aa60936609ba3b79a80c6",
         "type": "github"
       },
       "original": {
@@ -183,11 +183,11 @@
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1780749050,
-        "narHash": "sha256-3av0pIjlOWQ6rDbNOmpUSvbNnJkGORQKKjb4LtCZsIY=",
+        "lastModified": 1781074563,
+        "narHash": "sha256-md8WlXOlfnIeHeOScMTTHFyf2d6iaTwPl2apR5EQ3P4=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "a799d3e3886da994fa307f817a6bc705ae538eeb",
+        "rev": "9ae611a455b90cf061d8f332b977e387bda8e1ca",
         "type": "github"
       },
       "original": {
@@ -215,11 +215,11 @@
     },
     "nixpkgs_2": {
       "locked": {
-        "lastModified": 1780930886,
-        "narHash": "sha256-rppURzHviaQN131F+nLiLdGfcb0uCd9gGP0E5+iw9MI=",
+        "lastModified": 1781173989,
+        "narHash": "sha256-fnzKKPvS+oieI/pTzotA5tkoM47EB1NpaBcgk4R97hE=",
         "owner": "nixos",
         "repo": "nixpkgs",
-        "rev": "8c3cede7ddc26bd659d2d383b5610efbd2c7a16e",
+        "rev": "8c91a71d13451abc40eb9dae8910f972f979852f",
         "type": "github"
       },
       "original": {
@@ -334,11 +334,11 @@
     "tdlib": {
       "flake": false,
       "locked": {
-        "lastModified": 1779117169,
-        "narHash": "sha256-H6R959XVkMB9OVAynRvBYB53hzUPKY0Us+HkbiuPZN0=",
+        "lastModified": 1781211878,
+        "narHash": "sha256-CTU+aU1/6pDVxFAM2W4xKC/yKcoIZ1ugIA0ATQr5Ij0=",
         "owner": "tdlib",
         "repo": "td",
-        "rev": "e0943d068ce90b5010f1aea946e6901e25b43bf6",
+        "rev": "d6debbb2aae29a39e280f86e25ec0e54960dc838",
         "type": "github"
       },
       "original": {

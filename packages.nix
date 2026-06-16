@@ -150,7 +150,8 @@ in
 {
   mkPackageList =
     epkgs:
-    (editingPackages epkgs)
+    with epkgs; [ setup ]
+    ++ (editingPackages epkgs)
     ++ (completionPackages epkgs)
     ++ (vcPackages epkgs)
     ++ (orgPackages epkgs)

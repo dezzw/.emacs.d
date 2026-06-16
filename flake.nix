@@ -22,68 +22,6 @@
       url = "github:d12frosted/homebrew-emacs-plus";
       flake = false;
     };
-    # Custom Emacs packages from GitHub
-    kitty-graphics = {
-      url = "github:cashmeredev/kitty-graphics.el";
-      flake = false;
-    };
-    eglot-x = {
-      url = "github:nemethf/eglot-x";
-      flake = false;
-    };
-    emt = {
-      url = "github:roife/emt";
-      flake = false;
-    };
-    image-slicing = {
-      url = "github:ginqi7/image-slicing";
-      flake = false;
-    };
-    leetcode-emacs = {
-      url = "github:ginqi7/leetcode-emacs";
-      flake = false;
-    };
-
-    org-modern-indent = {
-      url = "github:jdtsmith/org-modern-indent";
-      flake = false;
-    };
-    panel = {
-      url = "github:LuciusChen/panel";
-      flake = false;
-    };
-    setup-el = {
-      url = "git+https://codeberg.org/pkal/setup.el.git";
-      flake = false;
-    };
-    telega = {
-      url = "github:LuciusChen/telega.el";
-      flake = false;
-    };
-    tdlib = {
-      url = "github:tdlib/td";
-      flake = false;
-    };
-    blame-reveal = {
-      url = "github:LuciusChen/blame-reveal";
-      flake = false;
-    };
-    symbol-overlay = {
-      url = "github:roife/symbol-overlay";
-      flake = false;
-    };
-    consult-ripfd = {
-      url = "github:jdtsmith/consult-ripfd";
-      flake = false;
-    };
-    miniline = {
-      url = "github:dezzw/miniline.el";
-      flake = false;
-    };
-    tree-sitter-clojure = {
-      url = "github:sogaiu/tree-sitter-clojure?ref=unstable-20250526";
-      flake = false;
-    };
   };
   outputs =
     inputs@{
@@ -103,22 +41,6 @@
         lib = pkgs.lib;
       in
       rec {
-        # ============================================================================
-        # Helper Functions
-        # ============================================================================
-
-        # Helper to convert timestamp to date string (YYYYMMDD format)
-        timestampToDate =
-          timestamp:
-          let
-            dateStr = builtins.readFile (
-              pkgs.runCommand "timestamp-to-date" { } ''
-                date -u -d @${toString timestamp} +%Y%m%d > $out
-              ''
-            );
-          in
-          lib.removeSuffix "\n" dateStr;
-
         # Function to apply patches to an Emacs derivation
         applyPatches =
           emacs-base: extraPatches:
@@ -140,10 +62,6 @@
           "${inputs.emacs-plus-patches}/patches/emacs-31/system-appearance.patch"
         ];
 
-        # ============================================================================
-        # Emacs Base Versions
-        # ============================================================================
-
         # IGC base: Use PGTK on Linux, otherwise regular IGC. Remove MPS (now built into emacs repo)
         emacs-igc-base =
           (pkgs.emacs-igc.overrideAttrs (old: {
@@ -158,10 +76,6 @@
           patches = (old.patches or [ ]) ++ darwinBasePatches;
         });
 
-        # ============================================================================
-        # Emacs Patched Versions
-        # ============================================================================
-
         # IGC patched: Add ImageMagick where supported plus custom patches
         emacs-igc-patched = applyPatches (emacs-igc-base.override {
           withImageMagick = !pkgs.stdenv.isLinux;
@@ -172,60 +86,14 @@
           withImageMagick = !pkgs.stdenv.isLinux;
         }) customPatches;
 
-        # ============================================================================
-        # Build Dependencies
-        # ============================================================================
-
-        # Build tdlib from HEAD source
-        tdlib-head = pkgs.tdlib.overrideAttrs (old: {
-          version = "head-${timestampToDate inputs.tdlib.lastModified}";
-          src = inputs.tdlib;
-          preConfigure = ''
-            rm -rf build
-          '';
-          enableParallelBuilding = true;
-          preBuild = (old.preBuild or "") + ''
-            export CMAKE_BUILD_PARALLEL_LEVEL=2
-          '';
-          makeFlags = (old.makeFlags or [ ]) ++ [ "-j2" ];
-        });
-
-        # ============================================================================
-        # Package Definitions
-        # ============================================================================
-
-        # Override tree-sitter clojure grammar
-        treesit-grammars-with-clojure-override =
-          let
-            clojure-grammar = pkgs.tree-sitter.buildGrammar {
-              language = "clojure";
-              version = "unstable-${timestampToDate inputs.tree-sitter-clojure.lastModified}";
-              src = inputs.tree-sitter-clojure;
-            };
-          in
-          pkgs.emacsPackages.treesit-grammars.with-grammars (
-            grammars:
-            let
-              grammarList = builtins.attrValues grammars;
-              filtered = builtins.filter (g: g.language or "" != "clojure") grammarList;
-            in
-            filtered ++ [ clojure-grammar ]
-          );
-
         # Centralized package definitions/build recipes/group lists
-        packageModule = import ./customized-package.nix {
+        packageModule = import ./packages.nix {
           inherit
             inputs
             lib
             pkgs
-            tdlib-head
-            treesit-grammars-with-clojure-override
             ;
         };
-
-        # ============================================================================
-        # Build Function
-        # ============================================================================
 
         # Function to build emacs-augmented with a given emacs-base
         buildEmacsAugmented =

@@ -97,7 +97,7 @@
             (project-eshell "Eshell")
             (magit-project-status "Magit" ?\m))
           project-vc-extra-root-markers
-          '("package.json" "deps.edn" "project.clj" "Package.swift" ".envrc" ".tags" ".project"))
+          '(".envrc" ".tags" ".project"))
   (:when-loaded
     (:global-bind "C-c p" (identity project-prefix-map))
     (:with-map project-prefix-map

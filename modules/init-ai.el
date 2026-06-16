@@ -19,13 +19,18 @@
     (setopt agent-shell-show-usage-at-turn-end t
             agent-shell-prefer-viewport-interaction t
             agent-shell-session-strategy 'prompt
+            agent-shell-file-completion-enabled t
+            ;;; claude code
             agent-shell-anthropic-claude-environment
             (agent-shell-make-environment-variables :inherit-env t)
+            ;;; codex
             agent-shell-openai-codex-environment
             (agent-shell-make-environment-variables :inherit-env t)
             agent-shell-openai-authentication
             (agent-shell-openai-make-authentication :api-key (lambda () (getenv "OPENAI_API_KEY")))
-            agent-shell-file-completion-enabled t)
+            ;;; cursor
+            agent-shell-cursor-acp-command '("agent" "acp")
+            )
     (setq agent-shell-preferred-agent-config
           (agent-shell-anthropic-make-claude-code-config))))
 

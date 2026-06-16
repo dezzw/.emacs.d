@@ -19,13 +19,6 @@
   (:require lib-env)
   (+load-env-file))
 
-(setup emt
-  (:require emt)
-  (:when-loaded
-    (:global-bind "M-f" 'emt-forward-word
-                  "M-b" 'emt-backward-word)
-    (emt-ensure)))
-
 ;; Open files with macOS default browser
 (with-eval-after-load 'org
   (setcdr (assq t org-file-apps-gnu) 'browse-url-default-macosx-browser))

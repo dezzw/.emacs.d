@@ -10,7 +10,7 @@
       (load-theme theme)))
   (custom-set-variables `(custom-enabled-themes (quote ,custom-enabled-themes)))
   (when (display-graphic-p)
-  (+setup-fonts)))
+    (+setup-fonts)))
 
 (defun set-dividers-and-fringe-color ()
   "Set the color of dividers and fringe to match the current theme."
@@ -59,8 +59,8 @@
 (defun apply-theme-based-on-appearance (&rest _)
   "Apply a theme based on the current macOS system appearance."
   (if (eq ns-system-appearance 'light)
-      (apply-theme light-theme 90)
-    (apply-theme dark-theme 90)))
+      (apply-theme light-theme 95)
+    (apply-theme dark-theme 95)))
 
 (defun opacity-dark-theme (&rest _frame)
   "Set the opacity of the current frame to 90% if the background mode is dark.
@@ -68,7 +68,7 @@ This function only works in a graphical interface.  The FRAME argument is
 optional and is used to specify which frame's opacity to change."
   (if (display-graphic-p)
       (if (eq (frame-parameter nil 'background-mode) 'dark)
-          (set-opacity 90))
+          (set-opacity 95))
     (message "Non-graphical interface")))
 
 (provide 'lib-appearance)

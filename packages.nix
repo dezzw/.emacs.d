@@ -129,6 +129,7 @@ let
   # AI helpers.
   aiPackages =
     epkgs: with epkgs; [
+      ai-code
       agent-shell
       gptel
     ];

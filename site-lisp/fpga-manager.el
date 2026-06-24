@@ -109,6 +109,7 @@ If nil, will auto-detect based on system username."
           :log-level ""
           :repeat "1"
           :keep-locked t
+          :seed ""
           :custom "")
   "Plist holding defaults/last values for FPGA helper commands.")
 
@@ -570,7 +571,7 @@ Handles both flag-only args like \\='-d\\=' and value args like \\='-r 5\\='."
         (test-ids nil)
         (browser nil)
         (repeat nil)
-        (delay nil)
+        (debug nil)
         (headless nil)
         (keep-locked nil)
         (remaining '()))
@@ -587,7 +588,7 @@ Handles both flag-only args like \\='-d\\=' and value args like \\='-r 5\\='."
        ((string-prefix-p "-i " arg)
         (setq test-ids (substring arg 3)))
        ((string= arg "-d")
-        (setq delay t))
+        (setq debug t))
        ((string= arg "--headless")
         (setq headless t))
        ((string= arg "--keep-locked")
@@ -598,7 +599,7 @@ Handles both flag-only args like \\='-d\\=' and value args like \\='-r 5\\='."
       (test-ids . ,test-ids)
       (browser . ,browser)
       (repeat . ,repeat)
-      (delay . ,delay)
+      (debug . ,debug)
       (headless . ,headless)
       (keep-locked . ,keep-locked)
       (remaining . ,(nreverse remaining)))))
@@ -617,7 +618,7 @@ Converts \\='-i\\=' to \\='--local\\=' for bitstream tests."
 (defun fpga-manager--build-webapp-command-parts (script-name env parsed-args)
   "Build webapp command parts from SCRIPT-NAME, ENV, and PARSED-ARGS."
   (let* ((protocol (alist-get 'protocol parsed-args))
-         (delay (alist-get 'delay parsed-args))
+         (debug (alist-get 'debug parsed-args))
          (repeat (alist-get 'repeat parsed-args))
          (browser (alist-get 'browser parsed-args))
          (test-ids (or (alist-get 'test-ids parsed-args) "webapp"))
@@ -629,7 +630,7 @@ Converts \\='-i\\=' to \\='--local\\=' for bitstream tests."
       (when remaining
         (setq parts (append parts remaining)))
       ;; Now add optional flags
-      (when delay
+      (when debug
         (setq parts (append parts '("-d"))))
       (when repeat
         (setq parts (append parts (list "--repeat" repeat))))
@@ -749,7 +750,7 @@ Converts \\='-i\\=' to \\='--local\\=' for bitstream tests."
                (fpga-manager--state-read-string-into prompt :test-case)))]
    ["Bitstream Options"
     :if (lambda () (eq fpga-manager-test-type 'bitstream))
-    ("-d" "Debug/Delay mode" "-d")
+    ("-d" "Debug mode" "-d")
     ("-a" "Admin mode (force restricted CLI)" "-a")
     ("-l" "Log level" "-l "
      :class transient-option
@@ -958,7 +959,7 @@ Each project gets its own FPGA manager buffer, similar to `project-eshell'."
     (test-ids . ,(or (fpga-manager--state-get-string :test-case) "webapp"))
     (browser . ,(fpga-manager--state-get-string :webapp-browser))
     (repeat . ,(fpga-manager--state-get-string :repeat))
-    (delay . nil)
+    (debug . nil)
     (headless . nil)
     (keep-locked . ,(fpga-manager--state-get :keep-locked))
     (remaining . nil)))

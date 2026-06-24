@@ -48,12 +48,11 @@
             patches = (old.patches or [ ]) ++ extraPatches;
           });
 
-        # NS startup fix needed even for the unpatched Darwin base builds.
-        darwinBasePatches = lib.optionals pkgs.stdenv.isDarwin [
-        ];
-
         # Custom patches list (can be enabled/disabled as needed)
         customPatches = [
+        ]
+        ++ lib.optionals pkgs.stdenv.isLinux [
+
         ]
         ++ lib.optionals pkgs.stdenv.isDarwin [
           # Add setting to enable rounded window with no decoration
@@ -62,29 +61,12 @@
           "${inputs.emacs-plus-patches}/patches/emacs-31/system-appearance.patch"
         ];
 
-        # IGC base: Use PGTK on Linux, otherwise regular IGC. Remove MPS (now built into emacs repo)
-        emacs-igc-base =
-          (pkgs.emacs-igc.overrideAttrs (old: {
-            buildInputs = builtins.filter (p: !(p ? pname && p.pname == "mps")) (old.buildInputs or [ ]);
-          })).overrideAttrs
-            (old: {
-              patches = (old.patches or [ ]) ++ darwinBasePatches;
-            });
 
-        # GIT base: Always use regular emacs-git from emacs-overlay
-        emacs-git-base = pkgs.emacs-git.overrideAttrs (old: {
-          patches = (old.patches or [ ]) ++ darwinBasePatches;
-        });
+        emacs-igc = applyPatches pkgs.emacs-igc customPatches;
 
-        # IGC patched: Add ImageMagick where supported plus custom patches
-        emacs-igc-patched = applyPatches (emacs-igc-base.override {
-          withImageMagick = !pkgs.stdenv.isLinux;
-        }) customPatches;
+        emacs-git = applyPatches pkgs.emacs-git customPatches;
 
-        # GIT patched: Add ImageMagick where supported plus custom patches
-        emacs-git-patched = applyPatches (emacs-git-base.override {
-          withImageMagick = !pkgs.stdenv.isLinux;
-        }) customPatches;
+        emacs-git-pgtk = applyPatches pkgs.emacs-git-pgtk customPatches;
 
         # Centralized package definitions/build recipes/group lists
         packageModule = import ./packages.nix {
@@ -173,19 +155,17 @@
         # ============================================================================
 
         # Build all four versions
-        emacs-augmented-igc = buildEmacsAugmented emacs-igc-base;
-        emacs-augmented-igc-patched = buildEmacsAugmented emacs-igc-patched;
-        emacs-augmented-git = buildEmacsAugmented emacs-git-base;
-        emacs-augmented-git-patched = buildEmacsAugmented emacs-git-patched;
+        emacs-augmented-igc = buildEmacsAugmented emacs-igc;
+        emacs-augmented-git = buildEmacsAugmented emacs-git;
+        emacs-augmented-git-pgtk = buildEmacsAugmented emacs-git-pgtk;
 
         # ============================================================================
         # Package Outputs
         # ============================================================================
 
         packages.demacs-igc = emacs-augmented-igc;
-        packages.demacs-igc-patched = emacs-augmented-igc-patched;
         packages.demacs-git = emacs-augmented-git;
-        packages.demacs-git-patched = emacs-augmented-git-patched;
+        packages.demacs-git-pgtk = emacs-augmented-git-pgtk;
 
         # Default is git
         packages.demacs = emacs-augmented-git;
@@ -205,9 +185,8 @@
           };
 
         apps.demacs-igc = mkApp "igc" packages.demacs-igc;
-        apps.demacs-igc-patched = mkApp "igc-patched" packages.demacs-igc-patched;
         apps.demacs-git = mkApp "git" packages.demacs-git;
-        apps.demacs-git-patched = mkApp "git-patched" packages.demacs-git-patched;
+        apps.demacs-git-pgtk = mkApp "git-pgtk" packages.demacs-git-pgtk;
         apps.export-demacs-package-manifest = flake-utils.lib.mkApp {
           drv = mkExportManifestApp packages.demacs-package-manifest;
           name = "export-demacs-package-manifest";

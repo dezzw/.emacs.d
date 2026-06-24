@@ -187,7 +187,5 @@
 ;; tab-bar & tab-line
 (setq tab-bar-mode t)
 
-(setenv "LSP_USE_PLISTS" "true")
-
 (provide 'early-init)
 ;;; early-init.el ends here

@@ -215,7 +215,6 @@
   (:when-loaded
     (:also-load lib-eglot)
     (setopt eglot-code-action-indications '(eldoc-hint)
-            eglot-max-file-watches 30000
             eglot-events-buffer-config '(:size 0 :format full)
             ;; Ignore server formatting, format with Apheleia instead.
             eglot-ignored-server-capabilities '(:documentFormattingProvider

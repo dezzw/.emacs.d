@@ -16,8 +16,7 @@
                 telega-mnz
                 lib-telega
                 cl-lib
-                telega-notifications
-                language-detection)
+                telega-notifications)
     (:with-map telega-prefix-map
       (:bind
        "p" telega-chatbuf-filter-search

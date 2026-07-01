@@ -144,13 +144,6 @@
     (setf (alist-get 'typescript-ts-mode apheleia-mode-alist) 'prettier)
     (setf (alist-get 'js-ts-mode apheleia-mode-alist) 'prettier)))
 
-(setup reformatter
-  (:require reformatter)
-  (:with-mode python-ts-mode
-    (reformatter-define ruff-format
-      :program "ruff"
-      :args '("format" "-"))))
-
 (setup mmm-mode
   (:defer (:require mmm-mode))
   (:with-mode nxml-mode

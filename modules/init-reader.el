@@ -23,8 +23,5 @@
              "C-c i r" org-remark-remove
              "C-c i d" org-remark-delete))))
 
-(setup markdown-mode
-  (:option markdown-command "pandoc --standalone --css=GTD.css"))
-
 (provide 'init-reader)
 ;;; init-reader.el ends here

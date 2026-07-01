@@ -91,10 +91,7 @@ let
       babashka
       cider
       clojure-ts-mode
-      geiser-chez
       groovy-mode
-      markdown-mode
-      neil
       nix-ts-mode
       swift-mode
       web-mode
@@ -103,6 +100,7 @@ let
   # Programming extras layered on top of built-in project/xref/eglot/flymake.
   programmingPackages =
     epkgs: with epkgs; [
+      citre
       eglot-booster
       eglot-x
       eldoc-box
@@ -110,7 +108,6 @@ let
       ghostel
       indent-bars
       mmm-mode
-      reformatter
       treesit-grammars.with-all-grammars
       topsy
       verb
@@ -141,7 +138,6 @@ let
       helpful
       jenkins
       keyfreq
-      language-detection
       leetcode-emacs
       telega
       pdf-tools
@@ -151,7 +147,8 @@ in
 {
   mkPackageList =
     epkgs:
-    with epkgs; [ setup ]
+    with epkgs;
+    [ setup ]
     ++ (editingPackages epkgs)
     ++ (completionPackages epkgs)
     ++ (vcPackages epkgs)

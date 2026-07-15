@@ -34,6 +34,12 @@
     (setq agent-shell-preferred-agent-config
           (agent-shell-anthropic-make-claude-code-config))))
 
+(setup ai-code
+  (:when-loaded
+    (ai-code-set-backend 'cursor)
+    (setopt ai-code-backends-infra-terminal-backend 'ghostel)
+    (with-eval-after-load 'magit
+      (ai-code-magit-setup-transients))))
 
 (setup anvil
   (unless (package-installed-p 'anvil)

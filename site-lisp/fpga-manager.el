@@ -1,62 +1,19 @@
-;;; lib-fpga-manager.el --- Interactive FPGA management -*- lexical-binding: t; -*-
+;;; fpga-manager.el --- Interactive FPGA management -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2024-2025
 ;; Author: Desmond Wang
-;; Version: 2.1
+;; Version: 2.5
 ;; Package-Requires: ((emacs "29.1"))
 ;; Keywords: tools, hardware
-;; URL: https://github.com/your-repo/fpga-manager
 
 ;;; Commentary:
 
-;; This package provides an interactive interface for managing FPGA locks.
-;; It displays a tabulated list of FPGAs organized into three sections:
-;; - MY FPGAs: FPGAs locked by you
-;; - IN USE: FPGAs locked by others
-;; - FREE: Available FPGAs
+;; Interactive interface for managing FPGA locks.
+;; Usage: M-x fpga-manager-status, then ? for the transient menu.
 ;;
-;; Usage:
-;;   M-x fpga-manager-status
-;;
-;; Keybindings:
-;;   l - Lock FPGA at point
-;;   u - Unlock FPGA at point
-;;   f - Force unlock FPGA
-;;   g - Refresh status
-;;   t - Test menu
-;;   U - Set current user
-;;   ? - Show menu
-;;   q - Quit
-;;
-;; --- Elisp beginner notes (syntax used in this file) ---
-;; (require 'feature)         ;; Load another library (like import).
-;; (defgroup NAME ...)         ;; Define a customization group.
-;; (defcustom NAME VALUE ...)  ;; User option (editable via M-x customize).
-;; (defvar NAME VALUE ...)     ;; Global variable (not user-facing).
-;; (defface NAME ...)          ;; Define a face (style for text).
-;; (defun NAME (args) ...)     ;; Define a function.
-;; (interactive)              ;; Allow calling a function via M-x or keybind.
-;;
-;; (let ((x 1) (y 2)) ...)     ;; Local variables for a block.
-;; (if COND A B)               ;; If/else.
-;; (when COND ...)             ;; If with no else (runs body when true).
-;; (unless COND ...)           ;; If not.
-;; (cond ((COND1) ...) ...)    ;; Multi-branch if.
-;;
-;; (if-let* ((x ...) (y ...)) ...)  ;; Bind and check non-nil.
-;; (when-let* ((x ...) ...) ...)    ;; Like when + if-let*.
-;;
-;; (lambda (args) ...)         ;; Anonymous function.
-;; #'symbol                   ;; Function symbol (like a pointer to a function).
-;;
-;; (list a b c)                ;; Build a list.
-;; (vector a b c)              ;; Build a vector (array).
-;; (setq var value)            ;; Assign.
-;; (setq-local var value)      ;; Assign buffer-local value.
-;;
-;; Strings: "text", chars: ?a, symbols: 'symbol, quoted list: '(a b).
-;; Property lists: '(:key value ...) and alists: '((key . value) ...).
-;; ----------------------------------------------------------
+;; The status buffer shows one global MY FPGAs block, free hosts grouped by
+;; linuxPC_Lock.py section, and every other locked host in a global IN USE
+;; block at the bottom.
 
 ;;; Code:
 
@@ -67,39 +24,37 @@
 
 ;;; Customization
 
-;; User-facing customization group so options show under M-x customize-group.
 (defgroup fpga-manager nil
   "Interactive FPGA lock management."
   :group 'tools
   :prefix "fpga-manager-")
 
-;; Username used for filtering "My FPGAs". We avoid forcing a default here so that
-;; first-time usage can auto-detect via $USER or `user-login-name`.
 (defcustom fpga-manager-current-user nil
-  "Current user name for filtering \\='My FPGAs\\='.
-Should be set to the exact username as it appears in the FPGA table,
-e.g., \"DESMOND.WANG\" or just \"DESMOND\".
-If nil, will auto-detect based on system username."
+  "Username for filtering \\='My FPGAs\\='.
+When nil, auto-detect from $USER or `user-login-name'."
   :type '(choice (const :tag "Auto-detect" nil)
                  (string :tag "Username"))
   :group 'fpga-manager)
 
-;;; Internal Variables
+(defcustom fpga-manager-sync-before-mutate t
+  "Run `uv sync' before lock/unlock and test commands.
+Status refreshes never run `uv sync'."
+  :type 'boolean
+  :group 'fpga-manager)
 
-;; Raw entries produced by `fpga-manager--parse-output`. This is the canonical
-;; data model for the current buffer and is reused for lookup at point.
-(defvar fpga-manager--entries nil
-  "List of FPGA entries for the current view.")
+;;; Constants and variables
 
-;; Controls which test menu subtree is active.
-(defvar fpga-manager-test-type 'bitstream
-  "Current test type: \\='bitstream or \\='webapp.")
+(defconst fpga-manager--section-title-regexp
+  "^-\\{10,\\}\\s-*\\(.+?\\)\\s-*-\\{10,\\}$"
+  "Regexp for linuxPC_Lock.py section banners.")
 
-;; Last transient arguments so the menu can reopen with previous choices.
-(defvar fpga-manager-test-last-args nil
-  "Last arguments used in test menu for persistence.")
+(defconst fpga-manager--separator-line (make-string 135 ?─))
+(defconst fpga-manager--manager-output-buffer "*FPGA Manager Output*")
+(defconst fpga-manager--test-output-buffer "*FPGA Test Output*")
 
-;; Shared command parameter store used across fpga-manager and bstt/* flows.
+(defvar fpga-manager--entries nil)
+(defvar fpga-manager-test-type 'bitstream)
+(defvar fpga-manager-test-last-args nil)
 (defvar fpga-manager--state
   '(:port "cli455"
           :lock-status ""
@@ -109,206 +64,383 @@ If nil, will auto-detect based on system username."
           :log-level ""
           :repeat "1"
           :keep-locked t
-          :seed ""
-          :custom "")
-  "Plist holding defaults/last values for FPGA helper commands.")
+          :custom ""))
+
+(defvar-local fpga-manager--current-row-overlay nil)
+(defvar-local fpga-manager--highlight-line nil)
 
 ;;; Faces
 
 (defface fpga-manager-section-header
   '((t :inherit font-lock-keyword-face :weight bold :height 1.1))
-  "Face for section headers in FPGA manager."
+  "Face for section headers."
   :group 'fpga-manager)
 
 (defface fpga-manager-separator
   '((t :inherit shadow))
-  "Face for separators in FPGA manager."
+  "Face for separators."
   :group 'fpga-manager)
 
 (defface fpga-manager-highlight
   '((t :inherit success))
-  "Face for FPGA row text under mouse."
+  "Face for the current FPGA row."
   :group 'fpga-manager)
 
-(defvar-local fpga-manager--current-row-overlay nil
-  "Overlay used to highlight the current FPGA row.")
+;;; Shared state
 
-(defun fpga-manager--add-highlight-face-to-entry (entry)
-  "Return ENTRY with mouse hover face on each cell."
-  (let ((cols (copy-sequence (cadr entry))))
-    (dotimes (i (length cols))
-      (aset cols i
-            (propertize (format "%s" (aref cols i))
-                        'mouse-face 'fpga-manager-highlight)))
-    (list (car entry) cols)))
+(defun fpga-manager--state-get (key)
+  (plist-get fpga-manager--state key))
 
-(defun fpga-manager--highlight-current-row ()
-  "Highlight text on the current FPGA row."
-  (when (derived-mode-p 'fpga-manager-mode)
-    (unless fpga-manager--current-row-overlay
-      (setq fpga-manager--current-row-overlay
-            (make-overlay (point-min) (point-min)))
-      (overlay-put fpga-manager--current-row-overlay
-                   'face
-                   'fpga-manager-highlight)
-      (overlay-put fpga-manager--current-row-overlay
-                   'priority
-                   1000))
+(defun fpga-manager--state-set (key value)
+  (setq fpga-manager--state (plist-put fpga-manager--state key value))
+  value)
 
-    (if (fpga-manager--get-env-at-point)
-        (move-overlay fpga-manager--current-row-overlay
-                      (line-beginning-position)
-                      (line-end-position))
-      (delete-overlay fpga-manager--current-row-overlay))))
+(defun fpga-manager-state-get (key)
+  "Get shared fpga-manager state value for KEY."
+  (fpga-manager--state-get key))
 
-;;; Parsing Functions
+(defun fpga-manager--state-get-string (key)
+  (let ((value (fpga-manager--state-get key)))
+    (when (and (stringp value) (not (string-empty-p value)))
+      value)))
 
-;; Parse a single table row produced by linuxPC_Lock.py. The output is a
-;; pipe-delimited table and we normalize whitespace with `string-trim`.
-(defun fpga-manager--parse-table-line (line)
-  "Parse a single LINE from the FPGA status table.
-Returns a list with env, user, date, reserved, motherboard, cards, model.
-Returns nil if LINE is invalid."
-  (when (string-match (concat "^|\\s-*\\([^|]+\\)\\s-*"
-                              "|\\s-*\\([^|]*\\)\\s-*"
-                              "|\\s-*\\([^|]*\\)\\s-*"
-                              "|\\s-*\\([^|]*\\)\\s-*"
-                              "|\\s-*\\([^|]*\\)\\s-*"
-                              "|\\s-*\\([^|]*\\)\\s-*"
-                              "|\\s-*\\([^|]*\\)\\s-*|")
-                      line)
-    (let ((env (string-trim (match-string 1 line)))
-          (user (string-trim (match-string 2 line)))
-          (date (string-trim (match-string 3 line)))
-          (reserved (string-trim (match-string 4 line)))
-          (motherboard (string-trim (match-string 5 line)))
-          (numofcards (string-trim (match-string 6 line)))
-          (model (string-trim (match-string 7 line))))
-      ;; Only accept FPGA rows (CLI*). This filters out table separators.
-      (when (string-match "^CLI[0-9]+" env)
-        (list env user date reserved motherboard numofcards model)))))
+(defun fpga-manager--state-read-string-into (prompt key)
+  (fpga-manager--state-set
+   key
+   (string-trim (read-string prompt (fpga-manager--state-get key)))))
 
-;; Convert raw output to tabulated-list entries. Each entry is:
-;; (id [env user date reserved motherboard cards model])
+(defun fpga-manager--state-read-choice-into (prompt choices key)
+  (fpga-manager--state-set
+   key
+   (completing-read prompt choices nil t (fpga-manager--state-get key))))
+
+(defun fpga-manager--ensure-list (value)
+  (if (listp value) value (list value)))
+
+(defun fpga-manager--push-arg-if-value (args prefix value)
+  (if value (cons (concat prefix value) args) args))
+
+(defun fpga-manager--remember-test-args (type args)
+  (setq fpga-manager-test-type type
+        fpga-manager-test-last-args (fpga-manager--ensure-list args)))
+
+(defun fpga-manager--bstt-build-bitstream-args ()
+  (let ((args '("-d")))
+    (dolist (pair '((:test-case . "-i ")
+                    (:log-level . "-l ")
+                    (:repeat . "-r ")
+                    (:custom . "-c ")))
+      (setq args (fpga-manager--push-arg-if-value
+                  args (cdr pair) (fpga-manager--state-get-string (car pair)))))
+    (nreverse args)))
+
+(defun fpga-manager--bstt-build-webapp-args ()
+  (let ((args (list (concat "--protocol="
+                            (or (fpga-manager--state-get-string :protocol) "http")))))
+    (dolist (pair '((:test-case . "-i ")
+                    (:repeat . "-r ")
+                    (:webapp-browser . "--browser=")))
+      (setq args (fpga-manager--push-arg-if-value
+                  args (cdr pair) (fpga-manager--state-get-string (car pair)))))
+    (when (fpga-manager--state-get :keep-locked)
+      (push "--keep-locked" args))
+    (nreverse args)))
+
+(defun fpga-manager--bstt-webapp-parsed-args ()
+  `((protocol . ,(or (fpga-manager--state-get-string :protocol) "http"))
+    (test-ids . ,(or (fpga-manager--state-get-string :test-case) "webapp"))
+    (browser . ,(fpga-manager--state-get-string :webapp-browser))
+    (repeat . ,(fpga-manager--state-get-string :repeat))
+    (debug . nil)
+    (headless . nil)
+    (keep-locked . ,(fpga-manager--state-get :keep-locked))
+    (remaining . nil)))
+
+(defun fpga-manager--bstt-sync-test-menu (type)
+  (setq fpga-manager-test-type type
+        fpga-manager-test-last-args
+        (if (eq type 'webapp)
+            (fpga-manager--bstt-build-webapp-args)
+          (fpga-manager--bstt-build-bitstream-args))))
+
+(defun fpga-manager--bstt-edit-field (type prompt key &optional choices)
+  "Prompt for KEY, store it, and refresh the test menu for TYPE."
+  (if choices
+      (fpga-manager--state-read-choice-into prompt choices key)
+    (fpga-manager--state-read-string-into prompt key))
+  (fpga-manager--bstt-sync-test-menu type))
+
+(defun fpga-manager--bstt-sync-from-bitstream (env args)
+  (fpga-manager--state-set :port env)
+  (dolist (arg (fpga-manager--ensure-list args))
+    (cond
+     ((string-prefix-p "-i " arg) (fpga-manager--state-set :test-case (substring arg 3)))
+     ((string-prefix-p "-r " arg) (fpga-manager--state-set :repeat (substring arg 3)))
+     ((string-prefix-p "-l " arg) (fpga-manager--state-set :log-level (substring arg 3)))
+     ((string-prefix-p "-c " arg) (fpga-manager--state-set :custom (substring arg 3)))))
+  (fpga-manager--remember-test-args 'bitstream args))
+
+(defun fpga-manager--bstt-sync-from-webapp (env args parsed-args)
+  (fpga-manager--state-set :port env)
+  (dolist (pair '((protocol . :protocol)
+                  (test-ids . :test-case)
+                  (browser . :webapp-browser)
+                  (repeat . :repeat)))
+    (when-let* ((value (alist-get (car pair) parsed-args)))
+      (fpga-manager--state-set (cdr pair) value)))
+  (fpga-manager--state-set :keep-locked (and (alist-get 'keep-locked parsed-args) t))
+  (fpga-manager--remember-test-args 'webapp args))
+
+;;; Parsing and table data
+
+(defun fpga-manager--cli-from-id (id)
+  "Return the CLI env name extracted from display id ID."
+  (if (and (stringp id) (string-match "\\`\\(CLI[0-9]+\\)" id))
+      (match-string 1 id)
+    id))
+
+(defun fpga-manager--current-user ()
+  "Return the downcased username used for \\='My FPGAs\\=' filtering."
+  (let ((user (or fpga-manager-current-user (getenv "USER") (user-login-name))))
+    (and user (not (string-empty-p user))
+         (downcase (string-trim user)))))
+
+(defun fpga-manager--normalize-user (user)
+  "Return USER as a lowercase alphanumeric string for fuzzy matching."
+  (downcase (replace-regexp-in-string "[^[:alnum:]]+" "" user)))
+
+(defun fpga-manager--user-matches-p (table-user)
+  "Return non-nil when TABLE-USER belongs to `fpga-manager--current-user'."
+  (let ((current (fpga-manager--normalize-user (or (fpga-manager--current-user) "")))
+        (table (fpga-manager--normalize-user table-user)))
+    (and (not (string-empty-p current))
+         (not (string-empty-p table))
+         (or (string-match-p (regexp-quote current) table)
+             (string-match-p (regexp-quote table) current)))))
+
+(defun fpga-manager--trim-field (value)
+  "Return VALUE trimmed, or \"\" when VALUE is nil."
+  (if value (string-trim value) ""))
+
+(defun fpga-manager--parse-section-title (line)
+  "Return the section title from a linuxPC_Lock.py banner LINE."
+  (when (string-match fpga-manager--section-title-regexp line)
+    (fpga-manager--trim-field (match-string 1 line))))
+
+(defun fpga-manager--parse-pipe-row (line)
+  "Parse a CLI table LINE into (env user date reserved motherboard cards model).
+Handles both 5- and 7-column linuxPC_Lock.py tables."
+  (when (and (string-prefix-p "|" line)
+             (not (string-prefix-p "+" line)))
+    (let ((parts (mapcar #'fpga-manager--trim-field (cdr (split-string line "|")))))
+      (when (and parts (string-match-p "^CLI[0-9]+" (car parts)))
+        (list (car parts)
+              (or (nth 1 parts) "")
+              (or (nth 2 parts) "")
+              (or (nth 3 parts) "")
+              (or (nth 4 parts) "")
+              (or (nth 5 parts) "")
+              (or (nth 6 parts) ""))))))
+
 (defun fpga-manager--parse-output (output)
-  "Parse the OUTPUT from linuxPC_Lock.py into a list of entries.
-Each entry is (id [env user date reserved motherboard numofcards model])."
-  (cl-loop for line in (split-string output "\n")
-           for parsed = (fpga-manager--parse-table-line line)
-           when parsed
-           collect (list (car parsed) (vconcat parsed))))
+  "Parse all linuxPC_Lock.py sections from OUTPUT.
+Return an alist with keys `sections' and `rows'."
+  (let (rows section-order current-section)
+    (dolist (line (split-string output "\n"))
+      (let ((section (fpga-manager--parse-section-title line)))
+        (cond
+         (section
+          (setq current-section section)
+          (unless (member section section-order)
+            (setq section-order (append section-order (list section)))))
+         ((and current-section (fpga-manager--parse-pipe-row line))
+          (push (cons current-section (fpga-manager--parse-pipe-row line)) rows)))))
+    `((sections . ,section-order)
+      (rows . ,(nreverse rows)))))
 
-;;; Entry Accessors
+(defun fpga-manager--rows-for-section (rows section)
+  "Return data rows in ROWS that belong to SECTION."
+  (let (section-rows)
+    (dolist (item rows (nreverse section-rows))
+      (when (equal (car item) section)
+        (push (cdr item) section-rows)))))
 
-;; Accessor for tabulated-list rows; returns nil for section headers.
-(defun fpga-manager--get-env-at-point ()
-  "Get the ENV (CLI*) name from the current row.
-Returns nil if point is on a section header."
-  (when-let* ((id (tabulated-list-get-id)))
-    (unless (string-prefix-p "SECTION:" id)
-      id)))
+(defun fpga-manager--row->entry (env-id row)
+  "Convert ROW into a tabulated-list entry with id ENV-ID."
+  (list env-id (vconcat row)))
+
+(defun fpga-manager--display-id (section env)
+  "Return a unique tabulated-list id for ENV in SECTION."
+  (if (string= section "Full Summary") env (concat env "@" section)))
+
+(defun fpga-manager--register-entry (entries env row)
+  "Add ENV/ROW to ENTRIES when ENV is not yet present."
+  (unless (assoc env entries)
+    (push (fpga-manager--row->entry env row) entries))
+  entries)
+
+(defun fpga-manager--entry-env (entry)
+  "Return the CLI env name from display ENTRY."
+  (fpga-manager--cli-from-id (car entry)))
 
 (defun fpga-manager--entry-user (entry)
-  "Get the user from ENTRY."
+  "Return the lock owner from display ENTRY, or \"\" when free."
   (when entry
-    (aref (cadr entry) 1)))
+    (fpga-manager--trim-field (aref (cadr entry) 1))))
 
 (defun fpga-manager--entry-locked-p (entry)
-  "Check if ENTRY is locked (has a user)."
-  (when entry
-    (not (string-empty-p (fpga-manager--entry-user entry)))))
+  "Return non-nil when ENTRY represents a locked host."
+  (and entry (not (string-empty-p (fpga-manager--entry-user entry)))))
 
-;; "Mine" detection is a substring match to handle usernames like
-;; "DESMOND.WANG" vs "DESMOND". Downcasing makes it case-insensitive.
-(defun fpga-manager--entry-mine-p (entry)
-  "Check if ENTRY belongs to current user.
-Returns t if the user field contains the current username."
-  (when (and entry fpga-manager-current-user)
-    (let ((user-field (downcase (string-trim (fpga-manager--entry-user entry))))
-          (current-user (downcase (string-trim fpga-manager-current-user))))
-      (string-match-p (regexp-quote current-user) user-field))))
-
-;;; Section Builders
-
-;; Section headers are regular tabulated-list entries with a special id.
-;; The printer uses this id to draw headers instead of table rows.
-(defun fpga-manager--make-section-header (title)
-  "Create a section header entry with TITLE."
-  (list (concat "SECTION:" title)
-        (vector title "" "" "" "" "" "")))
-
-;; A "separator" row is just a line of box-drawing chars.
-(defun fpga-manager--make-separator ()
-  "Create a separator line entry."
-  (list "SECTION:separator"
-        (vector (make-string 120 ?─) "" "" "" "" "" "")))
-
-;; We prepend sections to keep the caller code simple. This also lets us build
-;; the final list from back to front.
-(defun fpga-manager--add-section (result title entries)
-  "Add a section with TITLE and ENTRIES to RESULT.
-Returns the updated RESULT with section prepended."
-  (if (null entries)
-      result
-    (append (list (fpga-manager--make-separator)
-                  (fpga-manager--make-section-header title)
-                  (fpga-manager--make-separator))
-            entries
-            (when result
-              (list (fpga-manager--make-section-header "")))
-            result)))
-
-(defun fpga-manager--categorize-entries (entries)
-  "Categorize ENTRIES into groups: mine, free, in-use.
-Returns a list with section headers and entries."
-  (let ((mine '())
-        (in-use '())
-        (free '()))
-    ;; Categorize entries into three buckets based on lock state and user.
+(defun fpga-manager--partition-entries (entries)
+  "Return (mine free in-use) lists split from ENTRIES."
+  (let ((mine '()) (in-use '()) (free '()))
     (dolist (entry entries)
-      (let ((display-entry (fpga-manager--add-highlight-face-to-entry entry)))
+      (let ((user (fpga-manager--entry-user entry)))
         (cond
-         ((fpga-manager--entry-mine-p entry) (push display-entry mine))
-         ((fpga-manager--entry-locked-p entry) (push display-entry in-use))
-         (t (push display-entry free)))))
-    ;; Build result with sections in order: MY FPGAs, FREE, IN USE
-    ;; We build backwards (last section first) since add-section prepends
-    (fpga-manager--add-section
-     (fpga-manager--add-section
-      (fpga-manager--add-section nil "  IN USE" (nreverse in-use))
-      "  FREE" (nreverse free))
-     "  MY FPGAs" (nreverse mine))))
+         ((and (not (string-empty-p user))
+               (fpga-manager--user-matches-p user))
+          (push entry mine))
+         ((not (string-empty-p user)) (push entry in-use))
+         (t (push entry free)))))
+    (list (nreverse mine) (nreverse free) (nreverse in-use))))
 
-;;; Script Execution
+(defun fpga-manager--make-section-header (title)
+  (list (concat "SECTION:" title) (vector title "" "" "" "" "" "")))
 
-;; Prefer project root so python scripts resolve relative paths consistently.
+(defun fpga-manager--make-separator ()
+  (list "SECTION:separator" (vector fpga-manager--separator-line "" "" "" "" "" "")))
+
+(defun fpga-manager--section-block (title entries)
+  "Return display rows for section TITLE followed by ENTRIES."
+  (append (list (fpga-manager--make-separator)
+                (fpga-manager--make-section-header title)
+                (fpga-manager--make-separator))
+          entries))
+
+(defun fpga-manager--entries-for-section (section rows)
+  "Return tabulated-list entries for SECTION in ROWS."
+  (mapcar (lambda (row)
+            (fpga-manager--row->entry
+             (fpga-manager--display-id section (car row))
+             row))
+          (fpga-manager--rows-for-section rows section)))
+
+(defun fpga-manager--seed-registry (entries rows)
+  "Populate ENTRIES from Full Summary rows so registry columns stay rich."
+  (dolist (row (fpga-manager--rows-for-section rows "Full Summary"))
+    (setq entries (fpga-manager--register-entry entries (car row) row)))
+  entries)
+
+(defun fpga-manager--collect-envs (section-entries envs)
+  "Add env names from SECTION-ENTRIES to ENVS without duplicates."
+  (dolist (entry section-entries envs)
+    (let ((env (fpga-manager--entry-env entry)))
+      (unless (member env envs)
+        (setq envs (cons env envs)))))
+  envs)
+
+(defun fpga-manager--filter-entries-by-envs (entries excluded-envs)
+  "Remove entries whose env appears in EXCLUDED-ENVS."
+  (if (null excluded-envs)
+      entries
+    (let (kept)
+      (dolist (entry entries)
+        (unless (member (fpga-manager--entry-env entry) excluded-envs)
+          (push entry kept)))
+      (nreverse kept))))
+
+(defun fpga-manager--registry-display-rows (registry envs)
+  "Return tabulated-list rows for ENVS using columns from REGISTRY."
+  (mapcar (lambda (env)
+            (let ((entry (assoc env registry)))
+              (list env (cadr entry))))
+          envs))
+
+(defun fpga-manager--build-display-entries (parsed)
+  "Build tabulated-list rows and the lock lookup table from PARSED output.
+
+The buffer shows one global MY FPGAs block, free hosts grouped by section,
+and one global IN USE block at the bottom."
+  (let* ((section-order (cdr (assoc 'sections parsed)))
+         (rows (cdr (assoc 'rows parsed)))
+         (entries nil)
+         (global-mine-envs nil)
+         (global-in-use-envs nil)
+         (display nil))
+    (setq entries (fpga-manager--seed-registry entries rows))
+    (dolist (section section-order)
+      (dolist (row (fpga-manager--rows-for-section rows section))
+        (setq entries (fpga-manager--register-entry entries (car row) row))))
+    (dolist (section section-order)
+      (let ((section-entries (fpga-manager--entries-for-section section rows)))
+        (when section-entries
+          (let ((parts (fpga-manager--partition-entries section-entries)))
+            (setq global-mine-envs
+                  (fpga-manager--collect-envs (nth 0 parts) global-mine-envs))
+            (setq global-in-use-envs
+                  (fpga-manager--collect-envs (nth 2 parts) global-in-use-envs))))))
+    (let* ((mine-envs (reverse global-mine-envs))
+           (in-use-envs (reverse global-in-use-envs))
+           (excluded-envs (append mine-envs in-use-envs))
+           (global-mine (fpga-manager--registry-display-rows entries mine-envs)))
+      (when global-mine
+        (setq display (append display
+                              (fpga-manager--section-block "  MY FPGAs"
+                                                           global-mine))))
+      (dolist (section (reverse section-order))
+        (let* ((parts (fpga-manager--partition-entries
+                       (fpga-manager--entries-for-section section rows)))
+               (visible-free (fpga-manager--filter-entries-by-envs
+                              (nth 1 parts) excluded-envs)))
+          (when visible-free
+            (setq display (append display
+                                (fpga-manager--section-block
+                                 (format "  %s" section)
+                                 visible-free))))))
+      (let ((global-in-use (fpga-manager--registry-display-rows
+                            entries in-use-envs)))
+        (when global-in-use
+          (setq display (append display
+                                (fpga-manager--section-block "  IN USE"
+                                                             global-in-use)))))
+      (cons entries display))))
+
+(defun fpga-manager--get-env-at-point ()
+  "Return the CLI env at point, even for section-specific display ids."
+  (when-let* ((id (tabulated-list-get-id)))
+    (unless (string-prefix-p "SECTION:" id)
+      (fpga-manager--cli-from-id id))))
+
+(defun fpga-manager--count-locked-hosts (entries)
+  "Return how many registry ENTRIES are currently locked."
+  (let ((count 0))
+    (dolist (entry entries)
+      (when (fpga-manager--entry-locked-p entry)
+        (setq count (1+ count))))
+    count))
+
+;;; Shell commands
+
 (defun fpga-manager--project-root ()
-  "Get the current project root or `default-directory'."
   (if-let* ((proj (project-current)))
       (project-root proj)
     default-directory))
 
-;; The FPGA scripts live under fpga/ relative to project root.
 (defun fpga-manager--project-fpga-dir ()
-  "Get the fpga directory path for the current project."
   (expand-file-name "fpga" (fpga-manager--project-root)))
 
-(defun fpga-manager--lock-script-path ()
-  "Return the absolute path to linuxPC_Lock.py in the current project."
-  (expand-file-name "linuxPC_Lock.py" (fpga-manager--project-fpga-dir)))
+(defun fpga-manager--find-script (subdir filename)
+  (let* ((root (fpga-manager--project-root))
+         (script (expand-file-name (concat subdir "/" filename) root)))
+    (if (file-exists-p script)
+        script
+      (error "Could not find %s/%s under %s" subdir filename root))))
 
-;; Quote each part and re-join into a shell command string.
 (defun fpga-manager--build-command (parts)
-  "Build a shell command string from PARTS."
   (mapconcat #'shell-quote-argument parts " "))
 
-(defun fpga-manager--ensure-list (value)
-  "Return VALUE as a list."
-  (if (listp value) value (list value)))
-
 (defun fpga-manager--flatten-command-args (args)
-  "Expand ARGS into shell-ready parts.
-Each entry may already be a single argument or a short command fragment."
   (apply #'append
          (mapcar #'split-string-and-unquote
                  (let (parts)
@@ -317,10 +449,7 @@ Each entry may already be a single argument or a short command fragment."
                        (push arg parts)))))))
 
 (defun fpga-manager--build-uv-run-command (parts &optional env-parts)
-  "Build a `uv run` shell command from PARTS.
-When ENV-PARTS is non-nil, run the full command under that environment."
-  (let ((command (fpga-manager--build-command
-                  (append '("uv" "run") parts))))
+  (let ((command (fpga-manager--build-command (append '("uv" "run") parts))))
     (if env-parts
         (fpga-manager--build-command
          (append env-parts
@@ -330,187 +459,270 @@ When ENV-PARTS is non-nil, run the full command under that environment."
       command)))
 
 (defun fpga-manager--join-shell-commands (&rest commands)
-  "Join COMMANDS with `&&`, skipping any empty entries."
   (mapconcat #'identity
              (delq nil
                    (mapcar (lambda (command)
-                             (unless (string-empty-p command)
-                               command))
+                             (unless (string-empty-p command) command))
                            commands))
              " && "))
 
-(defun fpga-manager--with-uv-sync (&rest commands)
-  "Prefix COMMANDS with `uv sync` and join them with `&&`."
-  (apply #'fpga-manager--join-shell-commands
-         (fpga-manager--build-command '("uv" "sync"))
-         commands))
+(defun fpga-manager--maybe-with-uv-sync (sync &rest commands)
+  (if sync
+      (apply #'fpga-manager--join-shell-commands
+             (fpga-manager--build-command '("uv" "sync"))
+             commands)
+    (apply #'fpga-manager--join-shell-commands commands)))
 
-(defun fpga-manager--build-lock-state-command (env lock-value)
-  "Build the lock command that sets ENV to LOCK-VALUE."
-  (fpga-manager--build-uv-run-command
-   (list (fpga-manager--lock-script-path)
-         "-p" env
-         "-l" lock-value)))
+(defun fpga-manager--lock-script-command (args &optional sync)
+  (fpga-manager--maybe-with-uv-sync
+   sync
+   (fpga-manager--build-uv-run-command
+    (append (list (expand-file-name "linuxPC_Lock.py"
+                                    (fpga-manager--project-fpga-dir)))
+            (fpga-manager--flatten-command-args args)))))
 
 (defun fpga-manager--with-post-command (command post-command)
-  "Run COMMAND, then POST-COMMAND, preserving useful failure status.
-If COMMAND fails, return its status after POST-COMMAND runs. If COMMAND
-succeeds, return POST-COMMAND's status."
   (format "{ %s; command_status=$?; %s; post_status=$?; if [ \"$command_status\" -ne 0 ]; then exit \"$command_status\"; fi; exit \"$post_status\"; }"
-          command
-          post-command))
+          command post-command))
 
 (defun fpga-manager--build-webapp-session-command (env command &optional keep-locked)
-  "Build a shell command that locks ENV, runs COMMAND, and maybe unlocks it.
-When KEEP-LOCKED is non-nil, leave ENV locked after COMMAND exits."
-  (fpga-manager--with-uv-sync
-   (fpga-manager--build-lock-state-command env "1")
-   (if keep-locked
-       command
-     (fpga-manager--with-post-command
-      command
-      (fpga-manager--build-lock-state-command env "0")))))
+  (let ((lock (lambda (value)
+                (fpga-manager--lock-script-command (list "-p" env "-l" value)))))
+    (fpga-manager--maybe-with-uv-sync
+     fpga-manager-sync-before-mutate
+     (funcall lock "1")
+     (if keep-locked
+         command
+       (fpga-manager--with-post-command command (funcall lock "0"))))))
 
-;; Buffer name includes project to avoid cross-project reuse.
-(defun fpga-manager--compilation-buffer-name (project-root)
-  "Return a compilation buffer name for PROJECT-ROOT."
-  (format "*%s_compilation*"
-          (file-name-nondirectory (directory-file-name project-root))))
-
-;; Small helper to run a shell command with confirmation, routed to compile.
 (defun fpga-manager--confirm-and-compile (default-dir cmd)
-  "Confirm then compile CMD in DEFAULT-DIR."
   (let* ((project-root (fpga-manager--project-root))
          (compilation-buffer-name-function
           (lambda (_mode)
-            (fpga-manager--compilation-buffer-name project-root))))
+            (format "*%s_compilation*"
+                    (file-name-nondirectory (directory-file-name project-root))))))
     (when (yes-or-no-p (format "Run command in %s: %s ?" default-dir cmd))
       (let ((default-directory default-dir))
         (compile cmd)))))
 
-(defun fpga-manager--run-script-sync (args)
-  "Run linuxPC_Lock.py with ARGS synchronously and return output."
-  (let* ((default-directory (fpga-manager--project-fpga-dir))
-         (parts (append (list "linuxPC_Lock.py")
-                        (fpga-manager--flatten-command-args args))))
-    ;; Synchronous call is used only for status fetch (fast, small output).
-    (shell-command-to-string
-     (fpga-manager--with-uv-sync
-      (fpga-manager--build-uv-run-command parts)))))
+(defun fpga-manager--with-compilation-buffer (buffer-name thunk)
+  (let ((compilation-buffer-name-function (lambda (_mode) buffer-name)))
+    (funcall thunk)))
 
-;; Asynchronous compile-based execution gives us clickable errors and output.
-(defun fpga-manager--run-script-compile (args &optional on-success)
-  "Run linuxPC_Lock.py with ARGS in compilation mode.
-If ON-SUCCESS is provided, it will be called after successful compilation."
-  (let* ((default-directory (fpga-manager--project-fpga-dir))
-         (parts (append (list "linuxPC_Lock.py")
-                        (fpga-manager--flatten-command-args args)))
-         (compilation-buffer-name-function
-          (lambda (_mode) "*FPGA Manager Output*")))
-    (when on-success
-      ;; Use a temporary completion hook to refresh the status buffer when the
-      ;; command finishes successfully.
-      (letrec ((hook-fn
-                (lambda (buffer result)
-                  (when (equal (buffer-name buffer) "*FPGA Manager Output*")
-                    (remove-hook 'compilation-finish-functions hook-fn)
-                    (when (string-match "^finished" result)
-                      (funcall on-success))))))
-        (add-hook 'compilation-finish-functions hook-fn)))
-    (compile (fpga-manager--with-uv-sync
-              (fpga-manager--build-uv-run-command parts)))))
+(defun fpga-manager--on-compile-success (compilation-buffer-name status-buffer)
+  "After a successful compile, refresh STATUS-BUFFER."
+  (letrec ((hook-fn
+            (lambda (buffer result)
+              (when (equal (buffer-name buffer) compilation-buffer-name)
+                (remove-hook 'compilation-finish-functions hook-fn)
+                (when (string-match "^finished" result)
+                  (fpga-manager--refresh-buffer status-buffer))))))
+    (add-hook 'compilation-finish-functions hook-fn)))
 
-;;; Interactive Commands - Lock/Unlock
+(defun fpga-manager--run-lock-script (args &optional sync status-buffer)
+  (let ((default-directory (fpga-manager--project-fpga-dir)))
+    (fpga-manager--with-compilation-buffer fpga-manager--manager-output-buffer
+                                           (lambda ()
+                                             (when status-buffer
+                                               (fpga-manager--on-compile-success
+                                                fpga-manager--manager-output-buffer
+                                                status-buffer))
+                                             (compile (fpga-manager--lock-script-command args sync))))))
 
-;; Helper wrapper so commands can share "get env at point" error handling.
+;;; Interactive commands
+
 (defun fpga-manager--with-env-at-point (action)
-  "Execute ACTION with ENV at point if available.
-ACTION is a function that takes ENV as argument."
   (if-let* ((env (fpga-manager--get-env-at-point)))
       (funcall action env)
     (message "No ENV found at point")))
 
-(defun fpga-manager-lock ()
-  "Lock the FPGA at point."
-  (interactive)
+(defun fpga-manager--refresh-buffer (buffer)
+  (when (buffer-live-p buffer)
+    (with-current-buffer buffer (fpga-manager-refresh))))
+
+(defun fpga-manager--set-lock-state (lock-value &optional force-p)
   (fpga-manager--with-env-at-point
    (lambda (env)
      (let ((entry (assoc env fpga-manager--entries))
            (status-buffer (current-buffer)))
-       ;; Guard against double-locking to avoid noisy errors.
-       (if (fpga-manager--entry-locked-p entry)
-           (message "%s is already locked" env)
-         (message "Locking %s..." env)
-         (fpga-manager--run-script-compile
-          (format "-p %s -l 1" env)
-          (lambda ()
-            ;; Refresh the table once the lock command finishes.
-            (when (buffer-live-p status-buffer)
-              (with-current-buffer status-buffer
-                (fpga-manager-refresh))))))))))
+       (cond
+        (force-p
+         (when (yes-or-no-p (format "Force unlock %s? " env))
+           (message "Force unlocking %s..." env)
+           (fpga-manager--run-lock-script (list "-p" env "-l" "2")
+                                          fpga-manager-sync-before-mutate
+                                          status-buffer)))
+        ((and (= lock-value 1) (fpga-manager--entry-locked-p entry))
+         (message "%s is already locked" env))
+        ((and (= lock-value 0) (not (fpga-manager--entry-locked-p entry)))
+         (message "%s is not locked" env))
+        (t
+         (message "%s %s..."
+                  (if (= lock-value 1) "Locking" "Unlocking") env)
+         (fpga-manager--run-lock-script (list "-p" env "-l" (number-to-string lock-value))
+                                        fpga-manager-sync-before-mutate
+                                        status-buffer)))))))
+
+(defun fpga-manager-lock ()
+  "Lock the FPGA at point."
+  (interactive)
+  (fpga-manager--set-lock-state 1))
 
 (defun fpga-manager-unlock ()
   "Unlock the FPGA at point."
   (interactive)
-  (fpga-manager--with-env-at-point
-   (lambda (env)
-     (let ((entry (assoc env fpga-manager--entries))
-           (status-buffer (current-buffer)))
-       ;; Guard against unlocking an already-free device.
-       (if (not (fpga-manager--entry-locked-p entry))
-           (message "%s is not locked" env)
-         (message "Unlocking %s..." env)
-         (fpga-manager--run-script-compile
-          (format "-p %s -l 0" env)
-          (lambda ()
-            (when (buffer-live-p status-buffer)
-              (with-current-buffer status-buffer
-                (fpga-manager-refresh))))))))))
+  (fpga-manager--set-lock-state 0))
 
 (defun fpga-manager-force-unlock ()
   "Force unlock the FPGA at point."
   (interactive)
-  (fpga-manager--with-env-at-point
-   (lambda (env)
-     ;; Force unlock is potentially destructive; ask for confirmation.
-     (when (yes-or-no-p (format "Force unlock %s? " env))
-       (let ((status-buffer (current-buffer)))
-         (message "Force unlocking %s..." env)
-         (fpga-manager--run-script-compile
-          (format "-p %s -l 2" env)
-          (lambda ()
-            (when (buffer-live-p status-buffer)
-              (with-current-buffer status-buffer
-                (fpga-manager-refresh))))))))))
-
-;;; Interactive Commands - View
+  (fpga-manager--set-lock-state 2 'force))
 
 (defun fpga-manager-refresh ()
   "Refresh the FPGA lock table."
   (interactive)
-  (message "Fetching FPGA status...")
-  (let* ((output (fpga-manager--run-script-sync ""))
-         (entries (fpga-manager--parse-output output))
-         (categorized (fpga-manager--categorize-entries entries)))
-    (setq fpga-manager--entries entries
-          tabulated-list-entries categorized)
-    ;; Re-render the tabulated list with current data.
-    (tabulated-list-print t)
-    (message "Refreshed.")))
+  (let ((inhibit-read-only t))
+    (message "Fetching FPGA status...")
+    (let* ((default-directory (fpga-manager--project-fpga-dir))
+           (output (shell-command-to-string (fpga-manager--lock-script-command "")))
+           (parsed (fpga-manager--parse-output output))
+           (built (fpga-manager--build-display-entries parsed)))
+      (setq fpga-manager--entries (car built)
+            tabulated-list-entries (cdr built)
+            fpga-manager--highlight-line nil)
+      (tabulated-list-print t)
+      (message "Refreshed %d hosts (%d in use) across %d sections."
+               (length fpga-manager--entries)
+               (fpga-manager--count-locked-hosts fpga-manager--entries)
+               (length (cdr (assoc 'sections parsed)))))))
 
 (defun fpga-manager-set-user ()
   "Set the current user for \\='My FPGAs\\=' filtering."
   (interactive)
-  (let ((user (read-string "Enter your username (as shown in FPGA table): "
-                           fpga-manager-current-user)))
-    (setq fpga-manager-current-user (string-trim user))
-    (message "Current user set to: %s" fpga-manager-current-user)
-    ;; Refresh so the section grouping reflects the new filter.
-    (fpga-manager-refresh)))
+  (setq fpga-manager-current-user
+        (string-trim (read-string "Enter your username (as shown in FPGA table): "
+                                  fpga-manager-current-user)))
+  (message "Current user set to: %s" fpga-manager-current-user)
+  (fpga-manager-refresh))
 
-;;; Transient Menus
+;;; Test argument parsing
 
-;; The transient menu provides discoverability and keeps keybindings visible.
+(defun fpga-manager--parse-test-args (args)
+  (let ((protocol nil)
+        (test-ids nil)
+        (browser nil)
+        (repeat nil)
+        (debug nil)
+        (headless nil)
+        (keep-locked nil)
+        (remaining '()))
+    (dolist (arg (fpga-manager--ensure-list args))
+      (cond
+       ((string-prefix-p "--protocol=" arg) (setq protocol (substring arg 11)))
+       ((string-prefix-p "--test-ids=" arg) (setq test-ids (substring arg 11)))
+       ((string-prefix-p "--browser=" arg) (setq browser (substring arg 10)))
+       ((string-prefix-p "-r " arg) (setq repeat (substring arg 3)))
+       ((string-prefix-p "-i " arg) (setq test-ids (substring arg 3)))
+       ((string= arg "-d") (setq debug t))
+       ((string= arg "--headless") (setq headless t))
+       ((string= arg "--keep-locked") (setq keep-locked t))
+       (t (push arg remaining))))
+    `((protocol . ,protocol)
+      (test-ids . ,test-ids)
+      (browser . ,browser)
+      (repeat . ,repeat)
+      (debug . ,debug)
+      (headless . ,headless)
+      (keep-locked . ,keep-locked)
+      (remaining . ,(nreverse remaining)))))
+
+(defun fpga-manager--convert-bitstream-args (args)
+  (mapcar (lambda (arg)
+            (if (string-prefix-p "-i " arg)
+                (concat "--local " (substring arg 3))
+              arg))
+          (fpga-manager--ensure-list args)))
+
+(defun fpga-manager--build-webapp-command-parts (script-name env parsed-args)
+  (let* ((protocol (alist-get 'protocol parsed-args))
+         (parts (list script-name protocol env
+                      (or (alist-get 'test-ids parsed-args) "webapp"))))
+    (unless protocol (error "Protocol is required for webapp tests"))
+    (when-let* ((remaining (alist-get 'remaining parsed-args)))
+      (setq parts (append parts remaining)))
+    (when (alist-get 'debug parsed-args) (setq parts (append parts '("-d"))))
+    (when-let* ((repeat (alist-get 'repeat parsed-args)))
+      (setq parts (append parts (list "--repeat" repeat))))
+    (when-let* ((browser (alist-get 'browser parsed-args)))
+      (setq parts (append parts (list "--browser" browser))))
+    parts))
+
+(defun fpga-manager--build-webapp-main-command (script-path env parsed-args)
+  (fpga-manager--build-uv-run-command
+   (fpga-manager--build-webapp-command-parts
+    (file-name-nondirectory script-path) env parsed-args)
+   (when (alist-get 'headless parsed-args)
+     '("env" "-u" "XDG_CURRENT_DESKTOP"))))
+
+(defun fpga-manager-run-test (&optional args)
+  "Run test (bitstream or webapp) with ARGS."
+  (interactive (list (transient-args 'fpga-manager-test-menu)))
+  (fpga-manager--remember-test-args fpga-manager-test-type args)
+  (if (eq fpga-manager-test-type 'bitstream)
+      (fpga-manager-run-bitstream-test args)
+    (fpga-manager-run-webapp-test args)))
+
+(defun fpga-manager-run-bitstream-test (args)
+  "Run bitstream toplevel.py test with ARGS for the CLI at point."
+  (fpga-manager--with-env-at-point
+   (lambda (env)
+     (let* ((status-buffer (current-buffer))
+            (script-path (fpga-manager--find-script "bitstreams" "toplevel.py"))
+            (default-directory (file-name-directory script-path))
+            (cmd (fpga-manager--maybe-with-uv-sync
+                  fpga-manager-sync-before-mutate
+                  (fpga-manager--build-uv-run-command
+                   (append (list (file-name-nondirectory script-path) "-p" env)
+                           (fpga-manager--flatten-command-args
+                            (fpga-manager--convert-bitstream-args args)))))))
+       (fpga-manager--bstt-sync-from-bitstream env args)
+       (fpga-manager--with-compilation-buffer fpga-manager--test-output-buffer
+                                              (lambda ()
+                                                (message "Running bitstream test: %s" cmd)
+                                                (compile cmd)
+                                                (run-with-timer 2 nil #'fpga-manager--refresh-buffer
+                                                                status-buffer)))))))
+
+(defun fpga-manager-run-webapp-test (args)
+  "Run webapp main.py test with ARGS."
+  (fpga-manager--with-env-at-point
+   (lambda (env)
+     (let* ((script-path (fpga-manager--find-script "webapp" "main.py"))
+            (default-directory (file-name-directory script-path))
+            (parsed (fpga-manager--parse-test-args args))
+            (cmd (fpga-manager--build-webapp-session-command
+                  env
+                  (fpga-manager--build-webapp-main-command script-path env parsed)
+                  (alist-get 'keep-locked parsed))))
+       (fpga-manager--bstt-sync-from-webapp env args parsed)
+       (fpga-manager--with-compilation-buffer fpga-manager--test-output-buffer
+                                              (lambda ()
+                                                (message "Running webapp test%s%s: %s"
+                                                         (if (alist-get 'headless parsed) " (headless)" "")
+                                                         (if (alist-get 'keep-locked parsed) " (keeping host locked)" "")
+                                                         cmd)
+                                                (compile cmd)))))))
+
+(defun fpga-manager-toggle-test-type ()
+  "Toggle between bitstream and webapp test types."
+  (interactive)
+  (setq fpga-manager-test-type
+        (if (eq fpga-manager-test-type 'bitstream) 'webapp 'bitstream))
+  (message "Test type: %s" fpga-manager-test-type)
+  (transient-setup 'fpga-manager-test-menu))
+
+;;; Transient menus
+
 (transient-define-prefix fpga-manager-menu ()
   "Main transient menu for FPGA manager operations."
   ["FPGA Manager"
@@ -525,195 +737,6 @@ ACTION is a function that takes ENV as argument."
    ["Testing"
     ("t" "Test menu" fpga-manager-test-menu)]])
 
-(defun fpga-manager-help ()
-  "Show help menu for fpga-manager-mode."
-  (interactive)
-  (fpga-manager-menu))
-
-;;; Test Helper Functions
-
-;; Locate helper scripts by walking up the directory tree.
-;; This keeps the UI working from any subdirectory in the project.
-(defun fpga-manager--find-script (subdir filename)
-  "Find FILENAME in SUBDIR within the current directory tree."
-  (if-let* ((search-path (locate-dominating-file default-directory subdir))
-            (script-path (expand-file-name (concat subdir "/" filename) search-path)))
-      (if (file-exists-p script-path)
-          script-path
-        (error "Could not find %s/%s in directory tree" subdir filename))
-    (error "Could not find %s/%s in directory tree" subdir filename)))
-
-(defun fpga-manager-find-toplevel-script ()
-  "Find toplevel.py script in current directory tree."
-  (fpga-manager--find-script "bitstreams" "toplevel.py"))
-
-(defun fpga-manager-find-webapp-script ()
-  "Find webapp/main.py script in current directory tree."
-  (fpga-manager--find-script "webapp" "main.py"))
-
-(defun fpga-manager-toggle-test-type ()
-  "Toggle between bitstream and webapp test types."
-  (interactive)
-  (setq fpga-manager-test-type
-        (if (eq fpga-manager-test-type 'bitstream) 'webapp 'bitstream))
-  (message "Test type: %s" fpga-manager-test-type)
-  ;; Reopen the transient to reflect updated options.
-  (transient-setup 'fpga-manager-test-menu))
-
-;;; Test Argument Parsing
-
-;; Transient returns an argument list that mixes flags and key/value forms.
-;; We normalize it into an alist for easier command assembly.
-(defun fpga-manager--parse-test-args (args)
-  "Parse ARGS into an alist of (flag . value) pairs.
-Handles both flag-only args like \\='-d\\=' and value args like \\='-r 5\\='."
-  (let ((protocol nil)
-        (test-ids nil)
-        (browser nil)
-        (repeat nil)
-        (debug nil)
-        (headless nil)
-        (keep-locked nil)
-        (remaining '()))
-    (dolist (arg (fpga-manager--ensure-list args))
-      (cond
-       ((string-prefix-p "--protocol=" arg)
-        (setq protocol (substring arg 11)))
-       ((string-prefix-p "--test-ids=" arg)
-        (setq test-ids (substring arg 11)))
-       ((string-prefix-p "--browser=" arg)
-        (setq browser (substring arg 10)))
-       ((string-prefix-p "-r " arg)
-        (setq repeat (substring arg 3)))
-       ((string-prefix-p "-i " arg)
-        (setq test-ids (substring arg 3)))
-       ((string= arg "-d")
-        (setq debug t))
-       ((string= arg "--headless")
-        (setq headless t))
-       ((string= arg "--keep-locked")
-        (setq keep-locked t))
-       (t
-        (push arg remaining))))
-    `((protocol . ,protocol)
-      (test-ids . ,test-ids)
-      (browser . ,browser)
-      (repeat . ,repeat)
-      (debug . ,debug)
-      (headless . ,headless)
-      (keep-locked . ,keep-locked)
-      (remaining . ,(nreverse remaining)))))
-
-(defun fpga-manager--convert-bitstream-args (args)
-  "Convert transient ARGS to bitstream format.
-Converts \\='-i\\=' to \\='--local\\=' for bitstream tests."
-  (mapcar (lambda (arg)
-            (if (string-prefix-p "-i " arg)
-                (concat "--local " (substring arg 3))
-              arg))
-          (fpga-manager--ensure-list args)))
-
-;; Build the command parts in a stable order so downstream scripts parse
-;; positional arguments correctly.
-(defun fpga-manager--build-webapp-command-parts (script-name env parsed-args)
-  "Build webapp command parts from SCRIPT-NAME, ENV, and PARSED-ARGS."
-  (let* ((protocol (alist-get 'protocol parsed-args))
-         (debug (alist-get 'debug parsed-args))
-         (repeat (alist-get 'repeat parsed-args))
-         (browser (alist-get 'browser parsed-args))
-         (test-ids (or (alist-get 'test-ids parsed-args) "webapp"))
-         (remaining (alist-get 'remaining parsed-args)))
-    (unless protocol
-      (error "Protocol is required for webapp tests"))
-    (let ((parts (list script-name protocol env test-ids)))
-      ;; Positional arguments must come before optional flags.
-      (when remaining
-        (setq parts (append parts remaining)))
-      ;; Now add optional flags
-      (when debug
-        (setq parts (append parts '("-d"))))
-      (when repeat
-        (setq parts (append parts (list "--repeat" repeat))))
-      (when browser
-        (setq parts (append parts (list "--browser" browser))))
-      parts)))
-
-(defun fpga-manager--build-webapp-main-command (script-path env parsed-args)
-  "Build the main webapp command for SCRIPT-PATH, ENV, and PARSED-ARGS."
-  (fpga-manager--build-uv-run-command
-   (fpga-manager--build-webapp-command-parts
-    (file-name-nondirectory script-path)
-    env
-    parsed-args)
-   (when (alist-get 'headless parsed-args)
-     '("env" "-u" "XDG_CURRENT_DESKTOP"))))
-
-;;; Test Execution
-
-(defun fpga-manager-run-test (&optional args)
-  "Run test (bitstream or webapp) with ARGS."
-  (interactive (list (transient-args 'fpga-manager-test-menu)))
-  ;; Save arguments so the next menu invocation can reuse them.
-  (fpga-manager--remember-test-args fpga-manager-test-type args)
-  (if (eq fpga-manager-test-type 'bitstream)
-      (fpga-manager-run-bitstream-test args)
-    (fpga-manager-run-webapp-test args)))
-
-(defun fpga-manager-run-bitstream-test (args)
-  "Run bitstream toplevel.py test with ARGS for the CLI at point."
-  (fpga-manager--with-env-at-point
-   (lambda (env)
-     (let* ((status-buffer (current-buffer))
-            (script-path (fpga-manager-find-toplevel-script))
-            (default-directory (file-name-directory script-path))
-            (converted-args (fpga-manager--convert-bitstream-args args))
-            (cmd (fpga-manager--with-uv-sync
-                  (fpga-manager--build-uv-run-command
-                   (append (list (file-name-nondirectory script-path)
-                                 "-p" env)
-                           (fpga-manager--flatten-command-args converted-args)))))
-            (compilation-buffer-name-function
-             (lambda (_mode) "*FPGA Test Output*")))
-       ;; Persist args into BSTT state so quick actions reuse them.
-       (fpga-manager--bstt-sync-from-bitstream env args)
-       ;; Use compile so errors are navigable.
-       (message "Running bitstream test: %s" cmd)
-       (compile cmd)
-       ;; Give the test a moment to start before refreshing status.
-       (run-with-timer 2 nil
-                       (lambda ()
-                         (when (buffer-live-p status-buffer)
-                           (with-current-buffer status-buffer
-                             (fpga-manager-refresh)))))))))
-
-(defun fpga-manager-run-webapp-test (args)
-  "Run webapp main.py test with ARGS."
-  (fpga-manager--with-env-at-point
-   (lambda (env)
-     (let* ((script-path (fpga-manager-find-webapp-script))
-            (default-directory (file-name-directory script-path))
-            (parsed (fpga-manager--parse-test-args args))
-            (headless (alist-get 'headless parsed))
-            (keep-locked (alist-get 'keep-locked parsed)))
-       (let* ((cmd (fpga-manager--build-webapp-main-command
-                    script-path env parsed))
-              (full-cmd (fpga-manager--build-webapp-session-command
-                         env cmd keep-locked))
-              (compilation-buffer-name-function
-               (lambda (_mode) "*FPGA Test Output*")))
-         ;; Persist args into BSTT state so quick actions reuse them.
-         (fpga-manager--bstt-sync-from-webapp env args parsed)
-         ;; Headless mode drops the desktop variable to avoid GUI dependency.
-         (message "Running webapp test%s%s: %s"
-                  (if headless " (headless)" "")
-                  (if keep-locked " (keeping host locked)" "")
-                  full-cmd)
-         (compile full-cmd))))))
-
-;;; Transient Test Menu
-
-;; The transient menu captures common flags and exposes richer options by
-;; dynamically switching between bitstream and webapp sets.
 (transient-define-prefix fpga-manager-test-menu ()
   "Transient menu for running FPGA tests."
   :value (lambda ()
@@ -723,12 +746,10 @@ Converts \\='-i\\=' to \\='--local\\=' for bitstream tests."
                  (fpga-manager--bstt-build-bitstream-args))))
   [:description
    (lambda ()
-     (let ((env (fpga-manager--get-env-at-point)))
-       (if env
-           (format "FPGA Test Menu - CLI: %s"
-                   (propertize env 'face 'success))
-         (format "FPGA Test Menu - %s"
-                 (propertize "No CLI selected" 'face 'warning)))))
+     (if-let* ((env (fpga-manager--get-env-at-point)))
+         (format "FPGA Test Menu - CLI: %s" (propertize env 'face 'success))
+       (format "FPGA Test Menu - %s"
+               (propertize "No CLI selected" 'face 'warning))))
    ["Test Type"
     ("t"
      (lambda ()
@@ -740,13 +761,13 @@ Converts \\='-i\\=' to \\='--local\\=' for bitstream tests."
     ("-r" "Repeat count" "-r "
      :class transient-option
      :prompt "Repeat: "
-     :reader (lambda (prompt _initial-input _history)
+     :reader (lambda (prompt _initial _history)
                (fpga-manager--state-read-string-into prompt :repeat)))
     ("-I" "Test ID" "-i "
      :class transient-option
      :prompt "Test ID: "
      :always-read t
-     :reader (lambda (prompt _initial-input _history)
+     :reader (lambda (prompt _initial _history)
                (fpga-manager--state-read-string-into prompt :test-case)))]
    ["Bitstream Options"
     :if (lambda () (eq fpga-manager-test-type 'bitstream))
@@ -756,14 +777,12 @@ Converts \\='-i\\=' to \\='--local\\=' for bitstream tests."
      :class transient-option
      :prompt "Level: "
      :choices ("20" "50")
-     :reader (lambda (prompt _initial-input _history)
-               (fpga-manager--state-read-choice-into prompt
-                                                     '("20" "50")
-                                                     :log-level)))
+     :reader (lambda (prompt _initial _history)
+               (fpga-manager--state-read-choice-into prompt '("20" "50") :log-level)))
     ("-c" "Custom args" "-c "
      :class transient-option
      :prompt "Custom (key:value): "
-     :reader (lambda (prompt _initial-input _history)
+     :reader (lambda (prompt _initial _history)
                (fpga-manager--state-read-string-into prompt :custom)))]
    ["Webapp Options"
     :if (lambda () (eq fpga-manager-test-type 'webapp))
@@ -773,51 +792,52 @@ Converts \\='-i\\=' to \\='--local\\=' for bitstream tests."
      :class transient-option
      :prompt "Protocol (http/https): "
      :choices ("http" "https")
-     :reader (lambda (prompt _initial-input _history)
-               (fpga-manager--state-read-choice-into prompt
-                                                     '("http" "https")
-                                                     :protocol)))
+     :reader (lambda (prompt _initial _history)
+               (fpga-manager--state-read-choice-into prompt '("http" "https") :protocol)))
     ("-b" "Browser" "--browser="
      :class transient-option
      :prompt "Browser: "
      :choices ("chrome" "firefox" "safari" "edge")
-     :reader (lambda (prompt _initial-input _history)
-               (fpga-manager--state-read-choice-into prompt
-                                                     '("chrome" "firefox" "safari" "edge")
-                                                     :webapp-browser)))]]
+     :reader (lambda (prompt _initial _history)
+               (fpga-manager--state-read-choice-into
+                prompt '("chrome" "firefox" "safari" "edge") :webapp-browser)))]]
   [["Actions"
     ("RET" "Run test" fpga-manager-run-test)
     ("q" "Quit" transient-quit-one)]])
 
-;;; Major Mode
+;;; Major mode
 
-;; Auto-detect the user once per buffer, unless explicitly set.
-(defun fpga-manager--detect-current-user ()
-  "Detect current user from $USER environment variable."
-  (unless fpga-manager-current-user
-    (setq fpga-manager-current-user
-          (or (getenv "USER") (user-login-name)))))
+(defun fpga-manager--highlight-current-row ()
+  (when (derived-mode-p 'fpga-manager-mode)
+    (let ((line (line-number-at-pos)))
+      (unless (eql line fpga-manager--highlight-line)
+        (setq fpga-manager--highlight-line line)
+        (if (fpga-manager--get-env-at-point)
+            (progn
+              (unless fpga-manager--current-row-overlay
+                (setq fpga-manager--current-row-overlay
+                      (make-overlay (point-min) (point-min)))
+                (overlay-put fpga-manager--current-row-overlay 'face 'fpga-manager-highlight)
+                (overlay-put fpga-manager--current-row-overlay 'priority 1000))
+              (move-overlay fpga-manager--current-row-overlay
+                            (line-beginning-position) (line-end-position)))
+          (when fpga-manager--current-row-overlay
+            (delete-overlay fpga-manager--current-row-overlay)
+            (setq fpga-manager--current-row-overlay nil)))))))
 
 (defun fpga-manager--print-entry (id cols)
-  "Print a single entry with ID and COLS.
-Section headers and separators are styled differently."
   (if (string-prefix-p "SECTION:" id)
       (let ((title (aref cols 0)))
         (cond
          ((string-match-p "^─+$" title)
-          ;; Separator line.
-          (insert (propertize title 'face 'fpga-manager-separator))
-          (insert "\n"))
+          (insert (propertize title 'face 'fpga-manager-separator) "\n"))
          ((not (string-empty-p title))
-          ;; Section header.
-          (insert (propertize title 'face 'fpga-manager-section-header))
-          (insert "\n"))))
+          (insert (propertize title 'face 'fpga-manager-section-header) "\n"))))
     (tabulated-list-print-entry id cols)))
 
 (defvar fpga-manager-mode-map
   (let ((map (make-sparse-keymap)))
     (set-keymap-parent map tabulated-list-mode-map)
-    ;; One-keystroke actions for faster operation.
     (define-key map (kbd "l") #'fpga-manager-lock)
     (define-key map (kbd "u") #'fpga-manager-unlock)
     (define-key map (kbd "f") #'fpga-manager-force-unlock)
@@ -834,317 +854,139 @@ Section headers and separators are styled differently."
   "Major mode for managing FPGA locks interactively.
 
 \\{fpga-manager-mode-map}"
-  ;; Define tabulated list columns and install custom printer so we can render
-  ;; section headers inline with the data rows.
   (setq tabulated-list-format
         [("Env" 8 t)
-         ("User" 26 t)
+         ("User" 28 t)
          ("Date" 16 t)
-         ("Reserved" 30 t)
-         ("Motherboard" 22 t)
+         ("Reserved" 32 t)
+         ("Motherboard" 26 t)
          ("Cards" 6 t)
-         ("Model" 8 t)]
+         ("Model" 10 t)]
         tabulated-list-padding 2
         tabulated-list-sort-key nil)
   (setq-local tabulated-list-printer #'fpga-manager--print-entry)
   (add-hook 'tabulated-list-revert-hook #'fpga-manager-refresh nil t)
-  (add-hook 'post-command-hook
-            #'fpga-manager--highlight-current-row
-            nil
-            t)
+  (add-hook 'post-command-hook #'fpga-manager--highlight-current-row nil t)
+  (unless fpga-manager-current-user
+    (setq fpga-manager-current-user (or (getenv "USER") (user-login-name))))
   (tabulated-list-init-header))
 
-;;; Entry Point
-
-;; Buffer name follows the active project to avoid mixing multiple workspaces.
 (defun fpga-manager--buffer-name ()
-  "Generate buffer name for current project's FPGA manager.
-If in a project, use project name. Otherwise use default name."
   (if-let* ((proj (project-current))
-            (proj-name (file-name-nondirectory
-                        (directory-file-name (project-root proj)))))
-      (format "*FPGA Manager: %s*" proj-name)
+            (name (file-name-nondirectory
+                   (directory-file-name (project-root proj)))))
+      (format "*FPGA Manager: %s*" name)
     "*FPGA Manager*"))
 
 ;;;###autoload
 (defun fpga-manager-status ()
-  "Display FPGA Manager status in an interactive buffer.
-Each project gets its own FPGA manager buffer, similar to `project-eshell'."
+  "Display FPGA Manager status in an interactive buffer."
   (interactive)
-  (let* ((buffer-name (fpga-manager--buffer-name))
-         (buffer (get-buffer buffer-name)))
-    ;; Create or reuse existing buffer
-    (unless buffer
-      (setq buffer (get-buffer-create buffer-name))
-      (with-current-buffer buffer
-        (fpga-manager-mode)
-        (fpga-manager--detect-current-user)))
-    ;; Switch to buffer and refresh
+  (let ((buffer (get-buffer-create (fpga-manager--buffer-name))))
+    (with-current-buffer buffer
+      (unless (derived-mode-p 'fpga-manager-mode)
+        (fpga-manager-mode)))
     (switch-to-buffer buffer)
     (fpga-manager-refresh)
     (message "Press '?' for help")))
 
-;;; BSTT Helper Commands
-
-(defun fpga-manager--state-get (key)
-  "Get KEY from `fpga-manager--state'."
-  (plist-get fpga-manager--state key))
-
-(defun fpga-manager--state-set (key value)
-  "Set KEY to VALUE in `fpga-manager--state'."
-  (setq fpga-manager--state
-        (plist-put fpga-manager--state key value))
-  value)
-
-(defun fpga-manager--state-get-string (key)
-  "Get KEY from shared state when it is a non-empty string."
-  (let ((value (fpga-manager--state-get key)))
-    (when (and (stringp value)
-               (not (string-empty-p value)))
-      value)))
-
-(defun fpga-manager--push-arg-if-value (args prefix value)
-  "Push PREFIX plus VALUE onto ARGS when VALUE is non-empty."
-  (if value
-      (cons (concat prefix value) args)
-    args))
-
-(defun fpga-manager--remember-test-args (type args)
-  "Remember transient TYPE and ARGS for the next test menu invocation."
-  (setq fpga-manager-test-type type
-        fpga-manager-test-last-args (fpga-manager--ensure-list args)))
-
-(defun fpga-manager--sync-state-from-alist (mapping parsed-args)
-  "Apply MAPPING from PARSED-ARGS keys to state plist keys."
-  (dolist (entry mapping)
-    (when-let* ((value (alist-get (car entry) parsed-args)))
-      (fpga-manager--state-set (cdr entry) value))))
-
-(defun fpga-manager-state-get (key)
-  "Get shared fpga-manager state value for KEY."
-  (fpga-manager--state-get key))
-
-(defun fpga-manager--bstt-build-bitstream-args ()
-  "Build fpga-manager transient args from BSTT bitstream state."
-  (let ((args '("-d")))
-    (setq args (fpga-manager--push-arg-if-value
-                args "-i " (fpga-manager--state-get-string :test-case)))
-    (setq args (fpga-manager--push-arg-if-value
-                args "-l " (fpga-manager--state-get-string :log-level)))
-    (setq args (fpga-manager--push-arg-if-value
-                args "-r " (fpga-manager--state-get-string :repeat)))
-    (setq args (fpga-manager--push-arg-if-value
-                args "-c " (fpga-manager--state-get-string :custom)))
-    (nreverse args)))
-
-(defun fpga-manager--bstt-build-webapp-args ()
-  "Build fpga-manager transient args from BSTT webapp state."
-  (let ((args nil))
-    (push (concat "--protocol="
-                  (or (fpga-manager--state-get-string :protocol) "http"))
-          args)
-    (setq args (fpga-manager--push-arg-if-value
-                args "-i " (fpga-manager--state-get-string :test-case)))
-    (setq args (fpga-manager--push-arg-if-value
-                args "-r " (fpga-manager--state-get-string :repeat)))
-    (setq args (fpga-manager--push-arg-if-value
-                args "--browser=" (fpga-manager--state-get-string :webapp-browser)))
-    (when (fpga-manager--state-get :keep-locked)
-      (push "--keep-locked" args))
-    (nreverse args)))
-
-(defun fpga-manager--bstt-webapp-parsed-args ()
-  "Build canonical parsed webapp args from shared BSTT state."
-  `((protocol . ,(or (fpga-manager--state-get-string :protocol) "http"))
-    (test-ids . ,(or (fpga-manager--state-get-string :test-case) "webapp"))
-    (browser . ,(fpga-manager--state-get-string :webapp-browser))
-    (repeat . ,(fpga-manager--state-get-string :repeat))
-    (debug . nil)
-    (headless . nil)
-    (keep-locked . ,(fpga-manager--state-get :keep-locked))
-    (remaining . nil)))
-
-(defun fpga-manager--bstt-sync-test-menu (type)
-  "Sync fpga-manager test menu defaults from BSTT state."
-  (setq fpga-manager-test-type type
-        fpga-manager-test-last-args
-        (if (eq type 'webapp)
-            (fpga-manager--bstt-build-webapp-args)
-          (fpga-manager--bstt-build-bitstream-args))))
-
-(defun fpga-manager--bstt-sync-from-bitstream (env args)
-  "Update BSTT bitstream defaults from fpga-manager ENV and ARGS."
-  (fpga-manager--state-set :port env)
-  (dolist (arg (fpga-manager--ensure-list args))
-    (cond
-     ((string-prefix-p "-i " arg)
-      (fpga-manager--state-set :test-case (substring arg 3)))
-     ((string-prefix-p "-r " arg)
-      (fpga-manager--state-set :repeat (substring arg 3)))
-     ((string-prefix-p "-l " arg)
-      (fpga-manager--state-set :log-level (substring arg 3)))
-     ((string-prefix-p "-c " arg)
-      (fpga-manager--state-set :custom (substring arg 3)))))
-  (fpga-manager--remember-test-args 'bitstream args))
-
-(defun fpga-manager--bstt-sync-from-webapp (env args parsed-args)
-  "Update BSTT webapp defaults from fpga-manager ENV, ARGS, and PARSED-ARGS."
-  (fpga-manager--state-set :port env)
-  (fpga-manager--sync-state-from-alist
-   '((protocol . :protocol)
-     (test-ids . :test-case)
-     (browser . :webapp-browser)
-     (repeat . :repeat))
-   parsed-args)
-  (fpga-manager--state-set :keep-locked (and (alist-get 'keep-locked parsed-args) t))
-  (fpga-manager--remember-test-args 'webapp args))
-
-(defun fpga-manager--state-read-string-into (prompt key)
-  "Prompt with PROMPT and store the entered value into KEY."
-  ;; Use read-string to allow empty inputs (meaning "omit flag").
-  (fpga-manager--state-set
-   key
-   (string-trim (read-string prompt (fpga-manager--state-get key)))))
-
-(defun fpga-manager--state-read-choice-into (prompt choices key)
-  "Prompt with PROMPT over CHOICES and store the selected value into KEY."
-  ;; completing-read enforces a finite choice set when desired.
-  (fpga-manager--state-set
-   key
-   (completing-read prompt choices nil t (fpga-manager--state-get key))))
-
-;; BSTT Lock Command Helper Functions
+;;; BSTT commands
 
 (defun bstt/lock-set-port ()
   (interactive)
-  (fpga-manager--state-read-string-into
-   "Port (-p, blank to omit): " :port))
+  (fpga-manager--state-read-string-into "Port (-p, blank to omit): " :port))
 
 (defun bstt/lock-set-value ()
   (interactive)
-  (fpga-manager--state-read-string-into
-   "Lock (-l, blank to omit): " :lock-status))
+  (fpga-manager--state-read-string-into "Lock (-l, blank to omit): " :lock-status))
 
 (defun bstt/lock-build-cmd ()
   (let ((args nil)
-        (port (fpga-manager--state-get :port))
-        (lock (fpga-manager--state-get :lock-status)))
-    ;; Only add flags if the user actually provided a value.
-    (when (and port (not (string-empty-p port)))
-      (setq args (append args (list "-p" port))))
-    (when (and lock (not (string-empty-p lock)))
-      (setq args (append args (list "-l" lock))))
-    (fpga-manager--with-uv-sync
-     (fpga-manager--build-uv-run-command
-      (append (list "linuxPC_Lock.py") args)))))
+        (port (fpga-manager--state-get-string :port))
+        (lock (fpga-manager--state-get-string :lock-status)))
+    (when port (setq args (append args (list "-p" port))))
+    (when lock (setq args (append args (list "-l" lock))))
+    (fpga-manager--lock-script-command args fpga-manager-sync-before-mutate)))
 
 (defun bstt/lock-run ()
   (interactive)
-  (let* ((cmd (bstt/lock-build-cmd))
-         (default-directory (fpga-manager--project-fpga-dir)))
-    (fpga-manager--confirm-and-compile default-directory cmd)))
-
-;; BSTT Webapp Compile Command Helper Functions
+  (fpga-manager--confirm-and-compile (fpga-manager--project-fpga-dir) (bstt/lock-build-cmd)))
 
 (defun bstt/webapp-compile-set-cli-code ()
   (interactive)
-  (fpga-manager--state-read-string-into
-   "CLI Code: " :port)
-  (fpga-manager--bstt-sync-test-menu 'webapp))
+  (fpga-manager--bstt-edit-field 'webapp "CLI Code: " :port))
 
 (defun bstt/webapp-compile-set-batch-code ()
   (interactive)
-  (fpga-manager--state-read-string-into
-   "Batch Code: " :test-case)
-  (fpga-manager--bstt-sync-test-menu 'webapp))
+  (fpga-manager--bstt-edit-field 'webapp "Batch Code: " :test-case))
 
 (defun bstt/webapp-compile-set-browser ()
   (interactive)
-  (fpga-manager--state-read-choice-into
-   "Browser: "
-   '("chrome" "firefox" "safari" "edge")
-   :webapp-browser)
-  (fpga-manager--bstt-sync-test-menu 'webapp))
+  (fpga-manager--bstt-edit-field
+   'webapp "Browser: " :webapp-browser '("chrome" "firefox" "safari" "edge")))
 
 (defun bstt/webapp-compile-set-repeat ()
   (interactive)
-  (fpga-manager--state-read-string-into
-   "Repeat count: " :repeat)
-  (fpga-manager--bstt-sync-test-menu 'webapp))
+  (fpga-manager--bstt-edit-field 'webapp "Repeat count: " :repeat))
 
 (defun bstt/webapp-compile-build-cmd ()
   (let* ((env (fpga-manager--state-get :port))
-         (parsed-args (fpga-manager--bstt-webapp-parsed-args))
-         (script-path (fpga-manager-find-webapp-script))
-         (main-cmd (fpga-manager--build-webapp-main-command
-                    script-path env parsed-args)))
+         (parsed (fpga-manager--bstt-webapp-parsed-args))
+         (script-path (fpga-manager--find-script "webapp" "main.py")))
     (fpga-manager--build-webapp-session-command
      env
-     main-cmd
-     (alist-get 'keep-locked parsed-args))))
+     (fpga-manager--build-webapp-main-command script-path env parsed)
+     (alist-get 'keep-locked parsed))))
 
 (defun bstt/webapp-compile-run ()
   (interactive)
-  (let* ((script-path (fpga-manager-find-webapp-script))
-         (default-directory (file-name-directory script-path))
-         (cmd (bstt/webapp-compile-build-cmd)))
+  (let* ((script-path (fpga-manager--find-script "webapp" "main.py"))
+         (default-directory (file-name-directory script-path)))
     (fpga-manager--bstt-sync-test-menu 'webapp)
-    (fpga-manager--confirm-and-compile default-directory cmd)))
-
-;; BSTT Toplevel Command Helper Functions
+    (fpga-manager--confirm-and-compile default-directory (bstt/webapp-compile-build-cmd))))
 
 (defun bstt/toplevel-set-cli-code ()
   (interactive)
-  (fpga-manager--state-read-string-into
-   "CLI Code (-p): " :port)
-  (fpga-manager--bstt-sync-test-menu 'bitstream))
+  (fpga-manager--bstt-edit-field 'bitstream "CLI Code (-p): " :port))
 
 (defun bstt/toplevel-set-local-code ()
   (interactive)
-  (fpga-manager--state-read-string-into
-   "Local Code (--local): " :test-case)
-  (fpga-manager--bstt-sync-test-menu 'bitstream))
+  (fpga-manager--bstt-edit-field 'bitstream "Local Code (--local): " :test-case))
 
 (defun bstt/toplevel-set-config ()
   (interactive)
-  (fpga-manager--state-read-string-into
-   "Config (-c, blank to omit): " :custom)
-  (fpga-manager--bstt-sync-test-menu 'bitstream))
+  (fpga-manager--bstt-edit-field 'bitstream "Config (-c, blank to omit): " :custom))
 
 (defun bstt/toplevel-set-repeat ()
   (interactive)
-  (fpga-manager--state-read-string-into
-   "Repeat (-r): " :repeat)
-  (fpga-manager--bstt-sync-test-menu 'bitstream))
+  (fpga-manager--bstt-edit-field 'bitstream "Repeat (-r): " :repeat))
 
 (defun bstt/toplevel-build-cmd ()
   (let ((args (list "toplevel.py" "-d" "-p" (fpga-manager--state-get :port)
                     "--local" (fpga-manager--state-get :test-case)
                     "-r" (fpga-manager--state-get :repeat))))
-    ;; Optional -c flag only if config was provided.
-    (when-let* ((cfg (fpga-manager--state-get :custom)))
-      (unless (string-empty-p cfg)
-        (setq args (append args (list "-c" cfg)))))
-    (fpga-manager--with-uv-sync
+    (when-let* ((cfg (fpga-manager--state-get-string :custom)))
+      (setq args (append args (list "-c" cfg))))
+    (fpga-manager--maybe-with-uv-sync
+     fpga-manager-sync-before-mutate
      (fpga-manager--build-uv-run-command args))))
 
 (defun bstt/toplevel-run ()
   (interactive)
-  (let* ((script-path (fpga-manager-find-toplevel-script))
-         (default-directory (file-name-directory script-path))
-         (cmd (bstt/toplevel-build-cmd)))
+  (let* ((script-path (fpga-manager--find-script "bitstreams" "toplevel.py"))
+         (default-directory (file-name-directory script-path)))
     (fpga-manager--bstt-sync-test-menu 'bitstream)
-    (fpga-manager--confirm-and-compile default-directory cmd)))
+    (fpga-manager--confirm-and-compile default-directory (bstt/toplevel-build-cmd))))
 
-;; BSTT Code Submission Check Command Helper Functions
 (defun bstt/code-check-run ()
   (interactive)
-  (let* ((script-path (fpga-manager-find-webapp-script))
+  (let* ((script-path (fpga-manager--find-script "webapp" "main.py"))
          (default-directory (file-name-directory script-path))
-         (cmd (fpga-manager--with-uv-sync
+         (cmd (fpga-manager--maybe-with-uv-sync
+               fpga-manager-sync-before-mutate
                (fpga-manager--build-uv-run-command
                 (list "code_submission_check.py")))))
     (fpga-manager--confirm-and-compile default-directory cmd)))
 
 (provide 'fpga-manager)
-;;; lib-fpga-manager.el ends here
+;;; fpga-manager.el ends here

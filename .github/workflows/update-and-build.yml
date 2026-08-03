@@ -3,8 +3,14 @@ name: Update and Build Demacs
 on:
   workflow_dispatch:
   schedule:
-    # Run daily at midnight UTC
-    - cron: '0 0 * * *'
+    - cron: "0 0 * * *"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-and-build-demacs
+  cancel-in-progress: false
 
 jobs:
   update-flake:
@@ -18,33 +24,19 @@ jobs:
 
       - name: Install Nix
         uses: cachix/install-nix-action@v31
-        with:
-          nix_path: nixpkgs=channel:nixos-unstable
-
-      - name: Setup Cachix
-        uses: cachix/cachix-action@v16
-        with:
-          name: demacs
-          authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
 
       - name: Update flake inputs
         id: update
         run: |
           nix flake update
+
           if git diff --quiet flake.lock; then
-            echo "has_changes=false" >> $GITHUB_OUTPUT
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
             echo "No changes to flake.lock"
           else
-            echo "has_changes=true" >> $GITHUB_OUTPUT
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
             echo "flake.lock has been updated"
           fi
-
-      - name: Push flake dependencies to Cachix
-        if: steps.update.outputs.has_changes == 'true'
-        run: |
-          nix flake archive --json | \
-          jq -r '.path,(.inputs|to_entries[].value.path)' | \
-          cachix push demacs
 
       - name: Upload updated flake.lock
         if: steps.update.outputs.has_changes == 'true'
@@ -55,7 +47,7 @@ jobs:
           retention-days: 1
 
   build-and-cache:
-    name: Build demacs (${{ matrix.os }} - ${{ matrix.version }})
+    name: Build ${{ matrix.package }} on ${{ matrix.os }}
     needs: update-flake
     if: needs.update-flake.outputs.has_changes == 'true'
     runs-on: ${{ matrix.os }}
@@ -63,7 +55,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest]
-        version: [igc, igc-patched, git, git-patched]
+        package: [demacs-igc, demacs-git, demacs-git-pgtk]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -75,122 +67,22 @@ jobs:
 
       - name: Install Nix
         uses: cachix/install-nix-action@v31
-        with:
-          nix_path: nixpkgs=channel:nixos-unstable
 
       - name: Setup Cachix
         uses: cachix/cachix-action@v16
         with:
           name: demacs
-          authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+          authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
 
-      - name: Build demacs-${{ matrix.version }}
-        id: build
+      - name: Build and push to Cachix
         run: |
-          nix build .#demacs-${{ matrix.version }} --print-build-logs
-
-      - name: Push build to Cachix
-        if: success()
-        run: |
-          nix build .#demacs-${{ matrix.version }} --no-link --print-out-paths | \
-          cachix push demacs
-
-      - name: Create success marker
-        if: success()
-        run: |
-          mkdir -p .build-success
-          echo "${{ matrix.os }}-${{ matrix.version }}" > .build-success/${{ matrix.os }}-${{ matrix.version }}.txt
-
-      - name: Upload success marker
-        if: success()
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-success-${{ matrix.os }}-${{ matrix.version }}
-          path: .build-success/${{ matrix.os }}-${{ matrix.version }}.txt
-          retention-days: 1
-
-  check-matrix-success:
-    name: Check matrix success
-    needs: [update-flake, build-and-cache]
-    if: |
-      always() &&
-      needs.update-flake.outputs.has_changes == 'true' &&
-      !cancelled() &&
-      (needs.build-and-cache.result == 'success' || needs.build-and-cache.result == 'failure')
-    runs-on: ubuntu-latest
-    outputs:
-      any_success: ${{ steps.check.outputs.any_success }}
-    steps:
-      - name: Download success markers
-        id: download
-        continue-on-error: true
-        uses: actions/download-artifact@v4
-        with:
-          pattern: build-success-*
-          path: success-markers
-          merge-multiple: true
-
-      - name: Check for at least one successful matrix job
-        id: check
-        run: |
-          count=$(find success-markers -type f 2>/dev/null | wc -l | tr -d ' ')
-          if [ "$count" -gt 0 ]; then
-            echo "any_success=true" >> "$GITHUB_OUTPUT"
-            echo "Found $count successful matrix job(s)"
-          else
-            echo "any_success=false" >> "$GITHUB_OUTPUT"
-            echo "No successful matrix jobs found"
-          fi
-
-
-  push-to-cachix:
-    name: Push to Cachix (if any build succeeded)
-    needs: [update-flake, build-and-cache, check-matrix-success]
-    if: |
-      always() &&
-      needs.update-flake.outputs.has_changes == 'true' &&
-      needs.check-matrix-success.outputs.any_success == 'true' &&
-      !cancelled()
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Download updated flake.lock
-        uses: actions/download-artifact@v4
-        with:
-          name: flake-lock
-
-      - name: Install Nix
-        uses: cachix/install-nix-action@v31
-        with:
-          nix_path: nixpkgs=channel:nixos-unstable
-
-      - name: Setup Cachix
-        uses: cachix/cachix-action@v16
-        with:
-          name: demacs
-          authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
-
-      - name: Push all successful builds to Cachix
-        run: |
-          # Push all versions that might have succeeded
-          # Each individual build job already pushed its own result,
-          # this is a fallback to ensure everything is cached
-          for version in igc igc-patched git git-patched; do
-            echo "Attempting to push demacs-$version..."
-            nix build .#demacs-$version --no-link --print-out-paths 2>/dev/null | \
-              cachix push demacs || echo "demacs-$version not available, skipping"
-          done
+          set -o pipefail
+          nix build .#${{ matrix.package }} --no-link --print-build-logs --print-out-paths | cachix push demacs
 
   push-changes:
     name: Push flake.lock to repository
-    needs: [update-flake, build-and-cache, check-matrix-success]
-    if: |
-      always() &&
-      needs.update-flake.outputs.has_changes == 'true' &&
-      needs.check-matrix-success.outputs.any_success == 'true' &&
-      !cancelled()
+    needs: [update-flake, build-and-cache]
+    if: needs.update-flake.outputs.has_changes == 'true' && needs.build-and-cache.result == 'success'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -211,6 +103,6 @@ jobs:
           git add flake.lock
           git commit -m "[Chore] Update flake inputs
 
-          ✅ Builds verified on Linux and macOS"
+          Builds verified on Linux and macOS"
           git pull --rebase --autostash
           git push

@@ -11,8 +11,6 @@
 ;; ignore native compile warning
 (setq warning-minimum-level :emergency)
 
-;; Enable with t if you prefer
-(defconst *spell-check-support-enabled* nil )
 (defconst *is-mac* (eq system-type 'darwin))
 (defconst *is-linux* (memq system-type '(gnu gnu/linux gnu/kfreebsd berkeley-unix)))
 (defconst *org-path* "~/Documents/Org/")
@@ -22,9 +20,7 @@
                           "Noto Emoji"
                           "Segoe UI Emoji"
                           "Symbola"))
-;; (defconst *default-font* "MonaspiceAr Nerd Font Mono")
 (defconst *default-font* "Maple Mono NF")
-;; (defconst *zh-default-font* "LXGW WenKai")
 (defconst *zh-default-font* "Maple Mono NF CN")
 (defconst *symbol-default-font* "Symbols Nerd Font Mono")
 

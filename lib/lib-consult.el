@@ -1,12 +1,12 @@
-;; lib-consult.el --- Initialize org	-*- lexical-binding: t; -*-
+;;; lib-consult.el --- Consult helpers -*- lexical-binding: t -*-
 ;;; Commentary:
 ;;; Code:
 
 (defvar mcfly-commands
   '(consult-line
-    consult-outline
-    consult-git-grep
-    consult-ripfd))
+    consult-ripfd
+    consult-buffer
+    consult-goto-line))
 
 (defvar mcfly-back-commands
   '(self-insert-command
@@ -66,4 +66,4 @@ off the default preview behavior in Consult for those commands."
       (set source (plist-put (symbol-value source) :preview-key "M-P")))))
 
 (provide 'lib-consult)
-;;; lib-consult.el ends here.
+;;; lib-consult.el ends here

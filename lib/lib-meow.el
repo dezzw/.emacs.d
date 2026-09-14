@@ -121,6 +121,52 @@ If N is negative, select to the beginning of the previous Nth thing instead."
     (when (not (= pos (point)))
       (point))))
 
+(defcustom meow-two-char-escape-sequence "jk"
+  "Two-key sequence to exit meow insert state."
+  :type 'string
+  :group 'meow)
+
+(defcustom meow-two-char-escape-delay 0.4
+  "Seconds to wait for the second key of `meow-two-char-escape-sequence'."
+  :type 'number
+  :group 'meow)
+
+(declare-function meow-insert-exit "meow" ())
+
+(defun meow--two-char-exit-insert-state (sequence)
+  "Exit insert state when SEQUENCE is typed consecutively.
+SEQUENCE is a two-character string such as \"jk\"."
+  (when (meow-insert-mode-p)
+    (let* ((first (aref sequence 0))
+           (second (aref sequence 1))
+           (modified (buffer-modified-p))
+           (undo-list buffer-undo-list))
+      (insert (string first))
+      (let ((event (if defining-kbd-macro
+                       (read-event nil nil)
+                     (read-event nil nil meow-two-char-escape-delay))))
+        (cond
+         ((null event) nil)
+         ((char-equal event second)
+          (backward-delete-char 1)
+          (set-buffer-modified-p modified)
+          (setq buffer-undo-list undo-list)
+          (meow-insert-exit))
+         (t (push event unread-command-events)))))))
+
+(defun meow-two-char-exit-insert-state ()
+  "Exit meow insert state when `meow-two-char-escape-sequence' is typed."
+  (interactive)
+  (meow--two-char-exit-insert-state meow-two-char-escape-sequence))
+
+(defun meow-setup-two-char-escape ()
+  "Bind `meow-two-char-escape-sequence' in meow insert state."
+  (when (and (stringp meow-two-char-escape-sequence)
+             (= (length meow-two-char-escape-sequence) 2))
+    (define-key meow-insert-state-keymap
+                (substring meow-two-char-escape-sequence 0 1)
+                #'meow-two-char-exit-insert-state)))
+
 (defun meow-setup ()
   "Meow setup."
   (setq meow-cheatsheet-layout meow-cheatsheet-layout-qwerty)
@@ -215,43 +261,8 @@ If N is negative, select to the beginning of the previous Nth thing instead."
       (state
        '((telega-root-mode . normal)
          (telega-chat-mode . normal)))
-    (add-to-list 'meow-mode-state-list state)))
-
-;; (setq meow-two-char-escape-sequence "jk")
-;; (setq meow-two-char-escape-delay 0.5)
-
-;; (defun meow--two-char-exit-insert-state (s)
-;;   (when (meow-insert-mode-p)
-;;     (let ((modified (buffer-modified-p)))
-;;       (insert (elt s 0))
-;;       (let* ((second-char (elt s 1))
-;;              (event
-;;               (if defining-kbd-macro
-;;                   (read-event nil nil)
-;;                 (read-event nil nil meow-two-char-escape-delay))))
-;;         (when event
-;;           (if (and (characterp event) (= event second-char))
-;;               (progn
-;;                 (backward-delete-char 1)
-;;                 (set-buffer-modified-p modified)
-;;                 (meow--execute-kbd-macro "<escape>"))
-;;             (push event unread-command-events)))))))
-
-;; (defun meow-two-char-exit-insert-state ()
-;;   (interactive)
-;;   (meow--two-char-exit-insert-state meow-two-char-escape-sequence))
-
-;; (define-key meow-insert-state-keymap (substring meow-two-char-escape-sequence 0 1)
-;;             #'meow-two-char-exit-insert-state)
-
-;; sis-global-respect-mode 使得 meow-reverse 无效
-(defun sis-meow-reverse ()
-  "Just exchange point and mark.
-This command supports `meow-selection-command-fallback'."
-  (interactive)
-  (sis-global-respect-mode 0)
-  (meow-reverse)
-  (sis-global-respect-mode t))
+    (add-to-list 'meow-mode-state-list state))
+  (meow-setup-two-char-escape))
 
 (provide 'lib-meow)
 ;;; lib-meow.el ends here

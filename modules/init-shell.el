@@ -27,28 +27,32 @@
 
 
 (setup ghostel
-  (:also-load ghostel-eshell)
   (setopt ghostel-shell "zsh"
-          ghostel-module-directory user-emacs-directory
+          ghostel-module-directory (concat user-emacs-directory "ghostel")
           ghostel-tramp-shell-integration t)
-  (:hooks eshell-load-hook ghostel-eshell-visual-command-mode)
-  (defun dw/ghostel-tramp (host &optional user dir)
-    "Open Ghostel directly on HOST as USER using TRAMP."
-    (interactive
-     (list (read-string "Host: ")
-           (read-string "User: " "work")
-           (read-string "Remote dir: " "~/")))
-    (let ((default-directory
-           (format "/ssh:%s@%s:%s" user host (or dir "~/"))))
-      (ghostel)))
   (:when-loaded
+    (:also-load ghostel-eshell)
+    (:hooks eshell-load-hook ghostel-eshell-visual-command-mode)
+    (defun dw/ghostel-tramp (host &optional user dir)
+      "Open Ghostel directly on HOST as USER using TRAMP."
+      (interactive
+       (list (read-string "Host: ")
+             (read-string "User: " "work")
+             (read-string "Remote dir: " "~/")))
+      (let ((default-directory
+             (format "/ssh:%s@%s:%s" user host (or dir "~/"))))
+        (ghostel)))
     (add-to-list 'ghostel-eval-cmds '("magit-status-setup-buffer" magit-status-setup-buffer))
-    ))
+    (with-eval-after-load 'tabspaces
+      (add-to-list 'ghostel-eval-cmds
+                   '("cd-workspace" +ghostel-cd-workspace-root)))))
 
 (if (and (not (display-graphic-p))
          (eq (daemonp) "tui"))
-    (setup kitty-graphics
-      (:hook-into after-init)))
+    (progn
+      (setopt xterm-mouse-mode t)
+      (setup kitty-graphics
+        (:hook-into after-init))))
 
 (provide 'init-shell)
 ;;; init-shell.el ends here

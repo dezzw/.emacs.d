@@ -22,9 +22,15 @@
   (set-face-background 'fringe (face-attribute 'default :background)))
 
 
-;; Toggle between light and dark
-(defvar light-theme nil "The light theme.")
-(defvar dark-theme nil "The dark theme.")
+(defcustom light-theme nil
+  "Theme symbol for `apply-theme-based-on-appearance' in light mode."
+  :type 'symbol
+  :group 'faces)
+
+(defcustom dark-theme nil
+  "Theme symbol for `apply-theme-based-on-appearance' in dark mode."
+  :type 'symbol
+  :group 'faces)
 
 (defun +adjust-opacity (frame incr)
   "Adjust the background opacity of FRAME by increment INCR."
@@ -48,7 +54,6 @@
 
 (defun apply-theme (theme opacity)
   "Apply THEME and set window OPACITY."
-  (interactive)
   (when custom-enabled-themes
     (disable-theme (car custom-enabled-themes)))
   (setq custom-enabled-themes (list theme))

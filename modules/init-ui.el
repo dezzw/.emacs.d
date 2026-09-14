@@ -6,6 +6,7 @@
   (:also-load lib-window)
   (:global-bind "C-x |" 'split-window-horizontally-instead
                 "C-x _" 'split-window-vertically-instead
+                "C-x w D" 'toggle-window-hard-dedicated
                 "C-x 3" (lambda () (interactive) (select-window (split-window-horizontally)))
                 "C-x 2" (lambda () (interactive) (select-window (split-window-vertically)))))
 
@@ -57,29 +58,27 @@
 
 (setup panel
   (:require panel)
-  (setopt
-   ;; panel-latitude 43.45193874534566
-   ;; panel-longitude -80.49129101085033
-   panel-path-max-length 35
-   panel-min-left-padding 10
-   panel-image-file (concat user-emacs-directory "assets/bitmap.png")
-   panel-image-width 400
-   panel-image-height 169
-   panel-title "The best way to predict the future is to invent it.")
+  (setopt panel-path-max-length 35
+          panel-min-left-padding 10
+          panel-image-file (expand-file-name "assets/bitmap.png" user-emacs-directory)
+          panel-image-width 400
+          panel-image-height 169
+          panel-title "The best way to predict the future is to invent it.")
   (:when-loaded
-    (:face panel-title-face ((t (:inherit font-lock-constant-face :height 1.2 :italic t :family "Operator Mono"))))
+    (:also-load lib-panel)
+    (+panel-setup)
+    (:face panel-title-face ((t (:inherit font-lock-constant-face :height 1.2 :italic t))))
     (panel-create-hook)))
 
 (setup faces
   (:if-graphic
-    (:also-load lib-face)
+    (require 'lib-face)
     (:hooks window-setup-hook +setup-fonts
             server-after-make-frame-hook +setup-fonts
             after-make-frame-functions
             (lambda (frame)
               (with-selected-frame frame
-                (+setup-fonts))))
-    (+setup-fonts)))
+                (+setup-fonts))))))
 
 (setup custom
   (:when-loaded
@@ -105,10 +104,8 @@
           (:hook apply-theme-based-on-appearance)))
       (:with-hook window-setup-hook
         (:hook reapply-themes)
-        (:hook opacity-dark-theme)
         (:hook set-dividers-and-fringe-color))
       (:with-hook after-make-frame-functions (:hook opacity-dark-theme)))
-
     (:with-hook after-init-hook (:hook reapply-themes))))
 
 (setup hl-line
@@ -151,12 +148,7 @@
   (:also-load lib-popper)
   (:global-bind "C-c w p" 'popper-toggle
                 "C-c w n" 'popper-cycle
-                "C-c w P" 'popper-toggle-type
-                "C-c w <left>" '+popper-move-floating-popup-left
-                "C-c w <right>" '+popper-move-floating-popup-right
-                "C-c w <up>" '+popper-move-floating-popup-up
-                "C-c w <down>" '+popper-move-floating-popup-down
-                "C-c w r" '+popper-center-floating-popup)
+                "C-c w P" 'popper-toggle-type)
   (setopt popper-window-height (lambda (win)
                                  (fit-window-to-buffer
                                   win
@@ -175,10 +167,7 @@
             ;; AI/Chat
             "\\*chatgpt\\*$"
             ;; Terminal emulators
-            "\\*vterm\\*$"
-            "\\*.*-vterm\\*$"
-            "\\*ghostel\\*$"
-            "\\*.*-ghostel\\*$"
+            "\\ghostel\\*$"
             "\\*eat\\*$"
             "\\*eshell\\*$"
             "\\*.*-eshell\\*$"
@@ -230,7 +219,7 @@
     (setopt tabspaces-use-filtered-buffers-as-default t
             tabspaces-default-tab "Default"
             tabspaces-remove-to-default t
-            tabspaces-include-buffers '("*scratch*")
+            tabspaces-include-buffers '("*scratch*" "*panel*")
             tabspaces-initialize-project-with-todo t
             tabspaces-todo-file-name "project-todo.org"
             tabspaces-session t

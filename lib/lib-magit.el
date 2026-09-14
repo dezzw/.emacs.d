@@ -2,73 +2,6 @@
 ;;; Commentary:
 ;;; Code:
 
-(defconst gptel-commit-prompt-base
-  "The user provides the result of running `git diff --cached`.
-
-Task:
-- Generate a commit subject line that is short, clear, and accurately summarizes the staged changes.
-
-Output constraints (MUST follow exactly):
-- Output EXACTLY ONE line.
-- No surrounding quotes.
-- No markdown/code fences.
-- No additional commentary, blank lines, body, footers, trailers, or lists.
-
-Style guidelines:
-- Keep it brief (aim ~50 chars for the description).
-- Prefer specific nouns/verbs; avoid filler like \"update\", \"changes\", \"stuff\".
-- Mention the most important area impacted (file/feature/module) when helpful.
-- If multiple changes exist, summarize the primary one.
-
-Now produce the single-line commit message."
-  "Base prompt shared by `gptel-commit-prompt`.")
-
-(defun gptel-commit-prompt ()
-  "Return the system prompt used by `gptel-commit`.
-
-If (and only if) the current git branch name starts with \=`BSTT\=, the
-model must prefix the commit subject with \=`<branch_name> :\=`.
-
-For all other branches, the commit subject should NOT be prefixed with the
-branch name."
-  (let* ((branch (or (ignore-errors (magit-get-current-branch)) ""))
-         (bstt-branch-p (string-prefix-p "BSTT" branch))
-         (format-block
-          (if bstt-branch-p
-              (format "Required format:\n\n%s : <[change_type]> <description>\n\nWhere:\n- <branch_name> is the current git branch name (%s).\n- <change_type> is one of: fix, add, remove, feat, refactor (choose the best fit).\n- <description> is a concise, imperative summary describing what changed.\n\nExample:\n- %s : [fix] validate refresh token\n"
-                      branch branch branch)
-            "Required format:\n\n<[change_type]> <description>\n\nWhere:\n- <change_type> is one of: fix, add, remove, feat, refactor (choose the best fit).\n- <description> is a concise, imperative summary describing what changed.\n\nExample:\n- [fix] validate refresh token\n")))
-    (string-join
-     (list gptel-commit-prompt-base
-           format-block)
-     "\n\n")))
-
-(defun gptel-commit ()
-  "Generate commit message with gptel and insert it into the buffer."
-  (interactive)
-  (require 'gptel)
-  (setq-local gptel-model "openai/gpt-5.2")
-  (when buffer-read-only
-    (read-only-mode -1))
-  (let* ((lines (magit-git-lines "diff" "--cached"))
-         (changes (string-join lines "\n")))
-    (gptel-request changes :system (gptel-commit-prompt))))
-
-(defun +magit-gptel-commit-when-ready ()
-  "Auto-run `gptel-commit' when entering a Magit commit buffer.
-
-This is intentionally deferred and guarded so it only runs when `gptel'
-(and our `gptel-commit' helper) are available, similar to how
-`copilot-chat-insert-commit-message-when-ready' defers work until the
-implementation is loaded and the commit buffer is ready."
-  (let ((commit-buffer (current-buffer)))
-    (run-at-time
-     0.3 nil
-     (lambda ()
-       (when (buffer-live-p commit-buffer)
-         (with-current-buffer commit-buffer
-           (gptel-commit)))))))
-
 (defun +magit-or-vc-log-file (&optional prompt)
   "Show the version control log for the current file.
 
@@ -98,7 +31,6 @@ the built-in VC log view instead."
 
 (with-eval-after-load 'magit
   (transient-append-suffix 'magit-log "s" '("d" "dangling" magit-log-dangling)))
-;; (add-hook 'git-commit-setup-hook #'+magit-gptel-commit-when-ready))
 
 (defun magit-fullscreen (orig-fun &rest args)
   (window-configuration-to-register :magit-fullscreen)

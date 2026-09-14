@@ -54,42 +54,59 @@ NOTE: macOS only."
                    :disable_content_type_detection nil))
             (message (format "Saved to cloud: %s" fname))))))))
 
-(defvar +tab-bar-telega-indicator-cache nil)
+(defvar +telega-notification-cache nil
+  "Plist of Telega notification counts, or nil when there are none.")
 
-(defun +tab-bar-telega-icon-update (&rest _)
-  "Update the Telega icon in the tab bar, reflecting notification counts.
-This is used from Telega hooks and advice, so it accepts ignored args."
-  (setq +tab-bar-telega-indicator-cache
-        (when (and (fboundp 'telega-server-live-p)
-                   (telega-server-live-p)
-                   (buffer-live-p telega-server--buffer))
-          (let* ((keyword-count (length (ring-elements telega--notification-messages-ring)))
-                 (unread-count (or (plist-get telega--unread-chat-count :unread_unmuted_count) 0))
-                 (mentioned-count (apply '+ (mapcar (telega--tl-prop :unread_mention_count)
-                                                    (telega-filter-chats (telega-chats-list)
-                                                      '(mention)))))
-                 (notification-count (+ mentioned-count unread-count keyword-count)))
-            (when (> notification-count 0)
-              (concat (nerd-icons-faicon "nf-fae-telegram" :face '(:inherit nerd-icons-purple))
-                      "["
-                      (when (> unread-count 0)
-                        (propertize (concat " ●​​​" (number-to-string unread-count))
-                                    'face 'telega-unmuted-count))
-                      (when (> mentioned-count 0)
-                        (propertize (concat " @​​​" (number-to-string mentioned-count))
-                                    'face 'telega-mention-count))
-                      (when (> keyword-count 0)
-                        (propertize (concat " #​​​" (number-to-string keyword-count))
-                                    'face 'telega-unmuted-count))
-                      "]"))))))
+(defun +telega-notification--live-p ()
+  "Return non-nil when the Telega server is connected."
+  (and (fboundp 'telega-server-live-p)
+       (telega-server-live-p)
+       (buffer-live-p telega-server--buffer)))
 
-(defun +tab-bar-telega-icon ()
-  "Return the Telega icon for the tab bar, updating if necessary.
-This function checks if `+tab-bar-telega-indicator-cache` is set.  If it is,
-the cached value is returned.  Otherwise, it calls `+tab-bar-telega-icon-update`
-to refresh the icon and returns the updated value."
-  (or +tab-bar-telega-indicator-cache
-      (+tab-bar-telega-icon-update)))
+(defun +telega-notification--fetch-counts ()
+  "Return a plist of Telega notification counts, or nil when there are none."
+  (when (+telega-notification--live-p)
+    (let* ((keyword-count (length (ring-elements telega--notification-messages-ring)))
+           (unread-count (or (plist-get telega--unread-chat-count :unread_unmuted_count) 0))
+           (mentioned-count (apply '+ (mapcar (telega--tl-prop :unread_mention_count)
+                                             (telega-filter-chats (telega-chats-list)
+                                               '(mention)))))
+           (total (+ mentioned-count unread-count keyword-count)))
+      (when (> total 0)
+        (list :unread-count unread-count
+              :mentioned-count mentioned-count
+              :keyword-count keyword-count
+              :total total)))))
+
+(defun +telega-notification-update (&rest _)
+  "Refresh cached Telega notification counts and redraw the mode line.
+Used from Telega hooks and advice, so extra args are ignored."
+  (let ((new (+telega-notification--fetch-counts)))
+    (unless (equal new +telega-notification-cache)
+      (setq +telega-notification-cache new)
+      (force-mode-line-update))))
+
+(defun +telega-notification-icon ()
+  "Return the Telega nerd icon."
+  (when (fboundp 'nerd-icons-faicon)
+    (nerd-icons-faicon "nf-fae-telegram" :face '(:inherit nerd-icons-purple))))
+
+(defun +mode-line-telega-icon ()
+  "Return a detailed Telega notification indicator for the mode line.
+Reads `+telega-notification-cache' only; must not fetch during mode-line eval."
+  (when-let ((counts +telega-notification-cache))
+    (concat (+telega-notification-icon)
+            "["
+            (when (> (plist-get counts :unread-count) 0)
+              (propertize (concat " ●​​​" (number-to-string (plist-get counts :unread-count)))
+                          'face 'telega-unmuted-count))
+            (when (> (plist-get counts :mentioned-count) 0)
+              (propertize (concat " @​​​" (number-to-string (plist-get counts :mentioned-count)))
+                          'face 'telega-mention-count))
+            (when (> (plist-get counts :keyword-count) 0)
+              (propertize (concat " #​​​" (number-to-string (plist-get counts :keyword-count)))
+                          'face 'telega-unmuted-count))
+            "]")))
 
 (provide 'lib-telega)
 ;;; lib-telega.el ends here

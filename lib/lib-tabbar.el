@@ -26,23 +26,13 @@ TAB is the tab descriptor, and I is the tab index.  Apply custom
 styling to the tab name and index using `tab-bar-tab-face-function'.
 
 - Prefix the tab with its index and a colon, styled with a bold weight.
-- Surround the tab name with spaces, adjusting vertical alignment
-  for aesthetics.
+- Surround the tab name with spaces.
 - Return the formatted tab name with applied text properties."
   (let ((face (funcall tab-bar-tab-face-function tab)))
     (concat
-     (propertize " " 'display '(raise 0.25))
-     (propertize (format "%d:" i) 'face `(:inherit ,face :weight ultra-bold))
-     (propertize (concat " " (alist-get 'name tab) " ") 'face face)
-     (propertize " " 'display '(raise -0.25)))))
-
-(defun +tab-bar-format-menu-bar ()
-  "Produce the Menu button for the tab bar that shows the menu bar."
-  `((menu-bar menu-item
-              (format " %s "
-                      (nerd-icons-sucicon "nf-custom-emacs"
-                                          :face '(:inherit nerd-icons-purple)))
-              tab-bar-menu-bar :help "Menu Bar")))
+     (propertize (format "%d:" i)
+                 'face (list :inherit face :weight 'bold))
+     (propertize (concat " " (alist-get 'name tab) " ") 'face face))))
 
 (provide 'lib-tabbar)
 ;;; lib-tabbar.el ends here

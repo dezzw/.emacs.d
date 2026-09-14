@@ -17,7 +17,7 @@ TABLE, PRED, and POINT are forwarded to the completion backends."
 (setup orderless
   (:require orderless)
   (:when-loaded
-    (:option completion-styles '(orderless flex)
+    (:option completion-styles '(orderless+basic orderless flex)
              completion-ignore-case t
              ;; https://github.com/minad/corfu/issues/136
              ;; eglot 会更改 completion-category-defaults 这个变量。

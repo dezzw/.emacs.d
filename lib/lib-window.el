@@ -18,5 +18,21 @@
     (split-window-vertically)
     (when other-buffer
       (set-window-buffer (next-window) other-buffer))))
+
+(defun toggle-window-hard-dedicated ()
+  "Toggle strong dedication and protection from `delete-other-windows'."
+  (interactive)
+  (let* ((win (selected-window))
+         (on (and (eq (window-dedicated-p win) t)
+                  (window-parameter win 'no-delete-other-windows))))
+    (if on
+        (progn
+          (set-window-dedicated-p win nil)
+          (set-window-parameter win 'no-delete-other-windows nil)
+          (message "Window is no longer strongly dedicated/protected"))
+      (set-window-dedicated-p win t)
+      (set-window-parameter win 'no-delete-other-windows t)
+      (message "Window is strongly dedicated and protected from C-x 1"))))
+
 (provide 'lib-window)
 ;;; lib-window.el ends here

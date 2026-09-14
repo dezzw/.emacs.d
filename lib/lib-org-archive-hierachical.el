@@ -1,7 +1,4 @@
-;; lib-org-archive-hierachical.el --- Initialize org	-*- lexical-binding: t; -*-
-;; (setq org-archive-mark-done nil)
-;; (setq org-archive-location "%s_archive::* Archive")
-
+;;; lib-org-archive-hierachical.el --- Hierarchical org archive -*- lexical-binding: t; -*-
 ;; https://gist.github.com/kepi/2f4acc3cc93403c75fbba5684c5d852d
 ;; org-archive-subtree-hierarchical.el
 ;;
@@ -40,8 +37,7 @@
      (line-beginning-position) (line-end-position))))
 
 (defun org-archive-subtree-hierarchical--org-child-list ()
-  "This function returns all children of a heading as a list. "
-  (interactive)
+  "Return all children of the current heading as a list of line strings."
   (save-excursion
     ;; this only works with org-version > 8.0, since in previous
     ;; org-mode versions the function (org-outline-level) returns
@@ -115,8 +111,7 @@ belongs as a list."
                (concat "in file: " (abbreviate-file-name afile))))))
 
 (defun org-insert-struct (struct)
-  "TODO"
-  (interactive)
+  "Insert STRUCT, a list of strings, one per line."
   (when struct
     (insert (car struct))
     (newline)

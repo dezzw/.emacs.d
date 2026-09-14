@@ -99,9 +99,7 @@
           project-vc-extra-root-markers
           '(".envrc" ".tags" ".project"))
   (:when-loaded
-    (:global-bind "C-c p" (identity project-prefix-map))
-    (:with-map project-prefix-map
-      (:bind "t" project-vterm))))
+    (:global-bind "C-c p" (identity project-prefix-map))))
 
 (setup xref
   (:option xref-auto-jump-to-first-xref 'move)

@@ -12,10 +12,6 @@
            backward-delete-char-untabify-method 'hungry
            ;; Improve CJK wrapping
            word-wrap-by-category t
-           read-process-output-max (* 1024 1024)
-           ;; Suppress GUI features
-           use-file-dialog nil
-           use-dialog-box nil
            ;; Window size and features
            window-resize-pixelwise t
            frame-resize-pixelwise t
@@ -118,9 +114,6 @@
   (setq-default show-trailing-whitespace nil)
   (:with-mode (prog-mode text-mode conf-mode)
     (:local-set show-trailing-whitespace t)))
-;; (global-whitespace-cleanup-mode)
-;; (diminish 'whitespace-cleanup-mode))
-
 (setup vundo
   (:option vundo--window-max-height 5
            vundo-roll-back-on-quit t))

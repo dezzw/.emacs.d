@@ -7,6 +7,8 @@ on:
         description: Build packages even when flake.lock did not change
         type: boolean
         default: false
+  pull_request:
+    branches: [main]
   schedule:
     - cron: "0 0 * * *"
 

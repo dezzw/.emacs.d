@@ -87,7 +87,13 @@ jobs:
       - name: Build and push to Cachix
         run: |
           set -o pipefail
-          nix build .#${{ matrix.package }} --no-link --print-build-logs --print-out-paths | cachix push demacs
+          rebuild_flag=""
+          if [[ "${{ github.event_name }}" == "pull_request" ]] \
+            || [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ inputs.force_build }}" == "true" ]]; then
+            rebuild_flag="--rebuild"
+          fi
+          nix build .#${{ matrix.package }} --no-link --print-build-logs --print-out-paths $rebuild_flag \
+            | cachix push demacs
 
   push-changes:
     name: Push flake.lock to repository

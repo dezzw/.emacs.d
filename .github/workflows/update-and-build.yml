@@ -92,7 +92,10 @@ jobs:
   push-changes:
     name: Push flake.lock to repository
     needs: [update-flake, build-and-cache]
-    if: needs.update-flake.outputs.has_changes == 'true' && needs.build-and-cache.result == 'success'
+    if: >-
+      github.event_name != 'pull_request'
+      && needs.update-flake.outputs.has_changes == 'true'
+      && needs.build-and-cache.result == 'success'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository

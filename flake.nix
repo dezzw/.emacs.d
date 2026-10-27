@@ -65,11 +65,22 @@
         ];
 
 
-        emacs-igc = applyPatches pkgs.emacs-igc customPatches;
+        # Emacs 31 batch-native-compile leaves file args on command-line-args-left;
+        # Darwin CI then hits "Unknown terminal type" in emacs-packages-deps.
+        disableDarwinNativeCompilation =
+          emacs-base:
+          if pkgs.stdenv.hostPlatform.isDarwin then
+            emacs-base.override {
+              withNativeCompilation = false;
+            }
+          else
+            emacs-base;
 
-        emacs-git = applyPatches pkgs.emacs-git customPatches;
+        emacs-igc = applyPatches (disableDarwinNativeCompilation pkgs.emacs-igc) customPatches;
 
-        emacs-git-pgtk = applyPatches pkgs.emacs-git-pgtk customPatches;
+        emacs-git = applyPatches (disableDarwinNativeCompilation pkgs.emacs-git) customPatches;
+
+        emacs-git-pgtk = applyPatches (disableDarwinNativeCompilation pkgs.emacs-git-pgtk) customPatches;
 
         # Centralized package definitions/build recipes/group lists
         packageModule = import ./packages.nix {

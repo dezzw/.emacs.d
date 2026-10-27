@@ -87,12 +87,12 @@ jobs:
       - name: Build and push to Cachix
         run: |
           set -o pipefail
-          rebuild_flag=""
+          no_substitute_flag=""
           if [[ "${{ github.event_name }}" == "pull_request" ]] \
             || [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ inputs.force_build }}" == "true" ]]; then
-            rebuild_flag="--rebuild"
+            no_substitute_flag="--option substitute false"
           fi
-          nix build .#${{ matrix.package }} --no-link --print-build-logs --print-out-paths $rebuild_flag \
+          nix build .#${{ matrix.package }} --no-link --print-build-logs --print-out-paths $no_substitute_flag \
             | cachix push demacs
 
   push-changes:

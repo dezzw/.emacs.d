@@ -87,12 +87,16 @@ jobs:
       - name: Build and push to Cachix
         run: |
           set -o pipefail
-          no_substitute_flag=""
+          nix_args=()
           if [[ "${{ github.event_name }}" == "pull_request" ]] \
             || [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ inputs.force_build }}" == "true" ]]; then
-            no_substitute_flag="--option substitute false"
+            # Build demacs from source on CI: allow nixos.org cache for stdenv, not demacs.cachix hits.
+            nix_args+=(
+              --option substituters "https://cache.nixos.org"
+              --option trusted-public-keys "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
+            )
           fi
-          nix build .#${{ matrix.package }} --no-link --print-build-logs --print-out-paths $no_substitute_flag \
+          nix build .#${{ matrix.package }} --no-link --print-build-logs --print-out-paths "${nix_args[@]}" \
             | cachix push demacs
 
   push-changes:

@@ -27,6 +27,10 @@ in
           melpa2nix = melpaBuildArgs.melpa2nix or melpa2nix;
           elpa2nix = melpaBuildArgs.elpa2nix or elpa2nix;
         })
+      else if prev.lib.hasInfix "emacs/build-support/elpa.nix" pathStr then
+        elpaBuildArgs: result (elpaBuildArgs // {
+          elpa2nix = elpaBuildArgs.elpa2nix or elpa2nix;
+        })
       else
         result;
 }

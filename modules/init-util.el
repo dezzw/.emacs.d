@@ -29,7 +29,8 @@
                 "<remap> <describe-key>" 'helpful-key))
 
 (setup jinx
-  (:hooks emacs-startup-hook global-jinx-mode)
+  (:hooks prog-mode-hook jinx-mode
+          text-mode-hook jinx-mode)
   (:when-loaded
     (:bind
      "M-$" jinx-correct
@@ -101,10 +102,6 @@
            dired-hide-details-mode
            diredfl-mode
            nerd-icons-dired-mode)))
-
-(setup leetcode
-  (:autoload leetcode-list-all)
-  (:option leetcode-language "swift"))
 
 (provide 'init-util)
 ;;; init-util.el ends here

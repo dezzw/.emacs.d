@@ -29,8 +29,6 @@ auto-save-list
 session.*
 tabsession.el
 ..emacs.d-tabspaces-session.el
-anvil-worker-init.el
-anvil-worker.log
 tramp
 transient
 bookmarks

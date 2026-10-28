@@ -14,12 +14,12 @@
   (:hooks gptel-post-response-hook gptel-end-of-response))
 
 (setup agent-shell
-  (:global-bind "C-c a d" 'agent-shell-send-dwim)
+  (:global-bind "C-c a a" 'agent-shell
+                "C-c a A" 'agent-shell-new-shell
+                "C-c a d" 'agent-shell-send-dwim)
   (:when-loaded
     (setopt agent-shell-show-usage-at-turn-end t
             agent-shell-prefer-viewport-interaction t
-            agent-shell-session-strategy 'prompt
-            agent-shell-file-completion-enabled t
             ;;; claude code
             agent-shell-anthropic-claude-environment
             (agent-shell-make-environment-variables :inherit-env t)
@@ -28,20 +28,31 @@
             (agent-shell-make-environment-variables :inherit-env t)
             agent-shell-openai-authentication
             (agent-shell-openai-make-authentication :api-key (lambda () (getenv "OPENAI_API_KEY")))
-            ;;; cursor
-            agent-shell-cursor-acp-command '("agent" "acp")
             )
     (setq agent-shell-preferred-agent-config
-          (agent-shell-anthropic-make-claude-code-config))))
+          (agent-shell-cursor-make-agent-config)))
+  (:after magit
+    (defun +agent-shell-generate-commit ()
+      "Generate conventional commit message from staged changes."
+      (interactive)
+      (if (magit-staged-files)
+          (agent-shell-insert
+           :submit t
+           :text "Commit changes with conventional message")
+        (user-error "No staged changes")))
 
+    (defun +agent-shell-review-commit ()
+      "Send the commit at point to agent-shell for review."
+      (interactive)
+      (if-let* ((commit (magit-commit-p (magit-thing-at-point 'git-revision t))))
+          (agent-shell-insert
+           :submit t
+           :text (format "Review commit: %s" commit))
+        (user-error "No magit commit at point")))
 
-(setup anvil
-  (unless (package-installed-p 'anvil)
-    (package-vc-install
-     '(anvil :url "https://github.com/zawatton/anvil.el.git")))
-  (:when-loaded
-    (anvil-enable)
-    (anvil-server-start)))
+    (:with-map magit-mode-map
+      (:bind "C-c C-g" '+agent-shell-generate-commit
+             "C-c C-r" '+agent-shell-review-commit))))
 
 (provide 'init-ai)
 ;;; init-ai.el ends here

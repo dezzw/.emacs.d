@@ -7,6 +7,7 @@
   (:global-bind "C-x |" 'split-window-horizontally-instead
                 "C-x _" 'split-window-vertically-instead
                 "C-x w D" 'toggle-window-hard-dedicated
+                "C-x w f" 'toggle-frame-fullscreen
                 "C-x 3" (lambda () (interactive) (select-window (split-window-horizontally)))
                 "C-x 2" (lambda () (interactive) (select-window (split-window-vertically)))))
 
@@ -133,7 +134,8 @@
   (:hook-into prog-mode))
 
 
-(setup nerd-icons (:require nerd-icons))
+(setup nerd-icons
+  (:defer (:require nerd-icons)))
 
 (defun +popper-close-window-hack (&rest _)
   "Close popper window via `C-g'."
@@ -149,44 +151,42 @@
   (:global-bind "C-c w p" 'popper-toggle
                 "C-c w n" 'popper-cycle
                 "C-c w P" 'popper-toggle-type)
-  (setopt popper-window-height (lambda (win)
-                                 (fit-window-to-buffer
-                                  win
-                                  (max 15 (floor (frame-height) 3))
-                                  15))
-          popper-reference-buffers
-          '(;; Shell/build output
-            "\\*Messages\\*"
-            "Output\\*$"
-            "\\*Async Shell Command\\*"
-            help-mode
-            compilation-mode
-            ;; Help and navigation
-            "\\*Help\\*$"
-            "\\*xref\\*$"
-            ;; AI/Chat
-            "\\*chatgpt\\*$"
-            ;; Terminal emulators
-            "\\ghostel\\*$"
-            "\\*eat\\*$"
-            "\\*eshell\\*$"
-            "\\*.*-eshell\\*$"
-            ;; Org mode
-            "\\*Org Select\\*$"
-            ;; Verb/restclient HTTP responses
-            "\\*HTTP Response.*\\*$"
-            ;; Telegram buffers
-            "\\*Telega User\\*$"
-            "\\*Telegram Chat Info\\*$"
-            "\\*Telegram Message Info\\*$"
-            "\\*Telegram Sticker Set\\*$"
-            "\\*Telegram Notification Messages\\*$")
-          ;; popper-display-function #'+popper-display-child-frame
-          )
-  (setq popper-display-control t)
-  (:with-hook after-init-hook
-    (:hook popper-mode)
-    (:hook popper-tab-line-mode))
+  (:when-loaded
+    (setopt popper-window-height (lambda (win)
+                                   (fit-window-to-buffer
+                                    win
+                                    (max 15 (floor (frame-height) 3))
+                                    15))
+            popper-reference-buffers
+            '(;; Shell/build output
+              "\\*Messages\\*"
+              "Output\\*$"
+              "\\*Async Shell Command\\*"
+              help-mode
+              compilation-mode
+              ;; Help and navigation
+              "\\*Help\\*$"
+              "\\*xref\\*$"
+              ;; AI/Chat
+              "\\*chatgpt\\*$"
+              ;; Terminal emulators
+              "\\ghostel\\*$"
+              "\\*eat\\*$"
+              "\\*eshell\\*$"
+              "\\*.*-eshell\\*$"
+              ;; Org mode
+              "\\*Org Select\\*$"
+              ;; Verb/restclient HTTP responses
+              "\\*HTTP Response.*\\*$"
+              ;; Telegram buffers
+              "\\*Telega User\\*$"
+              "\\*Telegram Chat Info\\*$"
+              "\\*Telegram Message Info\\*$"
+              "\\*Telegram Sticker Set\\*$"
+              "\\*Telegram Notification Messages\\*$"))
+    (setq popper-display-control t))
+  (popper-mode 1)
+  (popper-tab-line-mode 1)
   (advice-add #'keyboard-quit :before #'+popper-close-window-hack))
 
 (setup tab-bar
@@ -232,8 +232,9 @@
       (+tabspaces-consult-setup))))
 
 (setup which-key
-  (:with-hook after-init-hook
-    (:hook which-key-mode)))
+  (:require which-key)
+  (:when-loaded
+    (which-key-mode 1)))
 
 (provide 'init-ui)
 ;;; init-ui.el ends here

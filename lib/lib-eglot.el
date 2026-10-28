@@ -40,6 +40,10 @@
     (with-current-buffer buffer
       (+eglot-report-streamed-diagnostics))))
 
+(cl-defmethod eglot-register-capability
+  (_server (_method (eql workspace/didChangeWorkspaceFolders)) _id &rest _)
+  nil)
+
 (defun vue-eglot-init-options ()
   "Return initialization options for the Vue language server."
   (let ((tsdk-path (expand-file-name "typescript/lib"

@@ -2,8 +2,12 @@
 ;;; Commentary:
 ;;; Code:
 
-(setup (:with-hook after-init-hook
-         (:hook savehist-mode)))
+(setup savehist
+  (:require savehist)
+  (:also-load lib-savehist)
+  (setopt savehist-save-minibuffer-history t)
+  (:with-hook after-init-hook
+    (:hook +savehist-safe-start)))
 
 (setup recentf
   (:hook-into after-init)

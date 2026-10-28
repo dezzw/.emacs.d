@@ -163,8 +163,6 @@
     (define-key symbol-overlay-map (kbd "c") #'symbol-overlay-put)
     (define-key symbol-overlay-map (kbd "C") #'symbol-overlay-remove-all)))
 
-(setup speed-type)
-
 (setup ultra-scroll
   (:option scroll-conservatively 101 ; important!
            scroll-margin 0)

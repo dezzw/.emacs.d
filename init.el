@@ -29,8 +29,12 @@
 
 (setq vc-follow-symlinks t)
 
-(defconst my/load-path-root-dirs
-  '("site-lisp" "lib" "modules" "themes")
+(defconst my/load-path-flat-dirs
+  '("lib" "modules" "themes")
+  "Top-level config dirs added directly to `load-path'.")
+
+(defconst my/load-path-recursive-dirs
+  '("site-lisp")
   "Directories under `user-emacs-directory' to scan recursively.")
 
 (defconst my/load-path-skip-dirs
@@ -63,28 +67,26 @@
               (add-to-list 'load-path (file-name-as-directory subdir-path) t))
             (my/add-subdirs-to-load-path subdir-path)))))))
 
-(dolist (dir my/load-path-root-dirs)
+(dolist (dir my/load-path-flat-dirs)
+  (let ((root (expand-file-name dir user-emacs-directory)))
+    (when (file-directory-p root)
+      (add-to-list 'load-path (file-name-as-directory root)))))
+
+(dolist (dir my/load-path-recursive-dirs)
   (let ((root (expand-file-name dir user-emacs-directory)))
     (when (file-directory-p root)
       (add-to-list 'load-path (file-name-as-directory root))
       (my/add-subdirs-to-load-path root))))
 
+(defun my/require-when-idle (modules &optional sec)
+  "Require MODULES after SEC idle seconds (default 1)."
+  (dolist (mod modules)
+    (run-with-idle-timer (or sec 1) nil
+                         (lambda ()
+                           (require mod nil 'noerror)))))
+
 (require 'setup)
 (require 'init-setup)
-
-(setup (:require keyfreq)
-  (setq keyfreq-excluded-commands
-        '(self-insert-command
-          forward-char
-          meow-next
-          meow-prev
-          execute-extended-command
-          vertico-next
-          backward-char
-          previous-line
-          next-line))
-  (keyfreq-mode 1)
-  (keyfreq-autosave-mode 1))
 
 (when *is-mac*
   (require 'init-mac))
@@ -99,14 +101,10 @@
 (require 'init-vc)
 (require 'init-util)
 (require 'init-transient)
-(require 'init-org)
-
-(require 'init-reader)
-(require 'init-social)
-(require 'init-shell)
 (require 'init-ai)
-(require 'init-bitstream)
 (require 'init-local)
+
+(my/require-when-idle '(init-org init-reader init-social init-shell init-bitstream))
 
 (unless (daemonp)
   (server-start))

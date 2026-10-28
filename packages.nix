@@ -24,7 +24,6 @@ let
       symbol-overlay
       ultra-scroll
       vertico
-      vertico-posframe
     ];
 
   # The retained third-party completion stack.
@@ -56,7 +55,6 @@ let
       rainbow-delimiters
       rainbow-mode
       separedit
-      speed-type
       undo-fu
       undo-fu-session
       vundo
@@ -67,14 +65,11 @@ let
   orgPackages =
     epkgs: with epkgs; [
       cdlatex
-      consult-notes
       denote
-      denote-markdown
       denote-org
       image-slicing
       ob-async
       org-appear
-      org-cliplink
       org-download
       org-modern
       org-modern-indent
@@ -118,7 +113,6 @@ let
     epkgs: with epkgs; [
       blame-reveal
       diff-hl
-      git-link
       git-modes
       magit
     ];
@@ -126,7 +120,6 @@ let
   # AI helpers.
   aiPackages =
     epkgs: with epkgs; [
-      ai-code
       agent-shell
       gptel
     ];
@@ -137,7 +130,6 @@ let
       eshell-syntax-highlighting
       helpful
       jenkins
-      keyfreq
       leetcode-emacs
       telega
       pdf-tools

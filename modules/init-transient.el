@@ -7,11 +7,8 @@
   (:when-loaded
     (:also-load lib-transient)
     (:global-bind "C-c e e" 'emacs-access-transient
-                  "C-c e g" 'gptel-menu
                   "C-c e p" 'prog-commands
-                  "C-c e m" 'magit-commands
-                  "C-c e u" 'uniline-transient
-                  "C-c e d" 'dape-transient)
+                  "C-c e m" 'magit-commands)
     (:with-map transient-base-map
       (:bind "<escape>" transient-quit-one))
     (:option transient-semantic-coloring t)

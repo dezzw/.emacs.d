@@ -51,10 +51,10 @@
         # Custom patches list (can be enabled/disabled as needed)
         customPatches = [
         ]
-        ++ lib.optionals pkgs.stdenv.isLinux [
+        ++ lib.optionals pkgs.stdenv.hostPlatform.isLinux [
 
         ]
-        ++ lib.optionals pkgs.stdenv.isDarwin [
+        ++ lib.optionals pkgs.stdenv.hostPlatform.isDarwin [
           # Add setting to enable rounded window with no decoration
           "${inputs.emacs-plus-patches}/patches/emacs-31/round-undecorated-frame.patch"
           # Make Emacs aware of OS-level light/dark mode

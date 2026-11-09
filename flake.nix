@@ -61,9 +61,6 @@
           "${inputs.emacs-plus-patches}/patches/emacs-31/system-appearance.patch"
         ];
 
-
-        emacs-igc = applyPatches pkgs.emacs-igc customPatches;
-
         emacs-git = applyPatches pkgs.emacs-git customPatches;
 
         emacs-git-pgtk = applyPatches pkgs.emacs-git-pgtk customPatches;
@@ -155,7 +152,6 @@
         # ============================================================================
 
         # Build all four versions
-        emacs-augmented-igc = buildEmacsAugmented emacs-igc;
         emacs-augmented-git = buildEmacsAugmented emacs-git;
         emacs-augmented-git-pgtk = buildEmacsAugmented emacs-git-pgtk;
 
@@ -163,7 +159,6 @@
         # Package Outputs
         # ============================================================================
 
-        packages.demacs-igc = emacs-augmented-igc;
         packages.demacs-git = emacs-augmented-git;
         packages.demacs-git-pgtk = emacs-augmented-git-pgtk;
 
@@ -184,7 +179,6 @@
             exePath = "/bin/emacs";
           };
 
-        apps.demacs-igc = mkApp "igc" packages.demacs-igc;
         apps.demacs-git = mkApp "git" packages.demacs-git;
         apps.demacs-git-pgtk = mkApp "git-pgtk" packages.demacs-git-pgtk;
         apps.export-demacs-package-manifest = flake-utils.lib.mkApp {

@@ -55,7 +55,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest]
-        package: [demacs-igc, demacs-git, demacs-git-pgtk]
+        package: [demacs-git, demacs-git-pgtk]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4

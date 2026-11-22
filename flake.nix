@@ -36,7 +36,10 @@
       let
         pkgs = import nixpkgs {
           inherit system;
-          overlays = [ emacs-overlay.overlay ];
+          overlays = [
+            emacs-overlay.overlay
+            (import ./nix/emacs-batch-cli-fix-overlay.nix)
+          ];
         };
         lib = pkgs.lib;
       in

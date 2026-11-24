@@ -62,7 +62,7 @@ the built-in VC log view instead."
     (when file
       (with-current-buffer (find-file file)
         (widen)
-        (replace-buffer-contents  blob-buf))
+        (replace-region-contents (point-min) (point-max) blob-buf))
       (message "save blob to file %s" file))
     (dolist (buf (buffer-list))         ;关闭此文件所有版本的blob buffer
       (with-current-buffer buf

@@ -48,7 +48,7 @@
                    '("cd-workspace" +ghostel-cd-workspace-root)))))
 
 (if (and (not (display-graphic-p))
-         (eq (daemonp) "tui"))
+         (equal (daemonp) "tui"))
     (progn
       (setopt xterm-mouse-mode t)
       (setup kitty-graphics

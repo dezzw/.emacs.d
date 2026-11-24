@@ -148,7 +148,7 @@ SEQUENCE is a two-character string such as \"jk\"."
         (cond
          ((null event) nil)
          ((char-equal event second)
-          (backward-delete-char 1)
+          (delete-char -1)
           (set-buffer-modified-p modified)
           (setq buffer-undo-list undo-list)
           (meow-insert-exit))

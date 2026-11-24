@@ -94,7 +94,7 @@ Used from Telega hooks and advice, so extra args are ignored."
 (defun +mode-line-telega-icon ()
   "Return a detailed Telega notification indicator for the mode line.
 Reads `+telega-notification-cache' only; must not fetch during mode-line eval."
-  (when-let ((counts +telega-notification-cache))
+  (when-let* ((counts +telega-notification-cache))
     (concat (+telega-notification-icon)
             "["
             (when (> (plist-get counts :unread-count) 0)

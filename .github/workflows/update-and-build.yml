@@ -20,10 +20,10 @@ jobs:
       has_changes: ${{ steps.update.outputs.has_changes }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install Nix
-        uses: cachix/install-nix-action@v31
+        uses: cachix/install-nix-action@v32
 
       - name: Update flake inputs
         id: update
@@ -40,7 +40,7 @@ jobs:
 
       - name: Upload updated flake.lock
         if: steps.update.outputs.has_changes == 'true'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: flake-lock
           path: flake.lock
@@ -58,18 +58,18 @@ jobs:
         package: [demacs-git, demacs-git-pgtk]
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Download updated flake.lock
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: flake-lock
 
       - name: Install Nix
-        uses: cachix/install-nix-action@v31
+        uses: cachix/install-nix-action@v32
 
       - name: Setup Cachix
-        uses: cachix/cachix-action@v16
+        uses: cachix/cachix-action@v17
         with:
           name: demacs
           authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
@@ -86,10 +86,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Download updated flake.lock
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: flake-lock
 

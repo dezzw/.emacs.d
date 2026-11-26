@@ -41,7 +41,7 @@
         ]
        ["Code action"
         ("a" "code-actions"      eglot-code-actions)
-        ("r" "rename"            eglot-rename)]
+        ("r" "rename"            refactor-rename)]
        ["diagnostic"
         ("n" "jump-to-next-diagnostic" flymake-goto-next-error)
         ("N" "jump-to-prev-diagnostic" flymake-goto-prev-error)

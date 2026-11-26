@@ -42,7 +42,7 @@
 (setq ffap-machine-p-known 'reject)
 
 ;; By default, Emacs "updates" its ui more often than it needs to
-(setq idle-update-delay 1.0)
+(setq which-func-update-delay 1.0)
 
 ;; Font compacting can be very resource-intensive, especially when rendering
 ;; icon fonts on Windows. This will increase memory usage.

@@ -18,7 +18,7 @@
   "Remove the `mcfly-back-to-present' hook and manage command history.
 This function handles the transition back to the present state in the
 minibuffer by removing the pre-command hook and managing the history
-commands specifically for \\=`M-p'.  If the current command is in
+commands specifically for `M-p'.  If the current command is in
 `mcfly-back-commands', it deletes the region from point to the end of the buffer."
   (remove-hook 'pre-command-hook 'mcfly-back-to-present t)
   (cond ((and (memq last-command mcfly-commands)
@@ -33,7 +33,7 @@ commands specifically for \\=`M-p'.  If the current command is in
   "Insert text from the current context into the minibuffer and set up hooks.
 When the current command is in `mcfly-commands', this function inserts
 contextual information (like a symbol or URL) from the buffer into the
-minibuffer, styled with the \\=`shadow' face.  It also adds a pre-command hook
+minibuffer, styled with the `shadow' face.  It also adds a pre-command hook
 to call `mcfly-back-to-present'."
   (when (memq this-command mcfly-commands)
     (let ((pre-insert-string (with-minibuffer-selected-window

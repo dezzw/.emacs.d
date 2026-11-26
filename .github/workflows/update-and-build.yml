@@ -61,7 +61,7 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Download updated flake.lock
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: flake-lock
 
@@ -89,7 +89,7 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Download updated flake.lock
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: flake-lock
 
